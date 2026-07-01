@@ -97,6 +97,12 @@ export const routes: RouteRecordRaw[] = [
     meta: { layout: 'default' },
   },
   {
+    path: '/achievements',
+    name: 'achievements',
+    component: () => import('@/modules/achievements/pages/AchievementsPage.vue'),
+    meta: { layout: 'default' },
+  },
+  {
     path: '/requests/mine',
     name: 'my-requests',
     component: () => import('@/modules/requests/pages/MyRequestsPage.vue'),

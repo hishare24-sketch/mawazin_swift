@@ -2,6 +2,8 @@
 import { computed } from 'vue'
 import { useGamificationStore } from '@/stores/GamificationStore'
 
+withDefaults(defineProps<{ showLink?: boolean }>(), { showLink: true })
+
 const g = useGamificationStore()
 const earnedBadges = computed(() => g.badges.filter(b => b.earned))
 const lockedBadges = computed(() => g.badges.filter(b => !b.earned))
@@ -75,6 +77,10 @@ const lockedBadges = computed(() => g.badges.filter(b => !b.earned))
         </template>
       </VTooltip>
     </div>
+
+    <VBtn v-if="showLink" variant="text" color="warning" size="small" class="mt-2 px-0" append-icon="mdi-arrow-left" :to="{ name: 'achievements' }">
+      الإنجازات ولوحة الصدارة
+    </VBtn>
   </VCard>
 </template>
 
