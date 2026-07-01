@@ -1,5 +1,5 @@
 import { defineStore } from 'pinia'
-import { ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 import { ai } from '@/services/ai'
 
 export type ProofType = 'assessment' | 'endorsement' | 'project' | 'certificate' | 'self'
@@ -20,6 +20,7 @@ export interface Skill {
 
 export interface Experience { id: number, title: string, company: string, period: string, desc: string }
 export interface Certificate { id: number, name: string, issuer: string, date: string }
+export interface ProofRequest { id: number, from: string, relation: string, skill: string, date: string }
 
 export const PROOF_META: Record<ProofType, { label: string, icon: string, weight: number, color: string }> = {
   assessment: { label: 'اختبار', icon: 'mdi-clipboard-check-outline', weight: 35, color: 'success' },
@@ -103,6 +104,28 @@ export const useProfileStore = defineStore('profile', () => {
   const experiences = ref<Experience[]>(state.experiences)
   const certificates = ref<Certificate[]>(state.certificates)
 
+  // Pending proof requests others sent to me (e.g. a manager asking me to verify a skill)
+  const pendingProofRequests = ref<ProofRequest[]>([
+    { id: 1, from: 'أحمد المنصور', relation: 'مدير سابق', skill: 'القيادة', date: 'قبل يومين' },
+    { id: 2, from: 'شركة تقنية المستقبل', relation: 'جهة توظيف', skill: 'Vue.js', date: 'قبل 4 أيام' },
+  ])
+  function resolveProofRequest(id: number, accept: boolean) {
+    const req = pendingProofRequests.value.find(r => r.id === id)
+    if (req && accept) {
+      const skill = skills.value.find(s => s.name.toLowerCase() === req.skill.toLowerCase())
+      if (skill)
+        skill.proofs.push({ id: nextProofId++, type: 'endorsement', label: `توصية من ${req.from}`, date: 'الآن' })
+    }
+    pendingProofRequests.value = pendingProofRequests.value.filter(r => r.id !== id)
+  }
+
+  // Skills that lack strong verification (confidence below 50 or self-assessment only)
+  const unverifiedSkills = computed(() =>
+    skills.value
+      .filter(s => skillConfidence(s) < 50 || s.proofs.every(p => p.type === 'self'))
+      .map(s => s.name),
+  )
+
   function persist() {
     localStorage.setItem(STORAGE_KEY, JSON.stringify({
       headline: headline.value,
@@ -147,6 +170,7 @@ export const useProfileStore = defineStore('profile', () => {
 
   return {
     headline, summary, skills, experiences, certificates,
+    pendingProofRequests, unverifiedSkills, resolveProofRequest,
     addSkill, removeSkill, addProof, addExperience, removeExperience, addCertificate, removeCertificate,
   }
 })

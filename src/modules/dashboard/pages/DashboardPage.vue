@@ -7,9 +7,13 @@ import { useSavedStore } from '@/stores/SavedStore'
 import { useWishesStore } from '@/stores/WishesStore'
 import { useCandidatesStore } from '@/stores/CandidatesStore'
 import { usePostedOpportunitiesStore } from '@/stores/PostedOpportunitiesStore'
+import { useTrustStore } from '@/stores/TrustStore'
+import { useProfileStore } from '@/stores/ProfileStore'
 import StatCard from '@/components/shared/StatCard.vue'
 import OpportunityCard from '@/modules/opportunities/components/OpportunityCard.vue'
 import { mockOpportunities } from '@/modules/opportunities/services/mockOpportunities'
+import { LEVEL_META } from '@/stores/InterviewsStore'
+import { ai } from '@/services/ai'
 
 const { t } = useI18n()
 const authStore = useAuthStore()
@@ -18,12 +22,27 @@ const savedStore = useSavedStore()
 const wishesStore = useWishesStore()
 const candidatesStore = useCandidatesStore()
 const postedStore = usePostedOpportunitiesStore()
+const trustStore = useTrustStore()
+const profileStore = useProfileStore()
 
 const userName = computed(() => authStore.authUser?.name ?? '')
 const isCompany = computed(() => authStore.role === 'company')
 
-const recommended = computed(() => [...mockOpportunities].sort((a, b) => b.matchRate - a.matchRate).slice(0, 4))
+const recommended = computed(() => [...mockOpportunities].sort((a, b) => b.matchRate - a.matchRate).slice(0, 5))
 const topCandidates = computed(() => [...candidatesStore.candidates].sort((a, b) => b.matchRate - a.matchRate).slice(0, 5))
+
+// — Seeker AI widgets —
+const trustDelta = 5 // simulated weekly change
+const pendingProofs = computed(() => profileStore.pendingProofRequests)
+const recommendedInterview = computed(() => ai.recommendInterview(profileStore.unverifiedSkills))
+const proactiveNudges = computed(() =>
+  ai.proactiveNudges({
+    trust: trustStore.score,
+    trustDelta,
+    pendingProofs: pendingProofs.value.length,
+    unverifiedSkills: profileStore.unverifiedSkills,
+  }),
+)
 
 const seekerStats = computed(() => [
   { title: 'طلباتي النشطة', value: applicationsStore.count, icon: 'mdi-file-send-outline', color: 'primary' },
@@ -82,6 +101,28 @@ const aiSuggestions = [
         </div>
       </div>
     </VCard>
+
+    <!-- Proactive AI nudges (seeker) -->
+    <div v-if="!isCompany && proactiveNudges.length" class="mb-4 d-flex flex-column ga-2">
+      <VAlert
+        v-for="(n, i) in proactiveNudges"
+        :key="i"
+        :type="n.tone"
+        variant="tonal"
+        density="compact"
+        border="start"
+      >
+        <div class="d-flex align-center justify-space-between flex-wrap ga-2">
+          <div class="d-flex align-center ga-2">
+            <VIcon :icon="n.icon" size="20" />
+            <span class="text-body-2">{{ n.text }}</span>
+          </div>
+          <VBtn v-if="n.action" size="x-small" variant="flat" :color="n.tone === 'warning' ? 'warning' : 'accent'" :to="{ name: n.action }">
+            {{ n.actionLabel }}
+          </VBtn>
+        </div>
+      </VAlert>
+    </div>
 
     <!-- Stat cards -->
     <VRow class="mb-2">
@@ -161,6 +202,55 @@ const aiSuggestions = [
 
       <!-- Side column -->
       <VCol cols="12" lg="4">
+        <!-- Trust summary (seeker) -->
+        <VCard v-if="!isCompany" class="pa-4 mt-2 mb-4">
+          <div class="d-flex align-center ga-4">
+            <VProgressCircular :model-value="trustStore.score" :size="72" :width="8" :color="trustStore.level.color">
+              <span class="text-subtitle-1 font-weight-bold">{{ trustStore.score }}</span>
+            </VProgressCircular>
+            <div class="flex-grow-1">
+              <div class="d-flex align-center ga-2">
+                <span class="text-subtitle-2 font-weight-bold">نسبة الثقة</span>
+                <VChip :color="trustStore.level.color" size="x-small" label>{{ trustStore.level.label }}</VChip>
+              </div>
+              <div class="text-caption text-success d-flex align-center ga-1">
+                <VIcon icon="mdi-trending-up" size="16" /> ارتفعت {{ trustDelta }}% هذا الأسبوع
+              </div>
+              <VBtn variant="text" color="primary" size="x-small" class="mt-1 px-0" :to="{ name: 'profile' }">عرض التفاصيل</VBtn>
+            </div>
+          </div>
+        </VCard>
+
+        <!-- Recommended interview (seeker) -->
+        <VCard v-if="!isCompany && recommendedInterview" class="pa-4 mb-4" variant="tonal" color="accent">
+          <div class="d-flex align-center ga-2 mb-2">
+            <VIcon icon="mdi-account-tie-voice-outline" />
+            <span class="text-subtitle-2 font-weight-bold">مقابلة موصى بها</span>
+            <VChip size="x-small" color="success" label class="ms-auto">+{{ recommendedInterview.trustGain }}% ثقة</VChip>
+          </div>
+          <p class="text-body-2 mb-3">{{ recommendedInterview.reason }}</p>
+          <VBtn color="accent" size="small" block prepend-icon="mdi-play" :to="{ name: 'interviews' }">
+            ابدأ مقابلة {{ LEVEL_META[recommendedInterview.level].label }}
+          </VBtn>
+        </VCard>
+
+        <!-- Pending proof requests (seeker) -->
+        <VCard v-if="!isCompany && pendingProofs.length" class="pa-4 mb-4">
+          <div class="d-flex align-center ga-2 mb-3">
+            <VIcon icon="mdi-account-star-outline" color="secondary" />
+            <span class="text-subtitle-1 font-weight-bold">إثباتات معلّقة ({{ pendingProofs.length }})</span>
+          </div>
+          <div v-for="req in pendingProofs" :key="req.id" class="d-flex align-center ga-2 mb-2">
+            <VAvatar color="secondary" variant="tonal" size="36"><VIcon icon="mdi-account" /></VAvatar>
+            <div class="flex-grow-1">
+              <div class="text-body-2 font-weight-bold">{{ req.from }}</div>
+              <div class="text-caption text-medium-emphasis">يطلب إثبات «{{ req.skill }}» · {{ req.date }}</div>
+            </div>
+            <VBtn icon="mdi-check" size="x-small" color="success" variant="tonal" @click="profileStore.resolveProofRequest(req.id, true)" />
+            <VBtn icon="mdi-close" size="x-small" color="error" variant="text" @click="profileStore.resolveProofRequest(req.id, false)" />
+          </div>
+        </VCard>
+
         <!-- AI assistant mini -->
         <VCard class="pa-4 mt-2 mb-4">
           <div class="d-flex align-center ga-2 mb-3">

@@ -1,12 +1,33 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 import { useTrustStore } from '@/stores/TrustStore'
+import { ai } from '@/services/ai'
 import TrustRadar from './TrustRadar.vue'
 
 const store = useTrustStore()
 const router = useRouter()
 const dialog = ref(false)
+const refreshing = ref(false)
+const motivation = ref('')
+
+// Motivational nudge whenever the score changes (live reaction to new proofs/interviews)
+let prevScore = store.score
+watch(() => store.score, (val) => {
+  const delta = val - prevScore
+  prevScore = val
+  if (delta !== 0)
+    motivation.value = ai.trustMotivation(delta, val)
+})
+
+// Manual re-analysis: recomputes are automatic, so this replays the AI pass with feedback
+function refreshAnalysis() {
+  refreshing.value = true
+  setTimeout(() => {
+    refreshing.value = false
+    motivation.value = ai.trustMotivation(0, store.score)
+  }, 700)
+}
 
 function factorColor(v: number) {
   if (v >= 70)
@@ -29,11 +50,24 @@ function factorColor(v: number) {
           <VChip :color="store.level.color" size="small" label>{{ store.level.label }}</VChip>
         </div>
         <p class="text-caption text-medium-emphasis mb-2">مؤشر مصداقية ملفك بناءً على 8 عوامل موضوعية</p>
-        <VBtn variant="tonal" color="primary" size="small" prepend-icon="mdi-chart-timeline-variant" @click="dialog = true">
-          عرض التفاصيل
-        </VBtn>
+        <div class="d-flex ga-2 flex-wrap">
+          <VBtn variant="tonal" color="primary" size="small" prepend-icon="mdi-chart-timeline-variant" @click="dialog = true">
+            عرض التفاصيل
+          </VBtn>
+          <VBtn variant="text" color="secondary" size="small" :loading="refreshing" prepend-icon="mdi-refresh" @click="refreshAnalysis">
+            تحديث التحليل
+          </VBtn>
+        </div>
       </div>
     </div>
+
+    <!-- Motivational AI nudge -->
+    <VSnackbar :model-value="!!motivation" color="secondary" location="top" timeout="4500" @update:model-value="motivation = ''">
+      <div class="d-flex align-center ga-2">
+        <VIcon icon="mdi-robot-happy-outline" />
+        <span>{{ motivation }}</span>
+      </div>
+    </VSnackbar>
 
     <!-- Breakdown dialog -->
     <VDialog v-model="dialog" max-width="640">

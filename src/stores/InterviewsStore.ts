@@ -11,7 +11,7 @@ export interface InterviewResult {
   strengths: string[]
   improvements: string[]
   recommendations: string[]
-  video?: { bodyLanguage: number, tone: number, confidence: number, note: string }
+  video?: { bodyLanguage: number, tone: number, confidence: number, pace: number, eyeContact: number, note: string, tips: string[] }
 }
 
 export interface Interview {

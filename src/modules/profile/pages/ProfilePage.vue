@@ -39,6 +39,21 @@ function levelOf(skill: Skill) {
   return skillLevelLabel(skill)
 }
 
+// AI comparison insight across verified skills
+const skillInsight = computed(() =>
+  ai.skillInsight(profile.skills.map(s => ({ name: s.name, confidence: skillConfidence(s) }))),
+)
+// AI narrative rationale for the skill open in the detail dialog
+const skillRationale = computed(() => {
+  if (!detailSkill.value)
+    return ''
+  return ai.skillRationale(
+    detailSkill.value.name,
+    detailSkill.value.proofs.map(p => ({ type: p.type, weight: PROOF_META[p.type].weight })),
+    skillConfidence(detailSkill.value),
+  )
+})
+
 // Add-proof dialog
 const proofDialog = ref(false)
 const proofSkill = ref<Skill | null>(null)
@@ -177,6 +192,19 @@ const profileCompletion = computed(() => {
             <VBtn color="accent" size="small" prepend-icon="mdi-plus" @click="skillDialog = true">إضافة مهارة</VBtn>
           </div>
           <p class="text-caption text-medium-emphasis mb-4">كل مهارة مدعومة بإثباتات (اختبار، توصية، مشروع، شهادة) تحدّد نسبة الثقة والمستوى</p>
+
+          <!-- AI skill-gap insight -->
+          <VAlert v-if="skillInsight" color="secondary" variant="tonal" density="comfortable" class="mb-4" border="start">
+            <template #prepend>
+              <VIcon icon="mdi-robot-happy-outline" />
+            </template>
+            <div class="d-flex align-center justify-space-between flex-wrap ga-2">
+              <span class="text-body-2">{{ skillInsight.message }}</span>
+              <VBtn size="x-small" color="accent" variant="flat" prepend-icon="mdi-account-tie-voice-outline" :to="{ name: 'interviews' }">
+                أثبت الآن
+              </VBtn>
+            </div>
+          </VAlert>
 
           <VCard v-for="skill in profile.skills" :key="skill.id" variant="outlined" class="pa-3 mb-3">
             <div class="d-flex justify-space-between align-center mb-2">
@@ -417,6 +445,14 @@ const profileCompletion = computed(() => {
           </VChip>
         </VCardTitle>
         <VCardText>
+          <!-- AI rationale for the confidence score -->
+          <VAlert color="secondary" variant="tonal" density="compact" class="mb-3" border="start">
+            <template #prepend>
+              <VIcon icon="mdi-robot-happy-outline" size="20" />
+            </template>
+            <span class="text-caption">{{ skillRationale }}</span>
+          </VAlert>
+
           <div class="text-body-2 font-weight-bold mb-2">مصادر الإثبات ({{ detailSkill.proofs.length }})</div>
           <VTimeline side="end" density="compact" align="start">
             <VTimelineItem v-for="p in detailSkill.proofs" :key="p.id" :dot-color="PROOF_META[p.type].color" size="x-small">

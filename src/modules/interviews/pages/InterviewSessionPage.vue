@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, onBeforeUnmount, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { LEVEL_META, TYPE_META, useInterviewsStore } from '@/stores/InterviewsStore'
 import type { InterviewResult } from '@/stores/InterviewsStore'
@@ -21,10 +21,37 @@ const answers = ref<Record<number, { text: string, score: number, competency: st
 const currentAnswer = ref('')
 const evaluating = ref(false)
 const lastFeedback = ref('')
+const hint = ref('')
 
 const current = computed(() => questions.value[currentIndex.value])
 const progress = computed(() => (questions.value.length ? ((currentIndex.value + 1) / questions.value.length) * 100 : 0))
 const isLast = computed(() => currentIndex.value === questions.value.length - 1)
+const answered = computed(() => !!(current.value && answers.value[current.value.id]))
+
+// — Per-question countdown timer —
+const QUESTION_SECONDS = 120
+const timeLeft = ref(QUESTION_SECONDS)
+let timerId: ReturnType<typeof setInterval> | undefined
+const timeLabel = computed(() => `${String(Math.floor(timeLeft.value / 60)).padStart(2, '0')}:${String(timeLeft.value % 60).padStart(2, '0')}`)
+const timeColor = computed(() => (timeLeft.value <= 15 ? 'error' : timeLeft.value <= 40 ? 'warning' : 'primary'))
+
+function startTimer() {
+  clearInterval(timerId)
+  timeLeft.value = QUESTION_SECONDS
+  timerId = setInterval(() => {
+    if (timeLeft.value > 0 && !answered.value)
+      timeLeft.value--
+    else if (timeLeft.value === 0 && !answered.value)
+      submitAnswer()
+  }, 1000)
+}
+watch(current, () => startTimer(), { immediate: true })
+onBeforeUnmount(() => clearInterval(timerId))
+
+function requestHint() {
+  if (current.value)
+    hint.value = ai.interviewHint(current.value.text, current.value.competency)
+}
 
 function submitAnswer() {
   if (!current.value)
@@ -42,6 +69,7 @@ function submitAnswer() {
 function nextQuestion() {
   currentAnswer.value = ''
   lastFeedback.value = ''
+  hint.value = ''
   if (isLast.value)
     finish()
   else currentIndex.value++
@@ -79,7 +107,10 @@ function finish() {
           <div class="text-caption text-medium-emphasis">المستوى: {{ LEVEL_META[interview.level].label }}</div>
         </div>
       </div>
-      <VChip color="primary" label prepend-icon="mdi-robot-happy-outline">مقابلة ذكية</VChip>
+      <div class="d-flex align-center ga-2">
+        <VChip :color="timeColor" label prepend-icon="mdi-timer-outline" variant="flat">{{ timeLabel }}</VChip>
+        <VChip color="primary" label prepend-icon="mdi-robot-happy-outline">مقابلة ذكية</VChip>
+      </div>
     </div>
 
     <!-- Video placeholder -->
@@ -112,6 +143,13 @@ function finish() {
         placeholder="اكتب إجابتك بتفصيل وأمثلة..."
       />
 
+      <!-- AI hint on request -->
+      <VExpandTransition>
+        <VAlert v-if="hint && !answered" type="info" variant="tonal" density="compact" class="mt-2" icon="mdi-lightbulb-on-outline">
+          {{ hint }}
+        </VAlert>
+      </VExpandTransition>
+
       <!-- Feedback -->
       <VExpandTransition>
         <VAlert v-if="answers[current?.id ?? -1]" type="success" variant="tonal" density="compact" class="mt-2">
@@ -123,7 +161,18 @@ function finish() {
       </VExpandTransition>
     </VCard>
 
-    <div class="d-flex justify-end ga-2">
+    <div class="d-flex justify-space-between align-center ga-2 flex-wrap">
+      <VBtn
+        v-if="!answered"
+        variant="text"
+        color="secondary"
+        prepend-icon="mdi-help-circle-outline"
+        :disabled="!!hint"
+        @click="requestHint"
+      >
+        اطلب توضيح
+      </VBtn>
+      <VSpacer />
       <VBtn
         v-if="!answers[current?.id ?? -1]"
         color="primary"
