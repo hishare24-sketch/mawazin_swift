@@ -81,6 +81,12 @@ export interface EvalElementSuggestion {
   price: number
 }
 
+// — Pre-interview attachments —
+export interface AttachmentsInsight {
+  summary: string // AI summary of the sent materials
+  tips: string[] // preparation focus tips for the interviewer
+}
+
 export interface SkillInsight {
   skill: string // weakest verified skill name
   confidence: number
@@ -152,4 +158,6 @@ export interface AiService {
   suggestReviewReply: (stars: number, comment: string) => string
   // — custom evaluation elements —
   suggestEvalElements: (type: string, specialties: string[]) => EvalElementSuggestion[]
+  // — pre-interview attachments —
+  attachmentsInsight: (items: { name: string, kind: 'file' | 'link', fileType?: string }[]) => AttachmentsInsight
 }

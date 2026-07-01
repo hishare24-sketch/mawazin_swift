@@ -10,6 +10,7 @@ import type {
   EvaluationReview,
   InterviewerEligibility,
   InterviewerRank,
+  AttachmentsInsight,
   EvalElementSuggestion,
   PricingSuggestion,
   RequestPerformance,
@@ -495,6 +496,31 @@ function suggestEvalElements(type: string, specialties: string[]): EvalElementSu
   return base.map((e, i) => (i === 0 && spec ? { ...e, description: `${e.description} — بتركيز على ${spec}` } : e))
 }
 
+// Summarize pre-interview materials and suggest what the interviewer should focus on
+function attachmentsInsight(items: { name: string, kind: 'file' | 'link', fileType?: string }[]): AttachmentsInsight {
+  if (!items.length)
+    return { summary: 'لم يُرسل المرشح أي مواد تحضيرية بعد.', tips: [] }
+  const files = items.filter(i => i.kind === 'file')
+  const links = items.filter(i => i.kind === 'link')
+  const hasCode = items.some(i => /github|gitlab|bitbucket|\.zip|\.js|\.ts|\.py/i.test(i.name + (i.fileType ?? '')))
+  const hasDesign = items.some(i => /behance|dribbble|figma|\.png|\.jpg|\.psd|image/i.test(i.name + (i.fileType ?? '')))
+  const hasPdf = items.some(i => /\.pdf|pdf/i.test(i.name + (i.fileType ?? '')))
+  const tips: string[] = []
+  if (hasCode)
+    tips.push('راجع الكود/المستودع قبل الجلسة وحضّر أسئلة عن قرارات التصميم وتحسين الأداء.')
+  if (hasDesign)
+    tips.push('اطّلع على الأعمال البصرية واسأل عن منهجية التصميم وقرارات تجربة المستخدم.')
+  if (hasPdf)
+    tips.push('اقرأ السيرة/المستندات لربط الأسئلة بخبرات المرشح الفعلية.')
+  if (!tips.length)
+    tips.push('اطّلع على المواد المرفقة لتخصيص أسئلة المقابلة.')
+  const parts = [files.length ? `${files.length} ملفًا` : '', links.length ? `${links.length} رابطًا` : ''].filter(Boolean)
+  return {
+    summary: `أرسل المرشح ${parts.join(' و')}${hasCode ? ' تتضمّن مشروعًا برمجيًا' : ''}. يُنصح بالاطّلاع عليها لرفع دقة التقييم.`,
+    tips,
+  }
+}
+
 export const mockAi: AiService = {
   skillLevel,
   trustAnalysis,
@@ -525,4 +551,5 @@ export const mockAi: AiService = {
   reviewsDigest,
   suggestReviewReply,
   suggestEvalElements,
+  attachmentsInsight,
 }

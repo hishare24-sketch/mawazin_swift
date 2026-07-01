@@ -55,6 +55,17 @@ describe('InterviewersStore', () => {
     expect(store.bookings[0].elements).toEqual(['التقييم المتقدم'])
   })
 
+  it('attaches pre-interview materials to a booking', () => {
+    const store = useInterviewersStore()
+    const iv = store.interviewers[0]
+    const id = store.book(iv, 'skills', 'الأحد · 18:00', 180)
+    store.addAttachment(id, { kind: 'link', name: 'مشروعي', url: 'https://github.com/x/y' })
+    store.addAttachment(id, { kind: 'file', name: 'cv.pdf', fileType: 'application/pdf', size: 1000 })
+    const b = store.bookings.find(x => x.id === id)
+    expect(b?.attachments?.length).toBe(2)
+    expect(b?.attachments?.[0].kind).toBe('link')
+  })
+
   it('accepts an agenda request and completes a session', () => {
     const store = useInterviewersStore()
     const req = store.agendaRequests[0]

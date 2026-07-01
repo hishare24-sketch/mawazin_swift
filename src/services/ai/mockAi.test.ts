@@ -26,6 +26,18 @@ describe('mockAi.suggestEvalElements', () => {
   })
 })
 
+describe('mockAi.attachmentsInsight', () => {
+  it('summarizes materials and tailors tips to their content', () => {
+    const insight = mockAi.attachmentsInsight([
+      { name: 'repo', kind: 'link', fileType: undefined },
+      { name: 'cv.pdf', kind: 'file', fileType: 'application/pdf' },
+    ])
+    expect(insight.summary.length).toBeGreaterThan(0)
+    expect(insight.tips.length).toBeGreaterThan(0)
+    expect(mockAi.attachmentsInsight([]).tips).toEqual([])
+  })
+})
+
 describe('mockAi.trustAnalysis', () => {
   it('suggests tips for weak factors', () => {
     const tips = mockAi.trustAnalysis([{ key: 'endorsements', label: 'التوصيات', value: 40 }])

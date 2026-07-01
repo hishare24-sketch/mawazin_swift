@@ -24,6 +24,16 @@ export interface CustomEvalElement {
   price: number // SAR, added on top of the base price
 }
 
+// Pre-interview material the candidate sends to the interviewer
+export interface Attachment {
+  id: number
+  kind: 'file' | 'link'
+  name: string
+  fileType?: string // mime/extension for files
+  size?: number // bytes
+  url?: string // for links
+}
+
 // Platform commission taken from each paid service (disclosed transparently)
 export const PLATFORM_COMMISSION = { min: 20, max: 30 } as const
 export const COMMISSION_NOTE = 'تتلقى المنصة نسبة تتراوح بين 20% إلى 30% من قيمة هذه الخدمة كعمولة لتغطية التكاليف التشغيلية والبنية التحتية والتسويق والدعم الفني.'
@@ -59,6 +69,7 @@ export interface Booking {
   report?: EvaluationReport
   ratingGiven?: number
   elements?: string[] // names of extra evaluation elements chosen
+  attachments?: Attachment[]
 }
 
 // Interviewer-side view: sessions the logged-in interviewer must conduct
@@ -73,6 +84,7 @@ export interface AgendaItem {
   status: 'requested' | 'scheduled' | 'completed'
   rating?: number
   report?: EvaluationReport
+  attachments?: Attachment[]
 }
 
 export const INTERVIEWER_TYPE_META: Record<InterviewerType, { label: string, icon: string, color: string }> = {
@@ -209,7 +221,14 @@ function loadMyElements(): CustomEvalElement[] {
 const AGENDA_SEED: AgendaItem[] = [
   { id: 1, candidateName: 'أحمد العلي', candidateInitial: 'أ', candidateField: 'تطوير الويب', kind: 'skills', datetime: 'الخميس 2026-07-02 · 20:00', price: 180, status: 'requested' },
   { id: 2, candidateName: 'سارة الزهراني', candidateInitial: 'س', candidateField: 'تطوير الويب', kind: 'level', datetime: 'الأحد 2026-07-05 · 18:00', price: 90, status: 'requested' },
-  { id: 3, candidateName: 'محمد القرني', candidateInitial: 'م', candidateField: 'البنية التحتية', kind: 'comprehensive', datetime: 'الثلاثاء 2026-06-30 · 19:00', price: 280, status: 'scheduled' },
+  {
+    id: 3, candidateName: 'محمد القرني', candidateInitial: 'م', candidateField: 'البنية التحتية', kind: 'comprehensive', datetime: 'الثلاثاء 2026-06-30 · 19:00', price: 280, status: 'scheduled',
+    attachments: [
+      { id: 1, kind: 'link', name: 'مشروع GitHub — منصة microservices', url: 'https://github.com/example/platform' },
+      { id: 2, kind: 'file', name: 'السيرة_الذاتية.pdf', fileType: 'application/pdf', size: 240000 },
+      { id: 3, kind: 'file', name: 'مخطط_المعمارية.png', fileType: 'image/png', size: 512000 },
+    ],
+  },
   {
     id: 4, candidateName: 'ليان الحربي', candidateInitial: 'ل', candidateField: 'تطوير الويب', kind: 'skills', datetime: '2026-06-22 · 17:00', price: 180, status: 'completed', rating: 5,
     report: {
@@ -309,6 +328,17 @@ export const useInterviewersStore = defineStore('interviewers', () => {
       b.ratingGiven = stars
   }
 
+  // Pre-interview attachments (candidate → interviewer)
+  let nextAttachmentId = 500
+  function addAttachment(bookingId: number, att: Omit<Attachment, 'id'>) {
+    const b = bookings.value.find(x => x.id === bookingId)
+    if (b) {
+      if (!b.attachments)
+        b.attachments = []
+      b.attachments.push({ ...att, id: nextAttachmentId++ })
+    }
+  }
+
   const completedReports = computed(() => bookings.value.filter(b => b.status === 'completed' && b.report))
 
   // Trust contribution from certified-interviewer reports (0-100)
@@ -362,7 +392,7 @@ export const useInterviewersStore = defineStore('interviewers', () => {
 
   return {
     interviewers, bookings, agenda, pricing, myEvalElements, fields,
-    getById, recommendedFor, matchFor, book, rateBooking,
+    getById, recommendedFor, matchFor, book, rateBooking, addAttachment,
     completedReports, trustValue,
     getAgendaItem, acceptRequest, declineRequest, completeSession, setPrice,
     addEvalElement, removeEvalElement,

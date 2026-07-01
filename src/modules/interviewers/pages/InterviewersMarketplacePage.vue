@@ -6,10 +6,21 @@ import { BOOKING_STATUS_META, INTERVIEWER_TYPE_META, KIND_META, useInterviewersS
 import type { InterviewerType } from '@/stores/InterviewersStore'
 import { useProfileStore } from '@/stores/ProfileStore'
 import EmptyState from '@/components/shared/EmptyState.vue'
+import AttachmentsDialog from '@/components/shared/AttachmentsDialog.vue'
 
 const router = useRouter()
 const store = useInterviewersStore()
 const profile = useProfileStore()
+
+// Pre-interview attachments dialog
+const attachDialog = ref(false)
+const attachBookingId = ref(0)
+const attachInterviewerName = ref('')
+function openAttachments(bookingId: number, interviewerName: string) {
+  attachBookingId.value = bookingId
+  attachInterviewerName.value = interviewerName
+  attachDialog.value = true
+}
 
 const candidate = computed(() => ({
   field: 'تطوير الويب',
@@ -179,6 +190,17 @@ function open(id: number) {
                   <VListItemSubtitle>{{ b.datetime }} · {{ b.price }} ريال</VListItemSubtitle>
                   <template #append>
                     <div class="d-flex align-center ga-2">
+                      <VBtn
+                        v-if="b.status !== 'completed' && b.status !== 'cancelled'"
+                        size="x-small"
+                        color="secondary"
+                        variant="tonal"
+                        prepend-icon="mdi-paperclip"
+                        @click="openAttachments(b.id, b.interviewerName)"
+                      >
+                        مرفقات
+                        <VChip v-if="b.attachments?.length" size="x-small" color="secondary" class="ms-1" label>{{ b.attachments.length }}</VChip>
+                      </VBtn>
                       <VChip v-if="b.report" color="success" size="small" label>{{ b.report.overall }}%</VChip>
                       <VChip :color="BOOKING_STATUS_META[b.status].color" size="small" label>{{ BOOKING_STATUS_META[b.status].label }}</VChip>
                     </div>
@@ -191,5 +213,7 @@ function open(id: number) {
         </div>
       </VCol>
     </VRow>
+
+    <AttachmentsDialog v-model="attachDialog" :booking-id="attachBookingId" :interviewer-name="attachInterviewerName" />
   </div>
 </template>

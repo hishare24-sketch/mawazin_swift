@@ -14,6 +14,22 @@ const notifications = useNotificationsStore()
 const item = computed(() => store.getAgendaItem(Number(route.params.id)))
 const questions = computed(() => (item.value ? ai.suggestEvaluationQuestions(item.value.kind) : []))
 
+// Candidate's pre-interview materials + AI insight
+const attachments = computed(() => item.value?.attachments ?? [])
+const attachInsight = computed(() => ai.attachmentsInsight(attachments.value.map(a => ({ name: a.name, kind: a.kind, fileType: a.fileType }))))
+function attIcon(a: { kind: string, fileType?: string, name: string }) {
+  if (a.kind === 'link')
+    return 'mdi-link-variant'
+  const t = `${a.fileType ?? ''}${a.name}`
+  if (/pdf/i.test(t))
+    return 'mdi-file-pdf-box'
+  if (/image|png|jpg|jpeg/i.test(t))
+    return 'mdi-file-image-outline'
+  if (/word|doc/i.test(t))
+    return 'mdi-file-word-outline'
+  return 'mdi-file-outline'
+}
+
 // Evaluation form
 const competencies = ref([
   { name: 'المعرفة التقنية', score: 70 },
@@ -89,6 +105,38 @@ function submitReport() {
         </div>
         <VChip color="error" label prepend-icon="mdi-record-circle"><span class="pulse">غرفة المقابلة</span></VChip>
       </div>
+    </VCard>
+
+    <!-- Candidate's pre-interview materials -->
+    <VCard v-if="attachments.length" class="pa-4 mb-4">
+      <div class="d-flex align-center ga-2 mb-3">
+        <VIcon icon="mdi-paperclip" color="secondary" />
+        <span class="text-subtitle-2 font-weight-bold">مواد تحضيرية من المرشح ({{ attachments.length }})</span>
+      </div>
+      <VRow dense class="mb-2">
+        <VCol v-for="a in attachments" :key="a.id" cols="12" sm="6">
+          <div class="att-row pa-2 d-flex align-center ga-2">
+            <VIcon :icon="attIcon(a)" color="secondary" />
+            <div class="flex-grow-1 text-truncate">
+              <div class="text-body-2 font-weight-bold text-truncate">{{ a.name }}</div>
+              <div class="text-caption text-medium-emphasis text-truncate">
+                <template v-if="a.kind === 'link'">{{ a.url }}</template>
+                <template v-else>{{ a.fileType }}</template>
+              </div>
+            </div>
+            <VBtn size="x-small" variant="text" color="primary" :href="a.url" target="_blank" :disabled="a.kind !== 'link'">
+              {{ a.kind === 'link' ? 'فتح' : 'معاينة' }}
+            </VBtn>
+          </div>
+        </VCol>
+      </VRow>
+      <VAlert color="secondary" variant="tonal" density="compact" border="start">
+        <div class="text-body-2 font-weight-bold mb-1"><VIcon icon="mdi-robot-happy-outline" size="18" /> تحليل الـ AI للمواد</div>
+        <div class="text-caption mb-2">{{ attachInsight.summary }}</div>
+        <ul class="text-caption ps-4 mb-0">
+          <li v-for="(tip, i) in attachInsight.tips" :key="i">{{ tip }}</li>
+        </ul>
+      </VAlert>
     </VCard>
 
     <VRow>
@@ -170,4 +218,8 @@ function submitReport() {
 <style scoped>
 .pulse { animation: pulse 1.2s ease-in-out infinite; }
 @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+.att-row {
+  border: 1px solid rgba(140, 163, 150, 0.2);
+  border-radius: var(--ui-radius);
+}
 </style>
