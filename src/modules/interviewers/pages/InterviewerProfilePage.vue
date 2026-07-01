@@ -5,6 +5,7 @@ import { INTERVIEWER_TYPE_META, KIND_META, useInterviewersStore } from '@/stores
 import type { MarketInterviewKind } from '@/stores/InterviewersStore'
 import { useProfileStore } from '@/stores/ProfileStore'
 import { useNotificationsStore } from '@/stores/NotificationsStore'
+import ReviewsPanel from '@/components/shared/ReviewsPanel.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -153,6 +154,17 @@ function confirmBooking() {
               </VCard>
             </VCol>
           </VRow>
+        </VCard>
+
+        <!-- Public reviews about this interviewer -->
+        <VCard class="pa-5 mt-4">
+          <h3 class="text-subtitle-1 font-weight-bold mb-3">التقييمات العلنية</h3>
+          <ReviewsPanel
+            direction="toInterviewer"
+            :subject-id="String(interviewer.id)"
+            :subject-name="interviewer.name"
+            can-add-review
+          />
         </VCard>
       </VCol>
 

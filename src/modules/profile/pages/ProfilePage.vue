@@ -8,6 +8,8 @@ import { useResumesStore } from '@/stores/ResumesStore'
 import { useTrustStore } from '@/stores/TrustStore'
 import { ai } from '@/services/ai'
 import TrustScoreCard from '@/components/shared/TrustScoreCard.vue'
+import ReviewsPanel from '@/components/shared/ReviewsPanel.vue'
+import { useReviewsStore } from '@/stores/ReviewsStore'
 import { LEVEL_META, TYPE_META, useInterviewsStore } from '@/stores/InterviewsStore'
 import { KIND_META, useInterviewersStore } from '@/stores/InterviewersStore'
 import type { Booking } from '@/stores/InterviewersStore'
@@ -16,6 +18,8 @@ const { t } = useI18n()
 const interviewsStore = useInterviewsStore()
 const interviewersStore = useInterviewersStore()
 const trust = useTrustStore()
+const reviewsStore = useReviewsStore()
+const reviewsCount = computed(() => reviewsStore.countFor('toCandidate', 'me'))
 
 // Certified-interviewer reports + digital certificate
 const certifiedReports = computed(() => interviewersStore.completedReports)
@@ -279,6 +283,10 @@ const heroStats = computed(() => [
       <VTab value="endorsements" prepend-icon="mdi-account-star-outline">التوصيات</VTab>
       <VTab value="resumes" prepend-icon="mdi-file-account-outline">السير الذاتية</VTab>
       <VTab value="interviews" prepend-icon="mdi-account-tie-voice-outline">المقابلات</VTab>
+      <VTab value="reviews" prepend-icon="mdi-star-outline">
+        التقييمات
+        <VChip v-if="reviewsCount" size="x-small" color="amber" class="ms-1" label>{{ reviewsCount }}</VChip>
+      </VTab>
       <VTab value="privacy" prepend-icon="mdi-shield-lock-outline">الخصوصية</VTab>
     </VTabs>
 
@@ -495,6 +503,18 @@ const heroStats = computed(() => [
               </div>
             </VCard>
           </template>
+        </VCard>
+      </VWindowItem>
+
+      <!-- Reviews (about the candidate) -->
+      <VWindowItem value="reviews">
+        <VCard class="pa-5">
+          <div class="d-flex align-center ga-2 mb-1">
+            <VIcon icon="mdi-star-check-outline" color="amber" />
+            <h3 class="text-subtitle-1 font-weight-bold">تقييمات المقيّمين عنك</h3>
+          </div>
+          <p class="text-caption text-medium-emphasis mb-4">تقييمات علنية موثّقة من المقيّمين المعتمدين — يمكنك الرد مرة واحدة على كل تقييم.</p>
+          <ReviewsPanel direction="toCandidate" subject-id="me" subject-name="أنت" can-reply />
         </VCard>
       </VWindowItem>
 

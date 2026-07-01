@@ -12,6 +12,7 @@ import type {
   InterviewerRank,
   PricingSuggestion,
   RequestPerformance,
+  ReviewsDigest,
   SkillInsight,
   SkillLevelResult,
   TrustTip,
@@ -426,6 +427,46 @@ function reviewEvaluationReport(draft: { strengths: string, improvements: string
   }
 }
 
+// Extract the most-frequent traits from a set of review comments + summarize.
+const TRAIT_LEXICON: { word: RegExp, label: string }[] = [
+  { word: /احترافي|احتراف/, label: 'احترافي' },
+  { word: /دقيق|دقة/, label: 'دقيق' },
+  { word: /واضح|وضوح|شرح/, label: 'واضح' },
+  { word: /صبور|صبر/, label: 'صبور' },
+  { word: /عملي|تطبيقي/, label: 'عملي' },
+  { word: /عميق|عمق|معمّق/, label: 'تحليل عميق' },
+  { word: /استراتيج/, label: 'استراتيجي' },
+  { word: /منظّم|منظم|ترتيب/, label: 'منظّم' },
+  { word: /متعاون|تعاون/, label: 'متعاون' },
+  { word: /ملاحظات|تغذية راجعة|توصيات/, label: 'ملاحظات مفيدة' },
+]
+function reviewsDigest(comments: string[]): ReviewsDigest {
+  if (!comments.length)
+    return { summary: 'لا توجد تقييمات بعد لتحليلها.', traits: [] }
+  const counts = new Map<string, number>()
+  for (const c of comments) {
+    for (const t of TRAIT_LEXICON) {
+      if (t.word.test(c))
+        counts.set(t.label, (counts.get(t.label) ?? 0) + 1)
+    }
+  }
+  const traits = [...counts.entries()].sort((a, b) => b[1] - a[1]).slice(0, 5).map(e => e[0])
+  const top = traits.slice(0, 2)
+  const summary = top.length
+    ? `تُجمع التقييمات على أنّ الأبرز: ${top.join(' و')} — انطباع إيجابي متكرر عبر ${comments.length} تقييمًا.`
+    : `${comments.length} تقييمًا تعكس تجربة إيجابية بملاحظات متنوّعة.`
+  return { summary, traits }
+}
+
+function suggestReviewReply(stars: number, comment: string): string {
+  const snippet = comment.trim().slice(0, 24)
+  if (stars >= 4)
+    return `شكرًا جزيلًا على كلماتك اللطيفة${snippet ? ` بخصوص «${snippet}…»` : ''}. سعدتُ بالتجربة وأتمنى لك كل التوفيق في مسارك المهني!`
+  if (stars === 3)
+    return 'أقدّر تقييمك الصادق وملاحظاتك. سآخذها بعين الاعتبار لتطوير التجربة مستقبلًا، وأشكرك على وقتك.'
+  return 'أشكرك على صراحتك، وأعتذر إن لم ترقَ التجربة لتوقعاتك. ملاحظاتك مهمة وسأعمل على تحسينها — يسعدني التواصل لأي توضيح.'
+}
+
 export const mockAi: AiService = {
   skillLevel,
   trustAnalysis,
@@ -453,4 +494,6 @@ export const mockAi: AiService = {
   recommendInterviewers,
   suggestEvaluationQuestions,
   reviewEvaluationReport,
+  reviewsDigest,
+  suggestReviewReply,
 }

@@ -61,6 +61,12 @@ export const routes: RouteRecordRaw[] = [
     meta: { layout: 'default' },
   },
   {
+    path: '/reviews',
+    name: 'reviews',
+    component: () => import('@/modules/reviews/pages/ReviewsPage.vue'),
+    meta: { layout: 'default' },
+  },
+  {
     path: '/opportunities',
     name: 'opportunities',
     component: () => import('@/modules/opportunities/pages/OpportunitiesPage.vue'),

@@ -25,16 +25,16 @@ export const navItems: NavItem[] = [
   { title: 'analytics', icon: 'mdi-chart-box-outline', to: 'interviewer-analytics', roles: ['interviewer'] },
   { title: 'assistant', icon: 'mdi-robot-happy-outline', to: 'assistant', roles: ['interviewer'] },
 
-  // Seeker
+  // Seeker — ordered by usage priority (doc §1), keeping existing extras
   { title: 'profile', icon: 'mdi-account-circle-outline', to: 'profile', roles: ['seeker'] },
-  { title: 'opportunities', icon: 'mdi-briefcase-search-outline', to: 'opportunities', roles: ['seeker'] },
   { title: 'requests', icon: 'mdi-storefront-outline', to: 'requests', roles: ['seeker'] },
+  { title: 'opportunities', icon: 'mdi-briefcase-search-outline', to: 'opportunities', roles: ['seeker'] },
+  { title: 'interviews', icon: 'mdi-account-tie-voice-outline', to: 'interviews', roles: ['seeker'] },
+  { title: 'assessments', icon: 'mdi-clipboard-check-outline', to: 'assessments', roles: ['seeker'] },
+  { title: 'resumeBuilder', icon: 'mdi-file-account-outline', to: 'resume-builder', roles: ['seeker'] },
+  { title: 'interviewers', icon: 'mdi-account-supervisor-circle-outline', to: 'interviewers', roles: ['seeker'] },
   { title: 'applications', icon: 'mdi-file-send-outline', to: 'applications', roles: ['seeker'] },
   { title: 'wishes', icon: 'mdi-hand-heart-outline', to: 'wishes', roles: ['seeker'] },
-  { title: 'assessments', icon: 'mdi-clipboard-check-outline', to: 'assessments', roles: ['seeker'] },
-  { title: 'interviews', icon: 'mdi-account-tie-voice-outline', to: 'interviews', roles: ['seeker'] },
-  { title: 'interviewers', icon: 'mdi-account-supervisor-circle-outline', to: 'interviewers', roles: ['seeker'] },
-  { title: 'resumeBuilder', icon: 'mdi-file-account-outline', to: 'resume-builder', roles: ['seeker'] },
   { title: 'assistant', icon: 'mdi-robot-happy-outline', to: 'assistant', roles: ['seeker', 'company'] },
 
   // Company

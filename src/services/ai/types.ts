@@ -68,6 +68,12 @@ export interface EvaluationReview {
   suggestions: string[]
 }
 
+// — Public reviews (dual rating) —
+export interface ReviewsDigest {
+  summary: string // one-line AI summary of the review body
+  traits: string[] // most-frequent traits/keywords extracted from comments
+}
+
 export interface SkillInsight {
   skill: string // weakest verified skill name
   confidence: number
@@ -134,4 +140,7 @@ export interface AiService {
   recommendInterviewers: (candidate: { field: string, skills: string[] }, interviewers: { id: number, type: string, specialties: string[] }[]) => InterviewerRank[]
   suggestEvaluationQuestions: (kind: string) => string[]
   reviewEvaluationReport: (draft: { strengths: string, improvements: string, level: string }) => EvaluationReview
+  // — public reviews (dual rating) —
+  reviewsDigest: (comments: string[]) => ReviewsDigest
+  suggestReviewReply: (stars: number, comment: string) => string
 }
