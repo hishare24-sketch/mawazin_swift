@@ -168,7 +168,7 @@ function exportResume(name: string, format: string) {
   toast(`جارٍ تصدير «${name}» بصيغة ${format}...`)
 }
 function shareResume(id: number) {
-  const url = `${window.location.origin}/resume/${id}`
+  const url = `${window.location.origin}${import.meta.env.BASE_URL}resume/${id}`
   navigator.clipboard?.writeText(url)
   toast('تم نسخ رابط مشاركة السيرة.')
 }

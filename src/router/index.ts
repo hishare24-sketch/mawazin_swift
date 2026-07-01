@@ -32,4 +32,20 @@ router.beforeEach((to) => {
   return true
 })
 
+// After a new deploy, a mid-session user's cached page may point at lazy-loaded
+// route chunks that no longer exist. Detect that failure and reload once to pull
+// the fresh index + chunks (guarded so it can never loop).
+router.onError((err) => {
+  const msg = String(err?.message ?? '')
+  const isChunkError = /dynamically imported module|Importing a module script failed|Failed to fetch|error loading dynamically imported/i.test(msg)
+  if (isChunkError && !sessionStorage.getItem('chunk-reloaded')) {
+    sessionStorage.setItem('chunk-reloaded', '1')
+    window.location.reload()
+  }
+})
+router.afterEach(() => {
+  // A successful navigation means chunks loaded fine — clear the guard.
+  sessionStorage.removeItem('chunk-reloaded')
+})
+
 export default router

@@ -128,7 +128,7 @@ function exportResume(format: string) {
 
 // — Sharing: public link, private (password) link, QR —
 const resumeSlug = computed(() => encodeURIComponent(currentName()))
-const publicLink = computed(() => `${window.location.origin}/resume/${resumeSlug.value}`)
+const publicLink = computed(() => `${window.location.origin}${import.meta.env.BASE_URL}resume/${resumeSlug.value}`)
 const privateDialog = ref(false)
 const privatePassword = ref('')
 const qrDialog = ref(false)
