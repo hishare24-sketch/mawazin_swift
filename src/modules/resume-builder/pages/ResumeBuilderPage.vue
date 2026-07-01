@@ -56,8 +56,74 @@ const toastMsg = ref('')
 function currentName() {
   return resumeName.value.trim() || `سيرة ${templateName.value}`
 }
+
+// — Real client-side export —
+const PNG_PROPS = ['color', 'background-color', 'background-image', 'font-size', 'font-weight', 'font-family', 'font-style', 'line-height', 'letter-spacing', 'text-align', 'text-transform', 'text-decoration', 'padding-top', 'padding-right', 'padding-bottom', 'padding-left', 'margin-top', 'margin-right', 'margin-bottom', 'margin-left', 'border', 'border-bottom', 'border-radius', 'display', 'flex-wrap', 'flex-direction', 'align-items', 'justify-content', 'gap', 'width', 'height', 'opacity', 'box-sizing', 'direction']
+function inlineStyles(src: Element, dest: HTMLElement) {
+  const cs = getComputedStyle(src)
+  for (const p of PNG_PROPS)
+    dest.style.setProperty(p, cs.getPropertyValue(p))
+  const s = src.children
+  const d = dest.children
+  for (let i = 0; i < s.length; i++)
+    inlineStyles(s[i], d[i] as HTMLElement)
+}
+function printResume() {
+  toastMsg.value = 'يفتح مربع الطباعة — اختر «حفظ كـ PDF».'
+  setTimeout(() => window.print(), 300)
+}
+async function exportPng() {
+  const node = document.querySelector('.resume-print-target') as HTMLElement | null
+  if (!node)
+    return
+  try {
+    const w = node.offsetWidth
+    const h = node.scrollHeight
+    const clone = node.cloneNode(true) as HTMLElement
+    inlineStyles(node, clone)
+    clone.style.maxHeight = 'none'
+    clone.style.margin = '0'
+    const xml = new XMLSerializer().serializeToString(clone)
+    const svg = `<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}"><foreignObject x="0" y="0" width="100%" height="100%">${xml}</foreignObject></svg>`
+    const img = new Image()
+    await new Promise((res, rej) => {
+      img.onload = res
+      img.onerror = rej
+      img.src = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`
+    })
+    const scale = 2
+    const canvas = document.createElement('canvas')
+    canvas.width = w * scale
+    canvas.height = h * scale
+    const ctx = canvas.getContext('2d')!
+    ctx.scale(scale, scale)
+    ctx.fillStyle = '#ffffff'
+    ctx.fillRect(0, 0, w, h)
+    ctx.drawImage(img, 0, 0)
+    canvas.toBlob((blob) => {
+      if (!blob) {
+        toastMsg.value = 'تعذّر توليد الصورة — جرّب تصدير PDF.'
+        return
+      }
+      const a = document.createElement('a')
+      a.href = URL.createObjectURL(blob)
+      a.download = `${currentName()}.png`
+      a.click()
+      URL.revokeObjectURL(a.href)
+      toastMsg.value = 'تم تنزيل صورة السيرة (PNG).'
+    })
+  }
+  catch {
+    toastMsg.value = 'تعذّر توليد الصورة — جرّب تصدير PDF.'
+  }
+}
 function exportResume(format: string) {
-  toastMsg.value = `جارٍ تصدير «${currentName()}» بصيغة ${format}...`
+  if (format.includes('PDF'))
+    printResume()
+  else if (format === 'PNG')
+    exportPng()
+  else
+    toastMsg.value = `تصدير ${format} سيتوفّر قريبًا — استخدم PDF أو PNG الآن.`
 }
 
 // — Sharing: public link, private (password) link, QR —
@@ -419,7 +485,7 @@ const previewHobbies = ['القراءة التقنية', 'التصوير', 'ال
             <span class="text-caption text-medium-emphasis">تتحدّث فورًا</span>
           </div>
 
-          <div class="resume-preview" :style="{ '--rp-accent': accentColor, fontSize: fontPx }" :dir="isRtl ? 'rtl' : 'ltr'">
+          <div class="resume-preview resume-print-target" :style="{ '--rp-accent': accentColor, fontSize: fontPx }" :dir="isRtl ? 'rtl' : 'ltr'">
             <!-- Header -->
             <div class="rp-header" :class="headerMod">
               <div class="d-flex align-center ga-3" :class="{ 'justify-center': selectedTemplate === 'academic' }">

@@ -144,6 +144,29 @@ body {
   outline-offset: 2px;
 }
 
+// ── Print: isolate the resume so "Save as PDF" produces a clean document ──
+@media print {
+  body * {
+    visibility: hidden;
+  }
+  .resume-print-target,
+  .resume-print-target * {
+    visibility: visible;
+  }
+  .resume-print-target {
+    position: absolute;
+    inset-inline-start: 0;
+    top: 0;
+    width: 100%;
+    max-height: none !important;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+  }
+  @page {
+    margin: 12mm;
+  }
+}
+
 // Respect users who prefer reduced motion — kill transforms/animations
 @media (prefers-reduced-motion: reduce) {
   *,
