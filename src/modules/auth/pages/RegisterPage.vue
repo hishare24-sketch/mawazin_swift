@@ -49,7 +49,11 @@ async function submit() {
       role: role.value,
     })
     authStore.setAuthUser(user)
-    router.push({ name: 'dashboard' })
+    // New seekers see the onboarding wizard; others go to their dashboard
+    if (user.role === 'seeker')
+      router.push({ name: 'onboarding' })
+    else
+      router.push({ name: 'dashboard' })
   }
   catch {
     error.value = 'تعذّر إنشاء الحساب. حاول مرة أخرى.'

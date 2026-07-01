@@ -15,6 +15,32 @@ export const routes: RouteRecordRaw[] = [
     meta: { layout: 'forms', public: true },
   },
 
+  // ===== Public explore (visitors) =====
+  {
+    path: '/explore/opportunities',
+    name: 'explore-opportunities',
+    component: () => import('@/modules/public/pages/PublicOpportunitiesPage.vue'),
+    meta: { layout: 'blank', public: true },
+  },
+  {
+    path: '/explore/assistant',
+    name: 'explore-assistant',
+    component: () => import('@/modules/public/pages/PublicAssistantPage.vue'),
+    meta: { layout: 'blank', public: true },
+  },
+  {
+    path: '/resume/:token',
+    name: 'public-resume',
+    component: () => import('@/modules/public/pages/PublicResumePage.vue'),
+    meta: { layout: 'blank', public: true },
+  },
+  {
+    path: '/survey/:token',
+    name: 'survey-answer',
+    component: () => import('@/modules/surveys/pages/SurveyAnswerPage.vue'),
+    meta: { layout: 'blank', public: true },
+  },
+
   // ===== Public landing =====
   {
     path: '/',
@@ -57,6 +83,42 @@ export const routes: RouteRecordRaw[] = [
     name: 'assessments',
     component: () => import('@/modules/assessments/pages/AssessmentsPage.vue'),
     meta: { layout: 'default' },
+  },
+  {
+    path: '/assessments/:id/take',
+    name: 'assessment-take',
+    component: () => import('@/modules/assessments/pages/TakeAssessmentPage.vue'),
+    meta: { layout: 'default' },
+  },
+  {
+    path: '/assessments/:id/result',
+    name: 'assessment-result',
+    component: () => import('@/modules/assessments/pages/AssessmentResultPage.vue'),
+    meta: { layout: 'default' },
+  },
+  {
+    path: '/messages',
+    name: 'messages',
+    component: () => import('@/modules/messages/pages/MessagesPage.vue'),
+    meta: { layout: 'default' },
+  },
+  {
+    path: '/notifications',
+    name: 'notifications',
+    component: () => import('@/modules/notifications/pages/NotificationsPage.vue'),
+    meta: { layout: 'default' },
+  },
+  {
+    path: '/settings',
+    name: 'settings',
+    component: () => import('@/modules/settings/pages/SettingsPage.vue'),
+    meta: { layout: 'default' },
+  },
+  {
+    path: '/onboarding',
+    name: 'onboarding',
+    component: () => import('@/modules/onboarding/pages/OnboardingPage.vue'),
+    meta: { layout: 'blank' },
   },
   {
     path: '/resume-builder',
@@ -110,6 +172,12 @@ export const routes: RouteRecordRaw[] = [
     path: '/surveys',
     name: 'surveys',
     component: () => import('@/modules/surveys/pages/SurveysPage.vue'),
+    meta: { layout: 'default' },
+  },
+  {
+    path: '/surveys/:id/analysis',
+    name: 'survey-analysis',
+    component: () => import('@/modules/surveys/pages/SurveyAnalysisPage.vue'),
     meta: { layout: 'default' },
   },
 

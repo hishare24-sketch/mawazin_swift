@@ -75,7 +75,7 @@ const endorsements = [
 
           <VBtn color="accent" block class="mb-2" prepend-icon="mdi-hand-heart-outline">إبداء رغبة</VBtn>
           <VBtn color="primary" variant="tonal" block class="mb-2" prepend-icon="mdi-calendar-clock-outline">جدولة مقابلة</VBtn>
-          <VBtn color="secondary" variant="outlined" block class="mb-2" prepend-icon="mdi-message-outline">إرسال رسالة</VBtn>
+          <VBtn color="secondary" variant="outlined" block class="mb-2" prepend-icon="mdi-message-outline" :to="{ name: 'messages' }">إرسال رسالة</VBtn>
           <VBtn color="error" variant="text" block prepend-icon="mdi-close">رفض الترشيح</VBtn>
         </VCard>
 

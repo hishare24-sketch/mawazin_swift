@@ -1,17 +1,17 @@
 <script setup lang="ts">
+import { useRouter } from 'vue-router'
 import PageHeader from '@/components/shared/PageHeader.vue'
+import { availableAssessments, completedAssessments } from '../services/mockAssessments'
 
-const available = [
-  { name: 'أساسيات JavaScript', type: 'مهاري', duration: '20 دقيقة', questions: 25, icon: 'mdi-language-javascript', color: 'warning' },
-  { name: 'تحليل الشخصية المهنية', type: 'شخصي', duration: '15 دقيقة', questions: 40, icon: 'mdi-head-cog-outline', color: 'secondary' },
-  { name: 'لعبة المنطق والذكاء', type: 'لعبة', duration: '10 دقائق', questions: 12, icon: 'mdi-puzzle-outline', color: 'accent' },
-  { name: 'مهارات Vue.js المتقدمة', type: 'مهاري', duration: '30 دقيقة', questions: 30, icon: 'mdi-vuejs', color: 'success' },
-]
+const router = useRouter()
 
-const completed = [
-  { name: 'أساسيات HTML & CSS', date: '2026-06-12', score: 92, level: 'متقدم' },
-  { name: 'مهارات التواصل', date: '2026-05-28', score: 78, level: 'متوسط' },
-]
+function startTest(id: number) {
+  router.push({ name: 'assessment-take', params: { id } })
+}
+
+function viewResult(id: number, score: number, name: string) {
+  router.push({ name: 'assessment-result', params: { id }, query: { score, name } })
+}
 </script>
 
 <template>
@@ -24,7 +24,7 @@ const completed = [
 
     <h3 class="text-h6 font-weight-bold mb-3">الاختبارات المتاحة</h3>
     <VRow class="mb-4">
-      <VCol v-for="test in available" :key="test.name" cols="12" sm="6" lg="3">
+      <VCol v-for="test in availableAssessments" :key="test.id" cols="12" sm="6" lg="3">
         <VCard class="pa-4 text-center" height="100%">
           <VAvatar :color="test.color" variant="tonal" size="56" rounded="lg" class="mb-3">
             <VIcon :icon="test.icon" size="30" />
@@ -33,9 +33,9 @@ const completed = [
           <VChip size="x-small" label class="my-2">{{ test.type }}</VChip>
           <div class="text-caption text-medium-emphasis mb-3">
             <VIcon icon="mdi-clock-outline" size="14" /> {{ test.duration }} ·
-            {{ test.questions }} سؤال
+            {{ test.questionsCount }} أسئلة
           </div>
-          <VBtn color="accent" size="small" block>ابدأ الاختبار</VBtn>
+          <VBtn color="accent" size="small" block @click="startTest(test.id)">ابدأ الاختبار</VBtn>
         </VCard>
       </VCol>
     </VRow>
@@ -43,7 +43,7 @@ const completed = [
     <h3 class="text-h6 font-weight-bold mb-3">الاختبارات المنجزة</h3>
     <VCard>
       <VList lines="two">
-        <template v-for="(test, i) in completed" :key="test.name">
+        <template v-for="(test, i) in completedAssessments" :key="test.id">
           <VListItem>
             <template #prepend>
               <VAvatar :color="test.score >= 85 ? 'success' : 'warning'" variant="tonal" rounded="lg">
@@ -53,10 +53,12 @@ const completed = [
             <VListItemTitle class="font-weight-bold">{{ test.name }}</VListItemTitle>
             <VListItemSubtitle>{{ test.date }} · المستوى: {{ test.level }}</VListItemSubtitle>
             <template #append>
-              <VBtn variant="tonal" color="primary" size="small">عرض التحليل</VBtn>
+              <VBtn variant="tonal" color="primary" size="small" @click="viewResult(test.id, test.score, test.name)">
+                عرض التحليل
+              </VBtn>
             </template>
           </VListItem>
-          <VDivider v-if="i < completed.length - 1" />
+          <VDivider v-if="i < completedAssessments.length - 1" />
         </template>
       </VList>
     </VCard>

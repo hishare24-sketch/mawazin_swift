@@ -11,6 +11,14 @@ const opportunity = computed(() => getOpportunityById(Number(route.params.id)))
 const similar = computed(() => mockOpportunities.filter(o => o.id !== Number(route.params.id)).slice(0, 3))
 
 const applied = ref(false)
+const applyDialog = ref(false)
+const selectedResume = ref<number | null>(1)
+
+// User's resumes to choose from when applying
+const resumes = [
+  { id: 1, name: 'سيرة تقنية - حديث', template: 'حديث', lang: 'عربي' },
+  { id: 2, name: 'Technical CV - Modern', template: 'Modern', lang: 'English' },
+]
 
 // Match breakdown (mock detailed analysis)
 const matchBreakdown = [
@@ -20,8 +28,17 @@ const matchBreakdown = [
   { label: 'الموقع', value: 100 },
 ]
 
-function apply() {
+function openApply() {
+  applyDialog.value = true
+}
+
+function confirmApply() {
   applied.value = true
+  applyDialog.value = false
+}
+
+function askAboutOpportunity() {
+  router.push({ name: 'messages' })
 }
 </script>
 
@@ -133,11 +150,11 @@ function apply() {
             block
             :disabled="applied"
             :prepend-icon="applied ? 'mdi-check' : 'mdi-send'"
-            @click="apply"
+            @click="openApply"
           >
             {{ applied ? 'تم التقديم' : 'تقدّم الآن' }}
           </VBtn>
-          <VBtn variant="outlined" color="primary" block class="mt-2" prepend-icon="mdi-message-outline">
+          <VBtn variant="outlined" color="primary" block class="mt-2" prepend-icon="mdi-message-outline" @click="askAboutOpportunity">
             سؤال عن الفرصة
           </VBtn>
         </VCard>
@@ -160,6 +177,40 @@ function apply() {
         </VCard>
       </VCol>
     </VRow>
+
+    <!-- Apply with resume dialog -->
+    <VDialog v-model="applyDialog" max-width="520">
+      <VCard class="pa-2">
+        <VCardTitle class="d-flex justify-space-between align-center">
+          <span>التقديم بسيرة ذاتية</span>
+          <VBtn icon="mdi-close" variant="text" size="small" @click="applyDialog = false" />
+        </VCardTitle>
+        <VCardText>
+          <p class="text-body-2 text-medium-emphasis mb-3">اختر السيرة الذاتية التي تريد التقديم بها:</p>
+          <VCard
+            v-for="r in resumes"
+            :key="r.id"
+            :variant="selectedResume === r.id ? 'flat' : 'outlined'"
+            :color="selectedResume === r.id ? 'primary' : undefined"
+            class="pa-3 mb-2 cursor-pointer d-flex align-center ga-3"
+            @click="selectedResume = r.id"
+          >
+            <VIcon :icon="selectedResume === r.id ? 'mdi-radiobox-marked' : 'mdi-radiobox-blank'" :color="selectedResume === r.id ? 'white' : undefined" />
+            <div>
+              <div class="text-body-2 font-weight-bold" :class="selectedResume === r.id ? 'text-white' : ''">{{ r.name }}</div>
+              <div class="text-caption" :class="selectedResume === r.id ? 'text-white' : 'text-medium-emphasis'">{{ r.template }} · {{ r.lang }}</div>
+            </div>
+          </VCard>
+          <VBtn variant="tonal" color="secondary" block class="mt-2" prepend-icon="mdi-plus" :to="{ name: 'resume-builder' }">
+            إنشاء سيرة جديدة لهذه الفرصة
+          </VBtn>
+        </VCardText>
+        <VCardActions class="justify-end">
+          <VBtn variant="text" @click="applyDialog = false">إلغاء</VBtn>
+          <VBtn color="accent" prepend-icon="mdi-send" @click="confirmApply">تأكيد التقديم</VBtn>
+        </VCardActions>
+      </VCard>
+    </VDialog>
   </div>
 
   <VCard v-else class="pa-12 text-center">

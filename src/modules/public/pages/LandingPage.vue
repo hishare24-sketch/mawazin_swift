@@ -33,6 +33,7 @@ const stats = [
         <span class="text-h6 font-weight-bold d-none d-sm-block">{{ t('app.name') }}</span>
       </div>
       <VSpacer />
+      <VBtn variant="text" class="d-none d-sm-inline-flex" @click="router.push({ name: 'explore-opportunities' })">استكشف الفرص</VBtn>
       <VBtn variant="text" @click="router.push({ name: 'login' })">{{ t('auth.login') }}</VBtn>
       <VBtn color="accent" class="ms-2" @click="router.push({ name: 'register' })">{{ t('auth.register') }}</VBtn>
     </VAppBar>
@@ -52,8 +53,8 @@ const stats = [
               <VBtn color="accent" size="x-large" prepend-icon="mdi-rocket-launch-outline" @click="router.push({ name: 'register' })">
                 ابدأ الآن مجاناً
               </VBtn>
-              <VBtn variant="outlined" color="white" size="x-large" @click="router.push({ name: 'login' })">
-                لديّ حساب
+              <VBtn variant="outlined" color="white" size="x-large" @click="router.push({ name: 'explore-opportunities' })">
+                استكشف الفرص
               </VBtn>
             </div>
           </VCol>

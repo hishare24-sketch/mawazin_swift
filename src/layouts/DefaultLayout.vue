@@ -94,8 +94,13 @@ const initials = computed(() => {
       <VIcon :icon="isDark ? 'mdi-weather-sunny' : 'mdi-weather-night'" />
     </VBtn>
 
+    <!-- Messages -->
+    <VBtn icon variant="text" :to="{ name: 'messages' }">
+      <VIcon icon="mdi-message-outline" />
+    </VBtn>
+
     <!-- Notifications -->
-    <VBtn icon variant="text">
+    <VBtn icon variant="text" :to="{ name: 'notifications' }">
       <VBadge color="error" dot>
         <VIcon icon="mdi-bell-outline" />
       </VBadge>
@@ -120,7 +125,7 @@ const initials = computed(() => {
       </template>
       <VList density="compact" min-width="200">
         <VListItem :title="t('common.profile')" prepend-icon="mdi-account-outline" :to="{ name: 'profile' }" />
-        <VListItem :title="t('common.settings')" prepend-icon="mdi-cog-outline" />
+        <VListItem :title="t('common.settings')" prepend-icon="mdi-cog-outline" :to="{ name: 'settings' }" />
         <VDivider />
         <VListItem :title="t('common.logout')" prepend-icon="mdi-logout" base-color="error" @click="logout" />
       </VList>

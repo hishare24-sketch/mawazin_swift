@@ -1,6 +1,9 @@
 <script setup lang="ts">
 import { ref } from 'vue'
+import { useRouter } from 'vue-router'
 import PageHeader from '@/components/shared/PageHeader.vue'
+
+const router = useRouter()
 
 const surveyTypes = [
   { id: 1, name: 'تقييم وظيفي', desc: 'تقييم أداء المرشح من مديره السابق', icon: 'mdi-star-check-outline', color: 'primary' },
@@ -73,7 +76,12 @@ function createSurvey(name: string) {
             </td>
             <td>{{ s.avgTime }}</td>
             <td>
-              <VBtn variant="text" size="small" color="primary" prepend-icon="mdi-chart-box-outline">التحليل</VBtn>
+              <VBtn variant="text" size="small" color="primary" prepend-icon="mdi-chart-box-outline" @click="router.push({ name: 'survey-analysis', params: { id: 1 } })">
+                التحليل
+              </VBtn>
+              <VBtn variant="text" size="small" prepend-icon="mdi-eye-outline" @click="router.push({ name: 'survey-answer', params: { token: 'demo' } })">
+                معاينة
+              </VBtn>
             </td>
           </tr>
         </tbody>
