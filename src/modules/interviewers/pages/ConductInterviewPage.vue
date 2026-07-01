@@ -3,11 +3,13 @@ import { computed, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { KIND_META, useInterviewersStore } from '@/stores/InterviewersStore'
 import type { EvaluationReport } from '@/stores/InterviewersStore'
+import { useNotificationsStore } from '@/stores/NotificationsStore'
 import { ai } from '@/services/ai'
 
 const route = useRoute()
 const router = useRouter()
 const store = useInterviewersStore()
+const notifications = useNotificationsStore()
 
 const item = computed(() => store.getAgendaItem(Number(route.params.id)))
 const questions = computed(() => (item.value ? ai.suggestEvaluationQuestions(item.value.kind) : []))
@@ -61,6 +63,13 @@ function submitReport() {
     trustGain: trustGain.value,
   }
   store.completeSession(item.value.id, report)
+  notifications.push({
+    icon: 'mdi-file-check-outline',
+    color: 'success',
+    title: 'اعتُمد تقرير مقابلة',
+    body: `أضفت تقرير ${item.value.candidateName} (${report.overall}%) لملفه ورفعت ثقته +${report.trustGain}%`,
+    category: 'interview',
+  })
   submittedSnackbar.value = true
   setTimeout(() => router.push({ name: 'interviewer-dashboard' }), 1200)
 }

@@ -1,7 +1,7 @@
 import { defineStore } from 'pinia'
 import { computed, ref, watch } from 'vue'
 
-export type NotificationCategory = 'opportunity' | 'wish' | 'endorsement' | 'message' | 'system'
+export type NotificationCategory = 'opportunity' | 'wish' | 'endorsement' | 'message' | 'system' | 'interview'
 
 export interface AppNotification {
   id: number
@@ -45,6 +45,20 @@ export const useNotificationsStore = defineStore('notifications', () => {
 
   const unreadCount = computed(() => notifications.value.filter(n => !n.read).length)
 
+  let nextId = 1000
+  function push(n: Omit<AppNotification, 'id' | 'read' | 'time'> & { time?: string }) {
+    notifications.value.unshift({
+      id: nextId++,
+      read: false,
+      time: n.time ?? 'الآن',
+      icon: n.icon,
+      color: n.color,
+      title: n.title,
+      body: n.body,
+      category: n.category,
+    })
+  }
+
   function markAllRead() {
     notifications.value.forEach(n => (n.read = true))
   }
@@ -59,5 +73,5 @@ export const useNotificationsStore = defineStore('notifications', () => {
       n.read = true
   }
 
-  return { notifications, unreadCount, markAllRead, toggleRead, markRead }
+  return { notifications, unreadCount, push, markAllRead, toggleRead, markRead }
 })

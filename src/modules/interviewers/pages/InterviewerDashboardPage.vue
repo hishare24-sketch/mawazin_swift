@@ -4,10 +4,23 @@ import { useRouter } from 'vue-router'
 import PageHeader from '@/components/shared/PageHeader.vue'
 import StatCard from '@/components/shared/StatCard.vue'
 import { KIND_META, useInterviewersStore } from '@/stores/InterviewersStore'
-import type { MarketInterviewKind } from '@/stores/InterviewersStore'
+import type { AgendaItem, MarketInterviewKind } from '@/stores/InterviewersStore'
+import { useNotificationsStore } from '@/stores/NotificationsStore'
 
 const router = useRouter()
 const store = useInterviewersStore()
+const notifications = useNotificationsStore()
+
+function acceptRequest(a: AgendaItem) {
+  store.acceptRequest(a.id)
+  notifications.push({
+    icon: 'mdi-calendar-check-outline',
+    color: 'success',
+    title: 'قبلت طلب مقابلة',
+    body: `أكّدت مقابلة ${KIND_META[a.kind].label} مع ${a.candidateName} — ${a.datetime}`,
+    category: 'interview',
+  })
+}
 
 const stats = computed(() => [
   { title: 'أرباح الشهر', value: `${store.interviewerStats.earnings} ﷼`, icon: 'mdi-cash-multiple', color: 'success' },
@@ -71,7 +84,7 @@ function savePricing() {
                 <VListItemSubtitle>{{ a.candidateField }} · {{ a.datetime }} · {{ a.price }} ﷼</VListItemSubtitle>
                 <template #append>
                   <div class="d-flex ga-1">
-                    <VBtn size="small" color="success" variant="tonal" prepend-icon="mdi-check" @click="store.acceptRequest(a.id)">قبول</VBtn>
+                    <VBtn size="small" color="success" variant="tonal" prepend-icon="mdi-check" @click="acceptRequest(a)">قبول</VBtn>
                     <VBtn icon="mdi-close" size="small" variant="text" color="error" @click="store.declineRequest(a.id)" />
                   </div>
                 </template>

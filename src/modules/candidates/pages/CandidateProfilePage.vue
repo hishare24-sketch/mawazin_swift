@@ -3,21 +3,54 @@ import { computed, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { CANDIDATE_STATUS_META } from '../interfaces/Candidate'
 import { useCandidatesStore } from '@/stores/CandidatesStore'
+import { KIND_META, useInterviewersStore } from '@/stores/InterviewersStore'
+import type { MarketInterviewKind } from '@/stores/InterviewersStore'
+import { useNotificationsStore } from '@/stores/NotificationsStore'
 
 const route = useRoute()
 const router = useRouter()
 const store = useCandidatesStore()
+const interviewersStore = useInterviewersStore()
+const notifications = useNotificationsStore()
 const candidate = computed(() => store.getById(Number(route.params.id)))
 const snackbar = ref('')
 
-// Request interview dialog
+// Certified-interviewer reports already on the candidate's record (mock)
+const candidateReports = [
+  { id: 1, interviewer: 'م. خالد الشمري', kind: 'skills' as MarketInterviewKind, level: 'متقدم', overall: 88, verified: true, strengths: ['حلول تقنية منظّمة', 'إلمام عميق بأنماط التصميم'], improvements: ['تحسين تغطية الاختبارات'], recommendation: 'مرشح تقني قوي جاهز لأدوار متقدمة.' },
+  { id: 2, interviewer: 'أ. سلمى العنزي', kind: 'behavioral' as MarketInterviewKind, level: 'متقدم', overall: 84, verified: true, strengths: ['تواصل واضح', 'وعي ذاتي عالٍ'], improvements: ['تعزيز الحزم في المواقف الصعبة'], recommendation: 'مرشح متوازن سلوكيًا مناسب للعمل التعاوني.' },
+]
+const reportDialog = ref(false)
+const activeReport = ref<typeof candidateReports[number] | null>(null)
+function openReport(r: typeof candidateReports[number]) {
+  activeReport.value = r
+  reportDialog.value = true
+}
+
+// Request interview via a certified interviewer
 const requestInterviewDialog = ref(false)
-const requestLevel = ref('متوسط')
-const interviewLevels = ['أساسي', 'متوسط', 'متقدم', 'خبير']
-const levelCosts: Record<string, string> = { 'أساسي': 'مجاني', 'متوسط': '49 ريال', 'متقدم': '149 ريال', 'خبير': '299 ريال' }
+const chosenInterviewerId = ref<number | null>(interviewersStore.interviewers[0]?.id ?? null)
+const chosenKind = ref<MarketInterviewKind>('skills')
+const kinds = Object.keys(KIND_META) as MarketInterviewKind[]
+const chosenInterviewer = computed(() => interviewersStore.getById(chosenInterviewerId.value ?? -1))
+const requestPrice = computed(() => {
+  const iv = chosenInterviewer.value
+  if (!iv)
+    return 0
+  const weight: Record<MarketInterviewKind, number> = { level: 0.2, behavioral: 0.4, skills: 0.6, leadership: 0.85, comprehensive: 1 }
+  return Math.round((iv.priceMin + (iv.priceMax - iv.priceMin) * weight[chosenKind.value]) / 5) * 5
+})
 function sendInterviewRequest() {
   requestInterviewDialog.value = false
-  snackbar.value = `تم إرسال طلب مقابلة (${requestLevel.value}) للمرشح`
+  const ivName = chosenInterviewer.value?.name ?? 'مقيّم معتمد'
+  notifications.push({
+    icon: 'mdi-account-tie',
+    color: 'primary',
+    title: 'طلب مقابلة عبر مقيّم معتمد',
+    body: `طلبت ${KIND_META[chosenKind.value].label} للمرشح ${candidate.value?.name} عبر ${ivName} (${requestPrice.value} ﷼)`,
+    category: 'interview',
+  })
+  snackbar.value = `تم إرسال طلب مقابلة للمرشح عبر ${ivName}`
 }
 
 const matchBreakdown = [
@@ -77,6 +110,24 @@ const endorsements = [
             </VCol>
           </VRow>
 
+          <!-- Certified-interviewer reports -->
+          <div class="d-flex align-center ga-2 mb-2">
+            <VIcon icon="mdi-account-tie" color="secondary" size="20" />
+            <h3 class="text-subtitle-1 font-weight-bold">تقارير المقيّمين المعتمدين ({{ candidateReports.length }})</h3>
+          </div>
+          <VRow class="mb-4">
+            <VCol v-for="r in candidateReports" :key="r.id" cols="12" sm="6">
+              <VCard variant="outlined" class="pa-3 cursor-pointer" @click="openReport(r)">
+                <div class="d-flex align-center justify-space-between mb-1">
+                  <span class="text-body-2 font-weight-bold">{{ r.interviewer }}</span>
+                  <VChip color="success" size="x-small" label>{{ r.overall }}%</VChip>
+                </div>
+                <div class="text-caption text-medium-emphasis mb-2">{{ KIND_META[r.kind].label }} · المستوى {{ r.level }}</div>
+                <VBtn size="x-small" variant="text" color="primary" prepend-icon="mdi-file-document-outline">عرض التقرير</VBtn>
+              </VCard>
+            </VCol>
+          </VRow>
+
           <div class="d-flex align-center justify-space-between mb-2">
             <h3 class="text-subtitle-1 font-weight-bold">السير الذاتية المُقدّمة</h3>
             <VBtn variant="text" size="x-small" color="primary" prepend-icon="mdi-refresh" @click="snackbar = 'تم إرسال طلب سيرة ذاتية محدّثة للمرشح'">
@@ -125,27 +176,62 @@ const endorsements = [
       </VCol>
     </VRow>
 
-    <!-- Request interview dialog -->
-    <VDialog v-model="requestInterviewDialog" max-width="440">
+    <!-- Request interview via certified interviewer -->
+    <VDialog v-model="requestInterviewDialog" max-width="520">
       <VCard class="pa-2">
-        <VCardTitle>طلب مقابلة — {{ candidate.name }}</VCardTitle>
+        <VCardTitle>طلب مقابلة تقييمية — {{ candidate.name }}</VCardTitle>
         <VCardText>
-          <p class="text-body-2 text-medium-emphasis mb-2">اختر مستوى المقابلة المطلوب:</p>
-          <VCard
-            v-for="lvl in interviewLevels"
-            :key="lvl"
-            :variant="requestLevel === lvl ? 'flat' : 'outlined'"
-            :color="requestLevel === lvl ? 'primary' : undefined"
-            class="pa-3 mb-2 cursor-pointer d-flex align-center justify-space-between"
-            @click="requestLevel = lvl"
-          >
-            <span :class="requestLevel === lvl ? 'text-white' : ''">{{ lvl }}</span>
-            <VChip size="x-small" :color="requestLevel === lvl ? 'white' : 'accent'" :variant="requestLevel === lvl ? 'flat' : 'tonal'" label>{{ levelCosts[lvl] }}</VChip>
-          </VCard>
+          <p class="text-body-2 text-medium-emphasis mb-3">اختر مقيّمًا معتمدًا يُجري المقابلة ويوثّق نتيجتها:</p>
+          <VSelect
+            v-model="chosenInterviewerId"
+            :items="interviewersStore.interviewers.map(i => ({ value: i.id, title: `${i.name} · ${i.title}` }))"
+            label="المقيّم المعتمد"
+            prepend-inner-icon="mdi-account-tie"
+            class="mb-3"
+          />
+          <VSelect
+            v-model="chosenKind"
+            :items="kinds.map(k => ({ value: k, title: `${KIND_META[k].label} · ${KIND_META[k].minutes}` }))"
+            label="نوع المقابلة"
+            class="mb-2"
+          />
+          <VAlert color="accent" variant="tonal" density="compact">
+            <div class="d-flex justify-space-between align-center">
+              <span class="text-body-2">التكلفة التقديرية</span>
+              <span class="font-weight-bold">{{ requestPrice }} ﷼</span>
+            </div>
+          </VAlert>
         </VCardText>
         <VCardActions class="justify-end">
           <VBtn variant="text" @click="requestInterviewDialog = false">إلغاء</VBtn>
-          <VBtn color="accent" prepend-icon="mdi-send" @click="sendInterviewRequest">إرسال الطلب</VBtn>
+          <VBtn color="accent" prepend-icon="mdi-send" :disabled="!chosenInterviewerId" @click="sendInterviewRequest">إرسال الطلب</VBtn>
+        </VCardActions>
+      </VCard>
+    </VDialog>
+
+    <!-- Report view dialog -->
+    <VDialog v-model="reportDialog" max-width="480">
+      <VCard v-if="activeReport" class="pa-2">
+        <VCardTitle class="d-flex justify-space-between align-center">
+          <span>تقرير المقابلة</span>
+          <VChip color="success" label>{{ activeReport.overall }}%</VChip>
+        </VCardTitle>
+        <VCardText>
+          <div class="text-caption text-medium-emphasis mb-1">
+            <VIcon icon="mdi-check-decagram" color="primary" size="14" /> {{ activeReport.interviewer }} · {{ KIND_META[activeReport.kind].label }} · المستوى {{ activeReport.level }}
+          </div>
+          <VDivider class="my-2" />
+          <div class="text-body-2 font-weight-bold mb-1">نقاط القوة</div>
+          <VChip v-for="s in activeReport.strengths" :key="s" size="x-small" color="success" variant="tonal" class="ma-1">{{ s }}</VChip>
+          <div class="text-body-2 font-weight-bold mt-2 mb-1">نقاط التحسين</div>
+          <VChip v-for="w in activeReport.improvements" :key="w" size="x-small" color="warning" variant="tonal" class="ma-1">{{ w }}</VChip>
+          <VAlert color="secondary" variant="tonal" density="compact" class="mt-3 text-body-2">
+            <template #prepend><VIcon icon="mdi-lightbulb-on-outline" size="18" /></template>
+            {{ activeReport.recommendation }}
+          </VAlert>
+        </VCardText>
+        <VCardActions class="justify-end">
+          <VBtn variant="text" @click="reportDialog = false">إغلاق</VBtn>
         </VCardActions>
       </VCard>
     </VDialog>

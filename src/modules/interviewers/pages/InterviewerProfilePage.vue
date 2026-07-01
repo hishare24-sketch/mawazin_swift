@@ -4,11 +4,13 @@ import { useRoute, useRouter } from 'vue-router'
 import { INTERVIEWER_TYPE_META, KIND_META, useInterviewersStore } from '@/stores/InterviewersStore'
 import type { MarketInterviewKind } from '@/stores/InterviewersStore'
 import { useProfileStore } from '@/stores/ProfileStore'
+import { useNotificationsStore } from '@/stores/NotificationsStore'
 
 const route = useRoute()
 const router = useRouter()
 const store = useInterviewersStore()
 const profile = useProfileStore()
+const notifications = useNotificationsStore()
 
 const interviewer = computed(() => store.getById(Number(route.params.id)))
 const candidate = computed(() => ({ field: 'تطوير الويب', skills: profile.skills.map(s => s.name) }))
@@ -81,8 +83,16 @@ function openBooking(kind?: MarketInterviewKind) {
 }
 
 function confirmBooking() {
-  if (interviewer.value && canConfirm.value)
+  if (interviewer.value && canConfirm.value) {
     store.book(interviewer.value, chosenKind.value, `${dateLabel.value} · ${chosenTime.value}`, price.value)
+    notifications.push({
+      icon: 'mdi-calendar-check-outline',
+      color: 'secondary',
+      title: 'طلب حجز مقابلة',
+      body: `أرسلت طلب ${KIND_META[chosenKind.value].label} إلى ${interviewer.value.name} — ${dateLabel.value} · ${chosenTime.value}`,
+      category: 'interview',
+    })
+  }
   bookDialog.value = false
   bookedSnackbar.value = true
 }
