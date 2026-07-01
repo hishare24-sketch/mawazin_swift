@@ -1,23 +1,29 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { getAssessmentById } from '../services/mockAssessments'
+import QuestionRenderer from '../components/QuestionRenderer.vue'
+import { QUESTION_TYPE_META, buildQuestions, getAssessmentById, scoreAnswer } from '../services/mockAssessments'
 
 const route = useRoute()
 const router = useRouter()
 
 const assessment = computed(() => getAssessmentById(Number(route.params.id)))
+const size = computed(() => Number(route.query.size) || 10)
+
+// Build a unique question set for this attempt
+const questions = computed(() => (assessment.value ? buildQuestions(assessment.value.pool, size.value) : []))
 
 const currentIndex = ref(0)
-const answers = ref<Record<number, number>>({})
+const answers = ref<Record<number, any>>({})
+const revealedHints = ref<Set<number>>(new Set())
 const secondsLeft = ref(0)
 let timer: ReturnType<typeof setInterval> | undefined
 
-const currentQuestion = computed(() => assessment.value?.questions[currentIndex.value])
-const totalQuestions = computed(() => assessment.value?.questions.length ?? 0)
+const currentQuestion = computed(() => questions.value[currentIndex.value])
+const totalQuestions = computed(() => questions.value.length)
 const progress = computed(() => (totalQuestions.value ? ((currentIndex.value + 1) / totalQuestions.value) * 100 : 0))
 const isLast = computed(() => currentIndex.value === totalQuestions.value - 1)
-const answeredCount = computed(() => Object.keys(answers.value).length)
+const answeredCount = computed(() => Object.values(answers.value).filter(v => v !== undefined && v !== '' && !(Array.isArray(v) && !v.length)).length)
 
 const timeLabel = computed(() => {
   const m = Math.floor(secondsLeft.value / 60)
@@ -25,10 +31,11 @@ const timeLabel = computed(() => {
   return `${m}:${String(s).padStart(2, '0')}`
 })
 
-function selectOption(optionIndex: number) {
+function revealHint() {
   if (currentQuestion.value)
-    answers.value[currentQuestion.value.id] = optionIndex
+    revealedHints.value = new Set(revealedHints.value).add(currentQuestion.value.id)
 }
+const hintShown = computed(() => !!currentQuestion.value && revealedHints.value.has(currentQuestion.value.id))
 
 function next() {
   if (!isLast.value)
@@ -38,11 +45,13 @@ function prev() {
   if (currentIndex.value > 0)
     currentIndex.value--
 }
+function skip() {
+  next()
+}
 
 function finish() {
-  // Real scoring: count correct answers against the answer key
-  const questions = assessment.value?.questions ?? []
-  const correct = questions.filter(q => answers.value[q.id] === q.correctIndex).length
+  const qs = questions.value
+  const correct = qs.filter(q => scoreAnswer(q, answers.value[q.id])).length
   const score = totalQuestions.value ? Math.round((correct / totalQuestions.value) * 100) : 0
   router.replace({
     name: 'assessment-result',
@@ -53,7 +62,7 @@ function finish() {
 
 onMounted(() => {
   if (assessment.value) {
-    secondsLeft.value = assessment.value.durationMinutes * 60
+    secondsLeft.value = Math.max(assessment.value.durationMinutes, size.value) * 60
     timer = setInterval(() => {
       if (secondsLeft.value > 0)
         secondsLeft.value--
@@ -61,7 +70,6 @@ onMounted(() => {
     }, 1000)
   }
 })
-
 onBeforeUnmount(() => {
   if (timer)
     clearInterval(timer)
@@ -91,37 +99,36 @@ onBeforeUnmount(() => {
     <VProgressLinear :model-value="progress" color="accent" height="8" rounded class="mb-5" />
 
     <!-- Question -->
-    <VCard class="pa-6 mb-4" min-height="280">
-      <div class="text-h6 font-weight-bold mb-5">{{ currentQuestion?.text }}</div>
-      <div class="d-flex flex-column ga-3">
-        <VCard
-          v-for="(opt, i) in currentQuestion?.options"
-          :key="i"
-          :variant="answers[currentQuestion!.id] === i ? 'flat' : 'outlined'"
-          :color="answers[currentQuestion!.id] === i ? 'primary' : undefined"
-          class="pa-3 cursor-pointer d-flex align-center ga-3"
-          @click="selectOption(i)"
-        >
-          <VIcon
-            :icon="answers[currentQuestion!.id] === i ? 'mdi-radiobox-marked' : 'mdi-radiobox-blank'"
-            :color="answers[currentQuestion!.id] === i ? 'white' : 'medium-emphasis'"
-          />
-          <span :class="answers[currentQuestion!.id] === i ? 'text-white' : ''">{{ opt }}</span>
-        </VCard>
+    <VCard v-if="currentQuestion" class="pa-6 mb-4" min-height="280">
+      <div class="d-flex align-center ga-2 mb-3 flex-wrap">
+        <VChip size="x-small" color="secondary" variant="tonal" label :prepend-icon="QUESTION_TYPE_META[currentQuestion.type].icon">
+          {{ QUESTION_TYPE_META[currentQuestion.type].label }}
+        </VChip>
+      </div>
+      <div class="text-h6 font-weight-bold mb-5">{{ currentQuestion.text }}</div>
+
+      <QuestionRenderer :key="currentQuestion.id" v-model="answers[currentQuestion.id]" :question="currentQuestion" />
+
+      <!-- AI hint -->
+      <div class="mt-4">
+        <VExpandTransition>
+          <VAlert v-if="hintShown && currentQuestion.hint" color="secondary" variant="tonal" density="compact" border="start">
+            <template #prepend><VIcon icon="mdi-robot-happy-outline" size="20" /></template>
+            <span class="text-caption">{{ currentQuestion.hint }}</span>
+          </VAlert>
+        </VExpandTransition>
+        <VBtn v-if="!hintShown && currentQuestion.hint" size="x-small" variant="text" color="secondary" prepend-icon="mdi-lightbulb-on-outline" @click="revealHint">
+          تلميح من الـ AI
+        </VBtn>
       </div>
     </VCard>
 
     <!-- Navigation -->
-    <div class="d-flex justify-space-between">
-      <VBtn variant="outlined" :disabled="currentIndex === 0" prepend-icon="mdi-arrow-right" @click="prev">
-        السابق
-      </VBtn>
-      <VBtn v-if="!isLast" color="accent" append-icon="mdi-arrow-left" @click="next">
-        التالي
-      </VBtn>
-      <VBtn v-else color="success" prepend-icon="mdi-check" @click="finish">
-        إنهاء الاختبار
-      </VBtn>
+    <div class="d-flex justify-space-between align-center flex-wrap ga-2">
+      <VBtn variant="outlined" :disabled="currentIndex === 0" prepend-icon="mdi-arrow-right" @click="prev">السابق</VBtn>
+      <VBtn variant="text" size="small" @click="skip">تخطّي السؤال</VBtn>
+      <VBtn v-if="!isLast" color="accent" append-icon="mdi-arrow-left" @click="next">التالي</VBtn>
+      <VBtn v-else color="success" prepend-icon="mdi-flag-checkered" @click="finish">إنهاء الاختبار</VBtn>
     </div>
   </div>
 
