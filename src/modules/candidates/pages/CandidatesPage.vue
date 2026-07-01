@@ -12,7 +12,18 @@ const store = useCandidatesStore()
 
 const search = ref('')
 const statusFilter = ref<CandidateStatus | null>(null)
-const sortBy = ref<'match' | 'recent'>('match')
+const sortBy = ref<'match' | 'recent' | 'trust'>('match')
+const minTrust = ref(0)
+const interviewLevelFilter = ref<string | null>(null)
+const interviewLevelOptions = ['أساسي', 'متوسط', 'متقدم', 'خبير'].map(v => ({ value: v, title: v }))
+
+function trustColor(v: number) {
+  if (v >= 70)
+    return 'success'
+  if (v >= 40)
+    return 'warning'
+  return 'error'
+}
 
 // Bulk selection
 const selected = ref<number[]>([])
@@ -55,9 +66,17 @@ const filtered = computed(() => {
     const matchesSearch = !search.value || c.name.includes(search.value) || c.title.includes(search.value)
       || c.skills.some(s => s.toLowerCase().includes(search.value.toLowerCase()))
     const matchesStatus = !statusFilter.value || c.status === statusFilter.value
-    return matchesSearch && matchesStatus
+    const matchesTrust = c.trustScore >= minTrust.value
+    const matchesInterview = !interviewLevelFilter.value || c.interviewLevel === interviewLevelFilter.value
+    return matchesSearch && matchesStatus && matchesTrust && matchesInterview
   })
-  list = [...list].sort((a, b) => (sortBy.value === 'match' ? b.matchRate - a.matchRate : b.id - a.id))
+  list = [...list].sort((a, b) => {
+    if (sortBy.value === 'trust')
+      return b.trustScore - a.trustScore
+    if (sortBy.value === 'recent')
+      return b.id - a.id
+    return b.matchRate - a.matchRate
+  })
   return list
 })
 
@@ -86,14 +105,21 @@ function openProfile(id: number) {
 
     <VCard class="pa-4 mb-5">
       <VRow dense align="center">
-        <VCol cols="12" md="6">
+        <VCol cols="12" md="5">
           <VTextField v-model="search" placeholder="ابحث بالاسم أو المسمى أو المهارة..." prepend-inner-icon="mdi-magnify" hide-details clearable />
         </VCol>
         <VCol cols="6" md="3">
           <VSelect v-model="statusFilter" :items="statusOptions" placeholder="حالة الترشيح" hide-details clearable />
         </VCol>
-        <VCol cols="6" md="3">
-          <VSelect v-model="sortBy" :items="[{ value: 'match', title: 'الأعلى تطابقاً' }, { value: 'recent', title: 'الأحدث' }]" hide-details prepend-inner-icon="mdi-sort" />
+        <VCol cols="6" md="2">
+          <VSelect v-model="interviewLevelFilter" :items="interviewLevelOptions" placeholder="مستوى المقابلة" hide-details clearable />
+        </VCol>
+        <VCol cols="6" md="2">
+          <VSelect v-model="sortBy" :items="[{ value: 'match', title: 'الأعلى تطابقاً' }, { value: 'trust', title: 'الأعلى ثقة' }, { value: 'recent', title: 'الأحدث' }]" hide-details prepend-inner-icon="mdi-sort" />
+        </VCol>
+        <VCol cols="12" class="d-flex align-center ga-3">
+          <span class="text-caption text-medium-emphasis text-no-wrap">أدنى نسبة ثقة: {{ minTrust }}%</span>
+          <VSlider v-model="minTrust" :min="0" :max="100" :step="5" color="secondary" hide-details density="compact" />
         </VCol>
       </VRow>
     </VCard>
@@ -128,11 +154,19 @@ function openProfile(id: number) {
                 </div>
               </div>
             </div>
-            <VChip :color="CANDIDATE_STATUS_META[c.status].color" size="small" label>{{ CANDIDATE_STATUS_META[c.status].label }}</VChip>
+            <div class="d-flex flex-column align-end ga-1">
+              <VChip :color="CANDIDATE_STATUS_META[c.status].color" size="small" label>{{ CANDIDATE_STATUS_META[c.status].label }}</VChip>
+              <VChip :color="trustColor(c.trustScore)" size="x-small" variant="tonal" prepend-icon="mdi-shield-check-outline">
+                ثقة {{ c.trustScore }}%
+              </VChip>
+            </div>
           </div>
 
-          <div class="d-flex flex-wrap ga-1 my-3">
+          <div class="d-flex flex-wrap ga-1 my-3 align-center">
             <VChip v-for="s in c.skills.slice(0, 4)" :key="s" size="x-small" variant="tonal" color="primary">{{ s }}</VChip>
+            <VChip v-if="c.interviewLevel !== 'لا يوجد'" size="x-small" variant="tonal" color="info" prepend-icon="mdi-account-tie-voice-outline">
+              مقابلة {{ c.interviewLevel }}
+            </VChip>
           </div>
 
           <div class="mb-3">

@@ -5,6 +5,7 @@ import { PROOF_META, skillConfidence, skillLevelLabel, useProfileStore } from '@
 import type { ProofType, Skill } from '@/stores/ProfileStore'
 import { useResumesStore } from '@/stores/ResumesStore'
 import { ai } from '@/services/ai'
+import TrustScoreCard from '@/components/shared/TrustScoreCard.vue'
 
 const authStore = useAuthStore()
 const profile = useProfileStore()
@@ -145,18 +146,14 @@ const profileCompletion = computed(() => {
           </div>
         </div>
 
-        <!-- Completion bar -->
-        <div class="mt-4">
-          <div class="d-flex justify-space-between text-caption mb-1">
-            <span class="text-medium-emphasis">اكتمال الملف</span>
-            <span class="font-weight-bold text-primary">{{ profileCompletion }}%</span>
-          </div>
-          <VProgressLinear :model-value="profileCompletion" color="success" height="8" rounded />
-        </div>
-
         <p class="text-body-2 text-medium-emphasis mt-4 mb-0" style="max-width: 700px">{{ profile.summary }}</p>
       </VCardText>
     </VCard>
+
+    <!-- Trust score -->
+    <div class="mb-5">
+      <TrustScoreCard />
+    </div>
 
     <VTabs v-model="tab" color="primary" class="mb-4" show-arrows>
       <VTab value="skills" prepend-icon="mdi-star-outline">المهارات</VTab>
