@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { computed, ref, watch } from 'vue'
 import { ai } from '@/services/ai'
+import { useGamificationStore } from '@/stores/GamificationStore'
 
 export type ProofType = 'assessment' | 'endorsement' | 'project' | 'certificate' | 'self'
 
@@ -148,6 +149,7 @@ export const useProfileStore = defineStore('profile', () => {
       category,
       proofs: [{ id: nextProofId++, type: 'self', label: 'تقييم ذاتي', date: 'الآن' }],
     })
+    useGamificationStore().record('skill', `أضفت مهارة «${name.trim()}»`)
   }
   function removeSkill(id: number) {
     skills.value = skills.value.filter(s => s.id !== id)

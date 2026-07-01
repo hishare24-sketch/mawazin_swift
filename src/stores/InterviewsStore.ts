@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { computed, ref, watch } from 'vue'
 import type { InterviewLevel, InterviewTrack, InterviewType } from '@/services/ai'
+import { useGamificationStore } from '@/stores/GamificationStore'
 
 export interface CompetencyScore { name: string, score: number }
 
@@ -122,6 +123,7 @@ export const useInterviewsStore = defineStore('interviews', () => {
     if (iv) {
       iv.status = 'completed'
       iv.result = result
+      useGamificationStore().record(iv.type === 'expert' ? 'expertInterview' : 'aiInterview', 'أنجزت مقابلة')
     }
   }
 

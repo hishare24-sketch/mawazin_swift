@@ -10,6 +10,7 @@ import { usePostedOpportunitiesStore } from '@/stores/PostedOpportunitiesStore'
 import { useTrustStore } from '@/stores/TrustStore'
 import { useProfileStore } from '@/stores/ProfileStore'
 import StatCard from '@/components/shared/StatCard.vue'
+import GamificationCard from '@/components/shared/GamificationCard.vue'
 import OpportunityCard from '@/modules/opportunities/components/OpportunityCard.vue'
 import { mockOpportunities } from '@/modules/opportunities/services/mockOpportunities'
 import { LEVEL_META } from '@/stores/InterviewsStore'
@@ -220,6 +221,11 @@ const aiSuggestions = [
             </div>
           </div>
         </VCard>
+
+        <!-- Gamification (seeker) -->
+        <div v-if="!isCompany" class="mb-4">
+          <GamificationCard />
+        </div>
 
         <!-- Recommended interview (seeker) -->
         <VCard v-if="!isCompany && recommendedInterview" class="pa-4 mb-4" variant="tonal" color="accent">

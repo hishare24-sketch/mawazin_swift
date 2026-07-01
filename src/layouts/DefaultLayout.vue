@@ -6,6 +6,7 @@ import { useDisplay, useTheme } from 'vuetify'
 import { useAuthStore } from '@/stores/AuthStore'
 import { useNotificationsStore } from '@/stores/NotificationsStore'
 import { useMessagesStore } from '@/stores/MessagesStore'
+import { useGamificationStore } from '@/stores/GamificationStore'
 import GlobalSearchBar from '@/components/shared/GlobalSearchBar.vue'
 import { navForRole } from './navigation'
 
@@ -30,6 +31,9 @@ const { mobile } = useDisplay()
 const authStore = useAuthStore()
 const notificationsStore = useNotificationsStore()
 const messagesStore = useMessagesStore()
+
+// Daily streak check-in — runs once when an authenticated layout mounts
+useGamificationStore().checkIn()
 
 // On desktop the drawer is permanent (open by default); on mobile it starts closed
 const drawer = ref(!mobile.value)

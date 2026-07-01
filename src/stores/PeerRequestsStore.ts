@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import { computed, ref, watch } from 'vue'
+import { useGamificationStore } from '@/stores/GamificationStore'
 
 // A unified peer-to-peer request: any user asks any other user for one of these services
 export type PeerRequestType
@@ -95,6 +96,7 @@ export const usePeerRequestsStore = defineStore('peerRequests', () => {
       status: 'pending',
       date: new Date().toISOString().slice(0, 10),
     })
+    useGamificationStore().record('peerRequest', 'أرسلت طلبًا')
   }
 
   function findIncoming(id: number) {
