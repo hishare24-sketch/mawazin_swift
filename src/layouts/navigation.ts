@@ -28,6 +28,7 @@ export const navItems: NavItem[] = [
   { title: 'wishes', icon: 'mdi-hand-heart-outline', to: 'wishes', roles: ['seeker'] },
   { title: 'assessments', icon: 'mdi-clipboard-check-outline', to: 'assessments', roles: ['seeker'] },
   { title: 'interviews', icon: 'mdi-account-tie-voice-outline', to: 'interviews', roles: ['seeker'] },
+  { title: 'interviewers', icon: 'mdi-account-supervisor-circle-outline', to: 'interviewers', roles: ['seeker'] },
   { title: 'resumeBuilder', icon: 'mdi-file-account-outline', to: 'resume-builder', roles: ['seeker'] },
   { title: 'assistant', icon: 'mdi-robot-happy-outline', to: 'assistant', roles: ['seeker', 'company'] },
 
