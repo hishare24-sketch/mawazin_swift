@@ -6,9 +6,71 @@ import { LEVEL_META, TYPE_META, useInterviewsStore } from '@/stores/InterviewsSt
 import type { Interview } from '@/stores/InterviewsStore'
 import type { InterviewLevel, InterviewTrack, InterviewType } from '@/services/ai'
 import { TRACK_META } from '@/services/ai'
+import { BOOKING_STATUS_META, KIND_META, useInterviewersStore } from '@/stores/InterviewersStore'
 
 const router = useRouter()
 const store = useInterviewsStore()
+const interviewers = useInterviewersStore()
+
+// — Upcoming schedule (weekly calendar + smart reminders) —
+const AR_DAYS = ['الأحد', 'الإثنين', 'الثلاثاء', 'الأربعاء', 'الخميس', 'الجمعة', 'السبت']
+function parseDT(s: string): Date | null {
+  const m = s.match(/(\d{4})-(\d{2})-(\d{2})(?:[^\d]*(\d{1,2}):(\d{2}))?/)
+  if (!m)
+    return null
+  const d = new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]), m[4] ? Number(m[4]) : 0, m[5] ? Number(m[5]) : 0)
+  return Number.isNaN(d.getTime()) ? null : d
+}
+const nowRef = new Date()
+const todayMid = new Date(nowRef.getFullYear(), nowRef.getMonth(), nowRef.getDate())
+function daysUntil(d: Date) {
+  const dm = new Date(d.getFullYear(), d.getMonth(), d.getDate())
+  return Math.round((dm.getTime() - todayMid.getTime()) / 86_400_000)
+}
+function relLabel(d: Date | null) {
+  if (!d)
+    return ''
+  const n = daysUntil(d)
+  if (n < 0)
+    return 'سابقة'
+  if (n === 0)
+    return 'اليوم'
+  if (n === 1)
+    return 'غدًا'
+  if (n <= 7)
+    return `خلال ${n} أيام`
+  return `بعد ${n} يومًا`
+}
+function sameDay(a: Date, b: Date) {
+  return a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate()
+}
+
+interface AgendaEntry { id: string, title: string, icon: string, raw: string, dt: Date | null, statusLabel: string, color: string, to: any }
+const upcoming = computed<AgendaEntry[]>(() => {
+  const fromInterviews: AgendaEntry[] = store.interviews
+    .filter(i => i.status !== 'completed')
+    .map(i => ({
+      id: `iv${i.id}`, title: `${TYPE_META[i.type].label} · ${LEVEL_META[i.level].label}`, icon: TYPE_META[i.type].icon,
+      raw: i.date, dt: parseDT(i.date),
+      statusLabel: i.status === 'in_progress' ? 'قيد التنفيذ' : 'مجدولة', color: i.status === 'in_progress' ? 'primary' : 'warning',
+      to: i.status === 'in_progress' ? { name: 'interview-session', params: { id: i.id } } : { name: 'interviews' },
+    }))
+  const fromBookings: AgendaEntry[] = interviewers.bookings
+    .filter(b => b.status === 'requested' || b.status === 'scheduled')
+    .map(b => ({
+      id: `bk${b.id}`, title: `${b.interviewerName} · ${KIND_META[b.kind].label}`, icon: 'mdi-account-tie-voice-outline',
+      raw: b.datetime, dt: parseDT(b.datetime),
+      statusLabel: BOOKING_STATUS_META[b.status].label, color: BOOKING_STATUS_META[b.status].color,
+      to: { name: 'interviewers' },
+    }))
+  return [...fromInterviews, ...fromBookings].sort((a, b) => (a.dt ? a.dt.getTime() : Infinity) - (b.dt ? b.dt.getTime() : Infinity))
+})
+const nextSession = computed(() => upcoming.value.find(u => u.dt && daysUntil(u.dt) >= 0) ?? upcoming.value[0] ?? null)
+const week = computed(() => Array.from({ length: 7 }, (_, k) => {
+  const d = new Date(todayMid)
+  d.setDate(d.getDate() + k)
+  return { key: k, label: AR_DAYS[d.getDay()], num: d.getDate(), items: upcoming.value.filter(u => u.dt && sameDay(u.dt, d)), isToday: k === 0 }
+}))
 
 const types = Object.keys(TYPE_META) as InterviewType[]
 const levels = Object.keys(LEVEL_META) as InterviewLevel[]
@@ -48,6 +110,60 @@ function viewResult(iv: Interview) {
       subtitle="أثبت مستواك عبر مقابلات ذكية أو مع خبراء — ترفع نسبة ثقتك"
       icon="mdi-account-tie-voice-outline"
     />
+
+    <!-- Upcoming schedule (weekly calendar + smart reminder) -->
+    <VCard v-if="upcoming.length" class="pa-4 mb-4">
+      <div class="d-flex align-center ga-2 mb-3">
+        <VIcon icon="mdi-calendar-clock-outline" color="primary" />
+        <h3 class="text-subtitle-1 font-weight-bold">جدولك القادم</h3>
+      </div>
+
+      <!-- Smart reminder -->
+      <VAlert v-if="nextSession" color="accent" variant="tonal" density="comfortable" class="mb-3" border="start">
+        <template #prepend><VIcon icon="mdi-bell-ring-outline" /></template>
+        <div class="d-flex align-center justify-space-between flex-wrap ga-2">
+          <span class="text-body-2">
+            <span class="font-weight-bold">مقابلتك القادمة:</span> {{ nextSession.title }}
+            <VChip v-if="nextSession.dt" size="x-small" color="accent" label class="ms-1">{{ relLabel(nextSession.dt) }}</VChip>
+            <span class="text-caption text-medium-emphasis ms-1">{{ nextSession.raw }}</span>
+          </span>
+          <VBtn size="small" color="accent" variant="flat" :to="nextSession.to">التفاصيل</VBtn>
+        </div>
+      </VAlert>
+
+      <!-- Weekly strip -->
+      <div class="week-strip">
+        <div
+          v-for="day in week"
+          :key="day.key"
+          class="week-day pa-2 text-center"
+          :class="{ 'week-day--today': day.isToday, 'week-day--has': day.items.length }"
+        >
+          <div class="text-caption text-medium-emphasis">{{ day.label }}</div>
+          <div class="text-h6 font-weight-bold">{{ day.num }}</div>
+          <div class="d-flex justify-center ga-1 mt-1" style="min-height: 8px">
+            <span v-for="it in day.items.slice(0, 3)" :key="it.id" class="week-dot" :style="{ background: `rgb(var(--v-theme-${it.color}))` }" />
+          </div>
+        </div>
+      </div>
+
+      <!-- Upcoming list -->
+      <VList class="py-0 mt-2">
+        <VListItem v-for="u in upcoming" :key="u.id" :to="u.to" class="px-2">
+          <template #prepend>
+            <VAvatar :color="u.color" variant="tonal" rounded="lg" size="38"><VIcon :icon="u.icon" size="20" /></VAvatar>
+          </template>
+          <VListItemTitle class="font-weight-bold text-body-2">{{ u.title }}</VListItemTitle>
+          <VListItemSubtitle>{{ u.raw }}</VListItemSubtitle>
+          <template #append>
+            <div class="d-flex align-center ga-2">
+              <VChip v-if="u.dt" size="x-small" variant="tonal" label>{{ relLabel(u.dt) }}</VChip>
+              <VChip :color="u.color" size="x-small" label>{{ u.statusLabel }}</VChip>
+            </div>
+          </template>
+        </VListItem>
+      </VList>
+    </VCard>
 
     <!-- Available -->
     <h3 class="text-h6 font-weight-bold mb-3">المقابلات المتاحة</h3>
@@ -150,3 +266,29 @@ function viewResult(iv: Interview) {
     </VDialog>
   </div>
 </template>
+
+<style scoped>
+.week-strip {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 6px;
+}
+.week-day {
+  border: 1px solid rgba(140, 163, 150, 0.18);
+  border-radius: var(--ui-radius);
+  transition: border-color 0.18s ease, background 0.18s ease;
+}
+.week-day--has {
+  border-color: rgba(var(--v-theme-primary), 0.4);
+}
+.week-day--today {
+  background: rgba(var(--v-theme-primary), 0.1);
+  border-color: rgb(var(--v-theme-primary));
+}
+.week-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  display: inline-block;
+}
+</style>
