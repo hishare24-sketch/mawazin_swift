@@ -73,6 +73,12 @@ export const routes: RouteRecordRaw[] = [
     meta: { layout: 'default' },
   },
   {
+    path: '/applications',
+    name: 'applications',
+    component: () => import('@/modules/applications/pages/ApplicationsPage.vue'),
+    meta: { layout: 'default' },
+  },
+  {
     path: '/wishes',
     name: 'wishes',
     component: () => import('@/modules/wishes/pages/WishesPage.vue'),

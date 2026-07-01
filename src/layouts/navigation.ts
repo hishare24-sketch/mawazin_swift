@@ -23,6 +23,7 @@ export const navItems: NavItem[] = [
   // Seeker
   { title: 'profile', icon: 'mdi-account-circle-outline', to: 'profile', roles: ['seeker'] },
   { title: 'opportunities', icon: 'mdi-briefcase-search-outline', to: 'opportunities', roles: ['seeker'] },
+  { title: 'applications', icon: 'mdi-file-send-outline', to: 'applications', roles: ['seeker'] },
   { title: 'wishes', icon: 'mdi-hand-heart-outline', to: 'wishes', roles: ['seeker'] },
   { title: 'assessments', icon: 'mdi-clipboard-check-outline', to: 'assessments', roles: ['seeker'] },
   { title: 'resumeBuilder', icon: 'mdi-file-account-outline', to: 'resume-builder', roles: ['seeker'] },

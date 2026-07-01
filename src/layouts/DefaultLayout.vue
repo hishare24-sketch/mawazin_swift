@@ -2,17 +2,26 @@
 import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
-import { useTheme } from 'vuetify'
+import { useDisplay, useTheme } from 'vuetify'
 import { useAuthStore } from '@/stores/AuthStore'
 import { navForRole } from './navigation'
 
 const { t, locale } = useI18n()
 const router = useRouter()
 const theme = useTheme()
+const { mobile } = useDisplay()
 const authStore = useAuthStore()
 
-const drawer = ref(true)
+// On desktop the drawer is permanent (open by default); on mobile it starts closed
+const drawer = ref(!mobile.value)
 const rail = ref(false)
+
+// Menu button: on mobile toggle the overlay drawer; on desktop toggle rail (collapse)
+function onMenuClick() {
+  if (mobile.value)
+    drawer.value = !drawer.value
+  else rail.value = !rail.value
+}
 
 const items = computed(() => navForRole(authStore.role))
 const user = computed(() => authStore.authUser)
@@ -42,7 +51,9 @@ const initials = computed(() => {
 <template>
   <VNavigationDrawer
     v-model="drawer"
-    :rail="rail"
+    :rail="rail && !mobile"
+    :temporary="mobile"
+    :permanent="!mobile"
     :location="locale === 'ar' ? 'right' : 'left'"
     width="270"
     color="primary"
@@ -73,12 +84,13 @@ const initials = computed(() => {
         rounded="lg"
         color="accent"
         class="mb-1"
+        @click="mobile && (drawer = false)"
       />
     </VList>
   </VNavigationDrawer>
 
   <VAppBar flat border color="surface" height="68">
-    <VBtn icon variant="text" @click="rail = !rail">
+    <VBtn icon variant="text" @click="onMenuClick">
       <VIcon icon="mdi-menu" />
     </VBtn>
 

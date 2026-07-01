@@ -12,6 +12,7 @@ const similar = computed(() => mockOpportunities.filter(o => o.id !== Number(rou
 
 const applied = ref(false)
 const applyDialog = ref(false)
+const appliedSnackbar = ref(false)
 const selectedResume = ref<number | null>(1)
 
 // User's resumes to choose from when applying
@@ -35,6 +36,7 @@ function openApply() {
 function confirmApply() {
   applied.value = true
   applyDialog.value = false
+  appliedSnackbar.value = true
 }
 
 function askAboutOpportunity() {
@@ -211,6 +213,14 @@ function askAboutOpportunity() {
         </VCardActions>
       </VCard>
     </VDialog>
+
+    <!-- Applied confirmation -->
+    <VSnackbar v-model="appliedSnackbar" color="success" timeout="4000">
+      تم إرسال طلبك بنجاح!
+      <template #actions>
+        <VBtn variant="text" @click="router.push({ name: 'applications' })">عرض طلباتي</VBtn>
+      </template>
+    </VSnackbar>
   </div>
 
   <VCard v-else class="pa-12 text-center">
