@@ -5,6 +5,7 @@ import PageHeader from '@/components/shared/PageHeader.vue'
 import { KIND_META, STATUS_META, useRequestsStore } from '@/stores/RequestsStore'
 import type { RequestStatus } from '@/stores/RequestsStore'
 import { ai } from '@/services/ai'
+import EmptyState from '@/components/shared/EmptyState.vue'
 
 const router = useRouter()
 const store = useRequestsStore()
@@ -130,9 +131,15 @@ function saveRate() {
         </template>
       </VList>
     </VCard>
-    <VCard v-else class="pa-10 text-center">
-      <VIcon icon="mdi-file-outline" size="48" color="medium-emphasis" />
-      <div class="text-body-2 text-medium-emphasis mt-2">لا طلبات في هذه الحالة</div>
+    <VCard v-else>
+      <EmptyState
+        icon="mdi-file-outline"
+        title="لا طلبات في هذه الحالة"
+        description="عندما تتقدّم لطلبات من السوق ستظهر هنا مع حالتها وتحليل أدائها."
+        action-text="تصفّح سوق الطلبات"
+        action-icon="mdi-storefront-outline"
+        @action="router.push({ name: 'requests' })"
+      />
     </VCard>
 
     <!-- Rate dialog -->

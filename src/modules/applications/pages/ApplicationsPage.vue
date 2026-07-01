@@ -3,6 +3,7 @@ import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import PageHeader from '@/components/shared/PageHeader.vue'
 import StatCard from '@/components/shared/StatCard.vue'
+import EmptyState from '@/components/shared/EmptyState.vue'
 import { useApplicationsStore } from '@/stores/ApplicationsStore'
 import type { ApplicationStatus } from '@/stores/ApplicationsStore'
 
@@ -97,10 +98,15 @@ const filterChips: { value: ApplicationStatus | 'all', label: string }[] = [
       </VList>
     </VCard>
 
-    <VCard v-else class="pa-10 text-center">
-      <VIcon icon="mdi-file-search-outline" size="56" color="medium-emphasis" />
-      <div class="text-h6 mt-3">لا توجد طلبات بهذه الحالة</div>
-      <VBtn color="accent" class="mt-3" :to="{ name: 'opportunities' }">تصفّح الفرص</VBtn>
+    <VCard v-else>
+      <EmptyState
+        icon="mdi-file-search-outline"
+        title="لا توجد طلبات بهذه الحالة"
+        description="تقدّم على الفرص المناسبة وتابع حالتها من هنا."
+        action-text="تصفّح الفرص"
+        action-icon="mdi-briefcase-search-outline"
+        @action="router.push({ name: 'opportunities' })"
+      />
     </VCard>
   </div>
 </template>

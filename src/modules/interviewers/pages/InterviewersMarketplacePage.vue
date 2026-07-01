@@ -5,6 +5,7 @@ import PageHeader from '@/components/shared/PageHeader.vue'
 import { BOOKING_STATUS_META, INTERVIEWER_TYPE_META, KIND_META, useInterviewersStore } from '@/stores/InterviewersStore'
 import type { InterviewerType } from '@/stores/InterviewersStore'
 import { useProfileStore } from '@/stores/ProfileStore'
+import EmptyState from '@/components/shared/EmptyState.vue'
 
 const router = useRouter()
 const store = useInterviewersStore()
@@ -156,9 +157,12 @@ function open(id: number) {
             </VCard>
           </VCol>
         </VRow>
-        <VCard v-if="!filtered.length" class="pa-10 text-center">
-          <VIcon icon="mdi-account-search-outline" size="48" color="medium-emphasis" />
-          <div class="text-body-2 text-medium-emphasis mt-2">لا مقيّمين مطابقين — وسّع الفلاتر</div>
+        <VCard v-if="!filtered.length">
+          <EmptyState
+            icon="mdi-account-search-outline"
+            title="لا مقيّمين مطابقين"
+            description="جرّب توسيع نطاق التقييم أو السعر، أو إزالة فلتر التخصص."
+          />
         </VCard>
 
         <!-- My bookings -->
