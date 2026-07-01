@@ -1,52 +1,53 @@
 import type { ThemeDefinition } from 'vuetify'
 
-// هوية «Indigo Aurora» — نيلي عصري + فيروزي (تفاعلات AI) + عنبري (أزرار CTA)
-export const lightTheme: ThemeDefinition = {
-  dark: false,
-  colors: {
-    'primary': '#4F46E5', // نيلي — الثقة والعلامة
-    'secondary': '#14B8A6', // فيروزي — تفاعلات الذكاء الاصطناعي
-    'accent': '#F59E0B', // عنبري — الأزرار المهمة (تقدم، قبول، إرسال)
-    'success': '#22C55E',
-    'info': '#3B82F6',
-    'warning': '#F97316',
-    'error': '#EF4444', // أحمر — الإلغاء، الرفض، التنبيهات
-    'background': '#F8FAFC', // خلفية فاتحة لراحة العين
-    'surface': '#FFFFFF',
-    'surface-variant': '#EEF2FF', // نيلي فاتح جدًا للأسطح الثانوية
-    'on-primary': '#FFFFFF',
-    'on-secondary': '#FFFFFF',
-    'on-accent': '#1F2937',
-    'on-surface': '#0F172A', // نصوص داكنة للقراءة الواضحة
-    'on-background': '#0F172A',
-  },
-  variables: {
-    'border-color': '#0F172A',
-    'theme-on-surface-variant': '#64748B',
-  },
-}
-
+// هوية «LittleBee» — خلفية خضراء داكنة + لمسة ليموني (lime) ساطعة
+// الداكن هو النمط المرجعي، والفاتح انعكاسه.
 export const darkTheme: ThemeDefinition = {
   dark: true,
   colors: {
-    'primary': '#818CF8', // نيلي أفتح على الخلفية الداكنة
-    'secondary': '#2DD4BF',
-    'accent': '#FBBF24',
+    'primary': '#A3E635', // ليموني — العلامة والعناصر التفاعلية والرسم البياني
+    'secondary': '#34D399', // زمردي — تفاعلات الذكاء الاصطناعي
+    'accent': '#BEF264', // ليموني ساطع — أزرار CTA (احسب/إيداع)
     'success': '#4ADE80',
-    'info': '#60A5FA',
-    'warning': '#FB923C',
+    'info': '#38BDF8',
+    'warning': '#FBBF24',
     'error': '#F87171',
-    'background': '#0B1120', // كحلي/سليت عميق
-    'surface': '#1E293B',
-    'surface-variant': '#273449',
-    'on-primary': '#0B1120',
-    'on-secondary': '#0B1120',
-    'on-accent': '#0B1120',
-    'on-surface': '#E2E8F0',
-    'on-background': '#E2E8F0',
+    'background': '#0E1712', // أخضر-أسود عميق
+    'surface': '#16221B', // بطاقات داكنة
+    'surface-variant': '#1F2E26',
+    'on-primary': '#0E1712', // نص داكن على الليموني الفاتح
+    'on-secondary': '#0E1712',
+    'on-accent': '#14210A',
+    'on-surface': '#E6EFE7', // أبيض مائل للأخضر
+    'on-background': '#E6EFE7',
   },
   variables: {
-    'border-color': '#E2E8F0',
-    'theme-on-surface-variant': '#94A3B8',
+    'border-color': '#E6EFE7',
+    'theme-on-surface-variant': '#8CA396',
+  },
+}
+
+export const lightTheme: ThemeDefinition = {
+  dark: false,
+  colors: {
+    'primary': '#4D7C0F', // ليموني داكن — تباين واضح على الأبيض
+    'secondary': '#059669', // زمردي
+    'accent': '#84CC16', // ليموني — أزرار CTA
+    'success': '#16A34A',
+    'info': '#0284C7',
+    'warning': '#D97706',
+    'error': '#DC2626',
+    'background': '#F3F8EF', // أبيض مائل للأخضر الفاتح
+    'surface': '#FFFFFF',
+    'surface-variant': '#EBF3E3',
+    'on-primary': '#FFFFFF',
+    'on-secondary': '#FFFFFF',
+    'on-accent': '#14210A', // نص داكن على الليموني
+    'on-surface': '#14210F', // نص أخضر داكن
+    'on-background': '#14210F',
+  },
+  variables: {
+    'border-color': '#14210F',
+    'theme-on-surface-variant': '#5B7052',
   },
 }

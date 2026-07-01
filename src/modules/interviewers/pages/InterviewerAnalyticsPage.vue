@@ -80,7 +80,7 @@ const insight = computed(() => {
             <div v-for="(v, i) in earningsSeries" :key="i" class="d-flex flex-column align-center flex-grow-1">
               <div class="text-caption font-weight-bold mb-1">{{ v }}</div>
               <div
-                class="rounded-t brand-gradient w-100"
+                class="rounded-t bar-lime w-100"
                 :style="{ height: `${(v / maxEarning) * 150}px`, minHeight: '8px', transition: 'height .4s ease' }"
               />
               <div class="text-caption text-medium-emphasis mt-1">{{ months[i] }}</div>

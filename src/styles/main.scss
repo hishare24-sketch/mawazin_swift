@@ -2,7 +2,9 @@
 
 :root {
   --app-font: 'Tajawal', 'Segoe UI', 'Tahoma', 'Noto Sans Arabic', system-ui, sans-serif;
-  --brand-gradient: linear-gradient(135deg, #4f46e5 0%, #7c3aed 45%, #0ea5e9 100%);
+  // «LittleBee» hero gradient — deep green with a lime edge (readable with light text)
+  --brand-gradient: linear-gradient(135deg, #14532d 0%, #0f2e1c 55%, #1a3a24 100%);
+  --lime-glow: radial-gradient(circle at 60% 30%, rgba(163, 230, 53, 0.22), transparent 60%);
 }
 
 * {
@@ -23,7 +25,7 @@ body {
   letter-spacing: 0 !important;
 }
 
-// Custom scrollbar (indigo)
+// Lime scrollbar
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
@@ -32,11 +34,11 @@ body {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(79, 70, 229, 0.28);
+  background: rgba(163, 230, 53, 0.3);
   border-radius: 8px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(79, 70, 229, 0.5);
+  background: rgba(163, 230, 53, 0.55);
 }
 
 // Utility
@@ -48,45 +50,59 @@ body {
   border-radius: 16px;
 }
 
-// Brand gradient (auth + hero areas) — !important to win over Vuetify's .v-card background
+// Brand gradient (auth + hero areas) with a soft lime glow overlay
 .brand-gradient {
   background: var(--brand-gradient) !important;
+  position: relative;
+}
+.brand-gradient::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: var(--lime-glow);
+  pointer-events: none;
+  border-radius: inherit;
 }
 
 // Gradient text for headings / brand marks
 .text-gradient {
-  background: var(--brand-gradient);
+  background: linear-gradient(120deg, #a3e635, #34d399);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
 }
 
-// Softer, more modern card shadows
+// LittleBee cards: large radius, hairline border, soft green-tinted shadow
 .v-card {
-  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04), 0 4px 16px rgba(15, 23, 42, 0.06) !important;
-  transition: box-shadow 0.22s ease, transform 0.22s ease;
+  border-radius: 16px !important;
+  border: 1px solid rgba(140, 163, 150, 0.16);
+  box-shadow: 0 1px 2px rgba(6, 20, 12, 0.06), 0 6px 20px rgba(6, 20, 12, 0.08) !important;
+  transition: box-shadow 0.22s ease, transform 0.22s ease, border-color 0.22s ease;
 }
 
-// Interactive cards gently lift on hover
+// Interactive cards lift with a lime glow on hover
 .v-card.cursor-pointer:hover {
-  box-shadow: 0 8px 28px rgba(79, 70, 229, 0.16) !important;
+  border-color: rgba(163, 230, 53, 0.45);
+  box-shadow: 0 10px 30px rgba(163, 230, 53, 0.18) !important;
   transform: translateY(-3px);
 }
 
-// Buttons: subtle press feedback + smoother motion
+// Buttons: subtle motion
 .v-btn {
   transition: transform 0.15s ease, box-shadow 0.2s ease !important;
 }
-.v-btn--elevated:hover,
-.v-btn.bg-accent:hover,
-.v-btn.text-accent:hover {
+.v-btn--elevated:hover {
   transform: translateY(-1px);
 }
 .v-btn:active {
   transform: translateY(0);
 }
 
-// Chips a touch rounder for a modern feel
 .v-chip {
   font-weight: 500;
+}
+
+// Vibrant lime fill for chart bars / progress visuals
+.bar-lime {
+  background: linear-gradient(to top, #4d7c0f 0%, #a3e635 100%);
 }
