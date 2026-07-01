@@ -6,6 +6,9 @@ import type { ProofType, Skill } from '@/stores/ProfileStore'
 import { useResumesStore } from '@/stores/ResumesStore'
 import { ai } from '@/services/ai'
 import TrustScoreCard from '@/components/shared/TrustScoreCard.vue'
+import { LEVEL_META, TYPE_META, useInterviewsStore } from '@/stores/InterviewsStore'
+
+const interviewsStore = useInterviewsStore()
 
 const authStore = useAuthStore()
 const profile = useProfileStore()
@@ -161,6 +164,7 @@ const profileCompletion = computed(() => {
       <VTab value="certificates" prepend-icon="mdi-certificate-outline">الشهادات</VTab>
       <VTab value="endorsements" prepend-icon="mdi-account-star-outline">التوصيات</VTab>
       <VTab value="resumes" prepend-icon="mdi-file-account-outline">السير الذاتية</VTab>
+      <VTab value="interviews" prepend-icon="mdi-account-tie-voice-outline">المقابلات</VTab>
       <VTab value="privacy" prepend-icon="mdi-shield-lock-outline">الخصوصية</VTab>
     </VTabs>
 
@@ -318,6 +322,31 @@ const profileCompletion = computed(() => {
             </VListItem>
           </VList>
           <div v-if="!resumesStore.count" class="text-center text-medium-emphasis py-6">لا سير ذاتية بعد — أنشئ أول سيرة</div>
+        </VCard>
+      </VWindowItem>
+
+      <!-- Interviews -->
+      <VWindowItem value="interviews">
+        <VCard class="pa-5">
+          <div class="d-flex justify-space-between mb-4">
+            <h3 class="text-subtitle-1 font-weight-bold">المقابلات المُنجزة ({{ interviewsStore.completed.length }})</h3>
+            <VBtn color="accent" size="small" prepend-icon="mdi-plus" :to="{ name: 'interviews' }">مقابلة جديدة</VBtn>
+          </div>
+          <VList v-if="interviewsStore.completed.length" lines="two" class="py-0">
+            <VListItem v-for="iv in interviewsStore.completed" :key="iv.id" :to="{ name: 'interview-result', params: { id: iv.id } }">
+              <template #prepend>
+                <VAvatar color="success" variant="tonal" rounded="lg"><VIcon :icon="TYPE_META[iv.type].icon" /></VAvatar>
+              </template>
+              <VListItemTitle class="font-weight-bold">{{ TYPE_META[iv.type].label }} · {{ LEVEL_META[iv.level].label }}</VListItemTitle>
+              <VListItemSubtitle>{{ iv.date }} · النتيجة {{ iv.result?.score }}% ({{ iv.result?.level }})</VListItemSubtitle>
+              <template #append>
+                <VChip color="success" size="small" label>{{ iv.result?.score }}%</VChip>
+              </template>
+            </VListItem>
+          </VList>
+          <div v-else class="text-center text-medium-emphasis py-6">
+            لا مقابلات بعد — أجرِ مقابلة AI لتحديد مستواك ورفع نسبة ثقتك
+          </div>
         </VCard>
       </VWindowItem>
 

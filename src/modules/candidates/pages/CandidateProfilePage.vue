@@ -10,6 +10,16 @@ const store = useCandidatesStore()
 const candidate = computed(() => store.getById(Number(route.params.id)))
 const snackbar = ref('')
 
+// Request interview dialog
+const requestInterviewDialog = ref(false)
+const requestLevel = ref('متوسط')
+const interviewLevels = ['أساسي', 'متوسط', 'متقدم', 'خبير']
+const levelCosts: Record<string, string> = { 'أساسي': 'مجاني', 'متوسط': '49 ريال', 'متقدم': '149 ريال', 'خبير': '299 ريال' }
+function sendInterviewRequest() {
+  requestInterviewDialog.value = false
+  snackbar.value = `تم إرسال طلب مقابلة (${requestLevel.value}) للمرشح`
+}
+
 const matchBreakdown = [
   { label: 'المهارات', value: 90 },
   { label: 'الخبرات', value: 85 },
@@ -96,6 +106,7 @@ const endorsements = [
           </VChip>
 
           <VBtn color="accent" block class="mb-2" prepend-icon="mdi-hand-heart-outline" @click="snackbar = 'تم إرسال رغبة للمرشح'">إبداء رغبة</VBtn>
+          <VBtn color="primary" block class="mb-2" prepend-icon="mdi-account-tie-voice-outline" @click="requestInterviewDialog = true">طلب مقابلة</VBtn>
           <VBtn color="primary" variant="tonal" block class="mb-2" prepend-icon="mdi-calendar-clock-outline" @click="store.setStatus(candidate.id, 'interview'); snackbar = 'تمت دعوة المرشح لمقابلة'">جدولة مقابلة</VBtn>
           <VBtn color="secondary" variant="outlined" block class="mb-2" prepend-icon="mdi-message-outline" :to="{ name: 'messages' }">إرسال رسالة</VBtn>
           <VBtn color="error" variant="text" block prepend-icon="mdi-close" @click="store.setStatus(candidate.id, 'rejected'); snackbar = 'تم رفض الترشيح'">رفض الترشيح</VBtn>
@@ -113,6 +124,31 @@ const endorsements = [
         </VCard>
       </VCol>
     </VRow>
+
+    <!-- Request interview dialog -->
+    <VDialog v-model="requestInterviewDialog" max-width="440">
+      <VCard class="pa-2">
+        <VCardTitle>طلب مقابلة — {{ candidate.name }}</VCardTitle>
+        <VCardText>
+          <p class="text-body-2 text-medium-emphasis mb-2">اختر مستوى المقابلة المطلوب:</p>
+          <VCard
+            v-for="lvl in interviewLevels"
+            :key="lvl"
+            :variant="requestLevel === lvl ? 'flat' : 'outlined'"
+            :color="requestLevel === lvl ? 'primary' : undefined"
+            class="pa-3 mb-2 cursor-pointer d-flex align-center justify-space-between"
+            @click="requestLevel = lvl"
+          >
+            <span :class="requestLevel === lvl ? 'text-white' : ''">{{ lvl }}</span>
+            <VChip size="x-small" :color="requestLevel === lvl ? 'white' : 'accent'" :variant="requestLevel === lvl ? 'flat' : 'tonal'" label>{{ levelCosts[lvl] }}</VChip>
+          </VCard>
+        </VCardText>
+        <VCardActions class="justify-end">
+          <VBtn variant="text" @click="requestInterviewDialog = false">إلغاء</VBtn>
+          <VBtn color="accent" prepend-icon="mdi-send" @click="sendInterviewRequest">إرسال الطلب</VBtn>
+        </VCardActions>
+      </VCard>
+    </VDialog>
 
     <VSnackbar :model-value="!!snackbar" color="success" timeout="2500" @update:model-value="snackbar = ''">
       {{ snackbar }}
