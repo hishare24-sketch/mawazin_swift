@@ -4,7 +4,10 @@ import vue from '@vitejs/plugin-vue'
 import vuetify from 'vite-plugin-vuetify'
 
 // https://vite.dev/config/
-export default defineConfig({
+// In production (GitHub Pages project site) assets live under /smart-recruitment-system/.
+// Dev keeps the root base so localhost URLs stay clean.
+export default defineConfig(({ command }) => ({
+  base: command === 'build' ? '/smart-recruitment-system/' : '/',
   plugins: [
     vue(),
     vuetify({ autoImport: true }),
@@ -20,4 +23,4 @@ export default defineConfig({
     port: Number(process.env.PORT) || 5173,
     host: true,
   },
-})
+}))
