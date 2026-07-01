@@ -1,8 +1,16 @@
 <script setup lang="ts">
 import { computed, nextTick, ref } from 'vue'
+import { ai } from '@/services/ai'
+import { useTrustStore } from '@/stores/TrustStore'
+import { useProfileStore } from '@/stores/ProfileStore'
+import { useInterviewsStore } from '@/stores/InterviewsStore'
 
-interface ChatMessage { from: 'user' | 'ai', text: string }
+interface ChatMessage { from: 'user' | 'ai', text: string, card?: import('@/services/ai').UploadAnalysis }
 interface Conversation { id: number, title: string, messages: ChatMessage[] }
+
+const trustStore = useTrustStore()
+const profileStore = useProfileStore()
+const interviewsStore = useInterviewsStore()
 
 const conversations = ref<Conversation[]>([
   {
@@ -25,7 +33,21 @@ const conversations = ref<Conversation[]>([
 const activeId = ref(1)
 const active = computed(() => conversations.value.find(c => c.id === activeId.value)!)
 
-const suggestions = ['حلّل نسبة الثقة في ملفي', 'اقترح لي مقابلة مناسبة', 'كيف أثبت مهاراتي؟', 'حلّل مقابلاتي السابقة', 'حلّل فرصي الحالية', 'أنشئ لي سيرة ذاتية']
+// Context-aware quick suggestions driven by real profile state
+const suggestions = computed(() => ai.assistantSuggestions({
+  unverifiedSkills: profileStore.unverifiedSkills,
+  pendingProofs: profileStore.pendingProofRequests.length,
+}))
+
+// Proactive AI alerts grounded in the user's live data
+const proactiveDismissed = ref(false)
+const proactiveNudges = computed(() => ai.proactiveNudges({
+  trust: trustStore.score,
+  trustDelta: 5,
+  pendingProofs: profileStore.pendingProofRequests.length,
+  unverifiedSkills: profileStore.unverifiedSkills,
+}))
+
 const historySearch = ref('')
 const filteredHistory = computed(() =>
   conversations.value.filter(c => !historySearch.value || c.title.includes(historySearch.value)),
@@ -42,20 +64,12 @@ async function scrollToBottom() {
     listRef.value.scrollTop = listRef.value.scrollHeight
 }
 
-function mockReply(question: string): string {
-  if (question.includes('نسبة الثقة') || question.includes('حلّل نسبتي'))
-    return 'نسبة ثقتك الحالية 75/100 (موثوق). أقوى عواملك: اكتمال البيانات والتوصيات. لرفعها: أكمل اختبار مهارة (+5%) وأجرِ مقابلة AI متقدمة (+5%). افتح ملفك ثم "عرض التفاصيل" لخطة كاملة.'
-  if (question.includes('اقترح') && question.includes('مقابلة'))
-    return 'أقترح مقابلة AI بمستوى «متقدم» لتثبيت مهاراتك القيادية ورفع نسبة ثقتك. هي أسئلة تحليل حالات وتفكير استراتيجي. توجّه إلى "المقابلات" لبدئها الآن.'
-  if (question.includes('أثبت') || question.includes('إثبات'))
-    return 'لإثبات مهاراتك: اربط كل مهارة بإثبات — اجتز اختبارها في مركز التقييم، أضف مشروعاً منفّذاً، أو اطلب توصية موثّقة من مدير سابق. كل إثبات يرفع نسبة الثقة في المهارة ومستواها.'
-  if (question.includes('حلّل مقابلاتي') || question.includes('مقابلاتي السابقة'))
-    return 'في مقابلتك الأخيرة (متوسط) حصلت على 82%. نقاط قوتك: وضوح الحلول والأمثلة العملية. للتحسّن: ادعم إجاباتك بأرقام قابلة للقياس. أنصح بمقابلة متقدمة لإثبات القيادة.'
-  if (question.includes('سيرة'))
-    return 'بالتأكيد! توجّه إلى "منشئ السيرة الذاتية" واختر القالب المناسب، وسأتولّى الباقي مع إعادة الصياغة الذكية.'
-  if (question.includes('فرص'))
-    return 'بناءً على ملفك، لديك 3 فرص بنسبة تطابق أعلى من 85%. أبرزها "مطوّر واجهات أمامية" بنسبة 94%.'
-  return 'سؤال ممتاز! أنصحك بالتركيز على تطوير مهاراتك التقنية وإضافة توصيات موثّقة. هل تريد تفصيلاً أكثر؟'
+function aiReply(question: string): string {
+  return ai.assistantReply(question, {
+    trust: trustStore.score,
+    unverifiedSkills: profileStore.unverifiedSkills,
+    lastInterviewScore: interviewsStore.completed[0]?.result?.score ?? null,
+  })
 }
 
 function newConversation() {
@@ -75,20 +89,31 @@ async function send(text?: string) {
   await scrollToBottom()
   isTyping.value = true
   setTimeout(async () => {
-    active.value.messages.push({ from: 'ai', text: mockReply(content) })
+    active.value.messages.push({ from: 'ai', text: aiReply(content) })
     isTyping.value = false
     await scrollToBottom()
   }, 900)
 }
 
-function onFilePick() {
-  active.value.messages.push({ from: 'user', text: '📎 تم رفع ملف: my-cv.pdf' })
+// Real file upload → AI analysis
+const fileInput = ref<HTMLInputElement | null>(null)
+function triggerFilePick() {
+  fileInput.value?.click()
+}
+async function onFileChange(e: Event) {
+  const file = (e.target as HTMLInputElement).files?.[0]
+  if (!file)
+    return
+  active.value.messages.push({ from: 'user', text: `📎 تم رفع ملف: ${file.name}` })
+  await scrollToBottom()
   isTyping.value = true
-  setTimeout(() => {
-    active.value.messages.push({ from: 'ai', text: 'حلّلت سيرتك: نقاط القوة واضحة في الخبرات التقنية. أقترح إضافة أرقام ونتائج ملموسة للإنجازات، وكلمات مفتاحية لأنظمة ATS.' })
+  const analysis = ai.analyzeUpload(file.name)
+  setTimeout(async () => {
+    active.value.messages.push({ from: 'ai', text: analysis.summary, card: analysis })
     isTyping.value = false
-    scrollToBottom()
+    await scrollToBottom()
   }, 1000)
+  ;(e.target as HTMLInputElement).value = ''
 }
 </script>
 
@@ -124,6 +149,28 @@ function onFilePick() {
         </div>
       </div>
 
+      <!-- Proactive AI alerts (context-aware) -->
+      <div v-if="!proactiveDismissed && proactiveNudges.length" class="mb-3">
+        <VAlert
+          :type="proactiveNudges[0].tone"
+          variant="tonal"
+          density="compact"
+          border="start"
+          closable
+          @click:close="proactiveDismissed = true"
+        >
+          <div class="d-flex align-center justify-space-between flex-wrap ga-2">
+            <div class="d-flex align-center ga-2">
+              <VIcon :icon="proactiveNudges[0].icon" size="20" />
+              <span class="text-body-2">{{ proactiveNudges[0].text }}</span>
+            </div>
+            <VBtn v-if="proactiveNudges[0].action" size="x-small" variant="flat" color="accent" :to="{ name: proactiveNudges[0].action }">
+              {{ proactiveNudges[0].actionLabel }}
+            </VBtn>
+          </div>
+        </VAlert>
+      </div>
+
       <VCard class="flex-grow-1 d-flex flex-column overflow-hidden">
         <div ref="listRef" class="flex-grow-1 overflow-y-auto pa-4">
           <div v-for="(msg, i) in active.messages" :key="i" class="d-flex mb-3" :class="msg.from === 'user' ? 'justify-end' : 'justify-start'">
@@ -133,6 +180,31 @@ function onFilePick() {
               </VAvatar>
               <div class="pa-3 rounded-lg text-body-2" :class="msg.from === 'user' ? 'bg-primary text-white' : 'bg-grey-lighten-3'">
                 {{ msg.text }}
+
+                <!-- Structured file-analysis card -->
+                <div v-if="msg.card" class="mt-3">
+                  <div class="d-flex align-center ga-1 mb-1">
+                    <VIcon icon="mdi-thumb-up-outline" color="success" size="16" />
+                    <span class="text-caption font-weight-bold">نقاط القوة</span>
+                  </div>
+                  <ul class="text-caption mb-2 ps-4">
+                    <li v-for="s in msg.card.strengths" :key="s">{{ s }}</li>
+                  </ul>
+                  <div class="d-flex align-center ga-1 mb-1">
+                    <VIcon icon="mdi-arrow-up-circle-outline" color="warning" size="16" />
+                    <span class="text-caption font-weight-bold">اقتراحات التحسين</span>
+                  </div>
+                  <ul class="text-caption mb-2 ps-4">
+                    <li v-for="s in msg.card.improvements" :key="s">{{ s }}</li>
+                  </ul>
+                  <div class="d-flex align-center ga-1 mb-1">
+                    <VIcon icon="mdi-tag-multiple-outline" color="secondary" size="16" />
+                    <span class="text-caption font-weight-bold">كلمات مفتاحية ATS مقترحة</span>
+                  </div>
+                  <div class="d-flex flex-wrap ga-1">
+                    <VChip v-for="k in msg.card.atsKeywords" :key="k" size="x-small" color="secondary" variant="tonal" label>{{ k }}</VChip>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
@@ -150,7 +222,8 @@ function onFilePick() {
         </div>
 
         <div class="pa-4 d-flex align-center ga-2">
-          <VBtn icon="mdi-paperclip" variant="text" @click="onFilePick" />
+          <input ref="fileInput" type="file" accept=".pdf,.doc,.docx,.png,.jpg,.jpeg" hidden @change="onFileChange">
+          <VBtn icon="mdi-paperclip" variant="text" @click="triggerFilePick" />
           <VTextField
             v-model="input"
             placeholder="اكتب رسالتك..."

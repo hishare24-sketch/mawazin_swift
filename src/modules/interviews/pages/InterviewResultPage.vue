@@ -53,12 +53,23 @@ const levelColor = computed(() => {
       <!-- Video analysis or breakdown -->
       <VCol cols="12" md="6">
         <VCard v-if="result.video" class="pa-5 mb-4">
-          <div class="text-subtitle-1 font-weight-bold mb-3">تحليل الفيديو (AI)</div>
-          <div v-for="item in [{ l: 'لغة الجسد', v: result.video.bodyLanguage }, { l: 'نبرة الصوت', v: result.video.tone }, { l: 'الثقة بالنفس', v: result.video.confidence }]" :key="item.l" class="mb-2">
+          <div class="d-flex align-center ga-2 mb-3">
+            <VIcon icon="mdi-video-account" color="secondary" />
+            <span class="text-subtitle-1 font-weight-bold">تحليل الفيديو (AI)</span>
+          </div>
+          <div v-for="item in [{ l: 'لغة الجسد', v: result.video.bodyLanguage }, { l: 'نبرة الصوت', v: result.video.tone }, { l: 'الثقة بالنفس', v: result.video.confidence }, { l: 'وتيرة الكلام', v: result.video.pace }, { l: 'التواصل البصري', v: result.video.eyeContact }]" :key="item.l" class="mb-2">
             <div class="d-flex justify-space-between text-body-2 mb-1"><span>{{ item.l }}</span><span class="font-weight-bold">{{ item.v }}%</span></div>
             <VProgressLinear :model-value="item.v" color="secondary" height="6" rounded />
           </div>
-          <p class="text-caption text-medium-emphasis mt-2">{{ result.video.note }}</p>
+          <p class="text-caption text-medium-emphasis mt-2 mb-2">{{ result.video.note }}</p>
+          <VDivider class="mb-2" />
+          <div class="text-caption font-weight-bold mb-1">تلميحات لتحسين الأداء</div>
+          <VList density="compact" class="py-0">
+            <VListItem v-for="tip in result.video.tips" :key="tip" class="px-0" min-height="28">
+              <template #prepend><VIcon icon="mdi-lightbulb-on-outline" color="accent" size="16" /></template>
+              <VListItemTitle class="text-caption" style="white-space: normal">{{ tip }}</VListItemTitle>
+            </VListItem>
+          </VList>
         </VCard>
 
         <VCard class="pa-5">
