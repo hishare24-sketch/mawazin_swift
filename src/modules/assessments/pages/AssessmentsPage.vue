@@ -6,15 +6,15 @@ import {
   QUESTION_TYPE_META,
   TEST_SIZES,
   availableAssessments,
-  challenges,
   completedAssessments,
 } from '../services/mockAssessments'
 import { useGamificationStore } from '@/stores/GamificationStore'
 
 const router = useRouter()
 const g = useGamificationStore()
-// Points + leaderboard now come from the real gamification engine
+// Points, leaderboard and challenges now come from the real gamification engine
 const leaderboard = computed(() => g.leaderboard)
+const METRIC_ICON: Record<string, string> = { skills: 'mdi-star-plus-outline', interviews: 'mdi-account-tie-voice-outline', recommendations: 'mdi-comment-check-outline', assessments: 'mdi-clipboard-check-outline', peerRequests: 'mdi-swap-horizontal-circle-outline', loginDays: 'mdi-calendar-check-outline' }
 
 // Size picker dialog
 const sizeDialog = ref(false)
@@ -80,22 +80,22 @@ const allTypes = Object.values(QUESTION_TYPE_META)
           </VCol>
         </VRow>
 
-        <!-- Challenges -->
+        <!-- Challenges (live from the gamification engine) -->
         <h3 class="text-h6 font-weight-bold mb-3 mt-5">التحديات</h3>
         <VRow>
-          <VCol v-for="c in challenges" :key="c.id" cols="12" sm="6">
+          <VCol v-for="c in g.challenges" :key="c.id" cols="12" sm="6">
             <VCard class="pa-4">
               <div class="d-flex align-center ga-3 mb-2">
-                <VAvatar :color="c.cadence === 'daily' ? 'primary' : 'accent'" variant="tonal" rounded="lg">
-                  <VIcon :icon="c.icon" />
+                <VAvatar :color="c.done ? 'success' : 'accent'" variant="tonal" rounded="lg">
+                  <VIcon :icon="c.done ? 'mdi-check' : (METRIC_ICON[c.metric] || 'mdi-target')" />
                 </VAvatar>
                 <div class="flex-grow-1">
                   <div class="text-body-2 font-weight-bold">{{ c.title }}</div>
-                  <div class="text-caption text-medium-emphasis">{{ c.cadence === 'daily' ? 'تحدٍّ يومي' : 'تحدٍّ أسبوعي' }}</div>
+                  <div class="text-caption text-medium-emphasis">{{ c.progress }}/{{ c.target }} — {{ c.done ? 'مكتمل' : 'قيد التقدّم' }}</div>
                 </div>
-                <VChip color="success" size="small" label prepend-icon="mdi-star-four-points">+{{ c.reward }}</VChip>
+                <VChip :color="c.done ? 'success' : 'warning'" size="small" label prepend-icon="mdi-star-four-points">+{{ c.reward }}</VChip>
               </div>
-              <VProgressLinear :model-value="c.progress" :color="c.cadence === 'daily' ? 'primary' : 'accent'" height="6" rounded />
+              <VProgressLinear :model-value="(c.progress / c.target) * 100" :color="c.done ? 'success' : 'accent'" height="6" rounded />
             </VCard>
           </VCol>
         </VRow>
