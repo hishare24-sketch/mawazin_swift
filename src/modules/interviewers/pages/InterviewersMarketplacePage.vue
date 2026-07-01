@@ -2,7 +2,7 @@
 import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import PageHeader from '@/components/shared/PageHeader.vue'
-import { BOOKING_STATUS_META, INTERVIEWER_TYPE_META, KIND_META, useInterviewersStore } from '@/stores/InterviewersStore'
+import { BOOKING_STATUS_META, INTERVIEWER_TIER_META, INTERVIEWER_TIERS, INTERVIEWER_TYPE_META, KIND_META, interviewerTier, useInterviewersStore } from '@/stores/InterviewersStore'
 import type { InterviewerType } from '@/stores/InterviewersStore'
 import { useProfileStore } from '@/stores/ProfileStore'
 import EmptyState from '@/components/shared/EmptyState.vue'
@@ -45,6 +45,9 @@ function applyReschedule(s: TimeSuggestion) {
   reschedDialog.value = false
   reschedSnackbar.value = true
 }
+
+// Accreditation tiers reference dialog
+const tiersDialog = ref(false)
 
 // Pre-interview attachments dialog
 const attachDialog = ref(false)
@@ -158,11 +161,38 @@ function open(id: number) {
       icon="mdi-account-supervisor-circle-outline"
     >
       <template #actions>
+        <VBtn variant="text" prepend-icon="mdi-medal-outline" @click="tiersDialog = true">
+          المستويات والمزايا
+        </VBtn>
         <VBtn variant="tonal" color="secondary" prepend-icon="mdi-badge-account-outline" :to="{ name: 'interviewer-register' }">
           سجّل كمقيّم
         </VBtn>
       </template>
     </PageHeader>
+
+    <!-- Accreditation tiers reference -->
+    <VDialog v-model="tiersDialog" max-width="620">
+      <VCard class="pa-2">
+        <VCardTitle class="d-flex align-center ga-2">
+          <VIcon icon="mdi-medal-outline" color="warning" /> مستويات الاعتماد ومزاياها
+        </VCardTitle>
+        <VCardText>
+          <p class="text-caption text-medium-emphasis mb-3">يترقّى المقيّم تلقائيًا بين المستويات كلما زادت مقابلاته المنجزة وتقييماته.</p>
+          <VCard v-for="t in INTERVIEWER_TIERS" :key="t" variant="outlined" class="pa-3 mb-2">
+            <div class="d-flex align-center ga-2 mb-1">
+              <VChip :color="INTERVIEWER_TIER_META[t].color" size="small" variant="tonal" label :prepend-icon="INTERVIEWER_TIER_META[t].icon">
+                {{ INTERVIEWER_TIER_META[t].label }}
+              </VChip>
+              <span class="text-caption text-medium-emphasis">{{ INTERVIEWER_TIER_META[t].req }}</span>
+            </div>
+            <div class="text-body-2"><VIcon icon="mdi-gift-outline" size="14" color="success" /> {{ INTERVIEWER_TIER_META[t].perk }}</div>
+          </VCard>
+        </VCardText>
+        <VCardActions class="justify-end">
+          <VBtn variant="text" @click="tiersDialog = false">إغلاق</VBtn>
+        </VCardActions>
+      </VCard>
+    </VDialog>
 
     <!-- AI recommended -->
     <div v-if="recommended.length" class="mb-6">
@@ -294,9 +324,12 @@ function open(id: number) {
                 <VChip color="success" size="small" label>{{ matchOf(iv.id) }}%</VChip>
               </div>
 
-              <div class="d-flex align-center ga-2 mb-2">
+              <div class="d-flex align-center flex-wrap ga-2 mb-2">
                 <VChip :color="INTERVIEWER_TYPE_META[iv.type].color" size="x-small" label :prepend-icon="INTERVIEWER_TYPE_META[iv.type].icon">
                   {{ INTERVIEWER_TYPE_META[iv.type].label }}
+                </VChip>
+                <VChip :color="INTERVIEWER_TIER_META[interviewerTier(iv)].color" size="x-small" variant="tonal" label :prepend-icon="INTERVIEWER_TIER_META[interviewerTier(iv)].icon">
+                  {{ INTERVIEWER_TIER_META[interviewerTier(iv)].label }}
                 </VChip>
                 <div class="d-flex align-center text-caption text-medium-emphasis">
                   <VIcon icon="mdi-star" color="warning" size="14" class="me-1" />{{ iv.rating }} ({{ iv.reviewsCount }})

@@ -4,8 +4,10 @@ import { useRouter } from 'vue-router'
 import { ai } from '@/services/ai'
 import { TAXONOMY } from '@/services/taxonomy'
 import type { SearchScope } from '@/services/ai/types'
+import { useSearchPrefsStore } from '@/stores/SearchPrefsStore'
 
 const router = useRouter()
+const prefs = useSearchPrefsStore()
 
 const query = ref('')
 const focused = ref(false)
@@ -13,7 +15,10 @@ const listening = ref(false)
 
 const suggestions = computed(() => (focused.value ? ai.searchSuggestions(query.value) : []))
 const alternatives = computed(() => (query.value ? ai.keywordAlternatives(query.value) : []))
-const showDropdown = computed(() => focused.value && (suggestions.value.length > 0 || alternatives.value.length > 0))
+// Recent + saved searches only surface before the user starts typing (adaptive history)
+const recent = computed(() => (focused.value && !query.value.trim() ? prefs.recent.slice(0, 6) : []))
+const savedSearches = computed(() => (focused.value && !query.value.trim() ? prefs.saved.slice(0, 5) : []))
+const showDropdown = computed(() => focused.value && (suggestions.value.length > 0 || alternatives.value.length > 0 || recent.value.length > 0 || savedSearches.value.length > 0))
 
 // The suggestions list is teleported to <body> so it escapes the app-bar's
 // `overflow: hidden`; its position is anchored to the field on every open/resize.
@@ -49,7 +54,12 @@ const scopes: { value: SearchScope, title: string }[] = [
 
 function go(extra: Record<string, string> = {}) {
   focused.value = false
+  prefs.recordSearch(query.value)
   router.push({ name: 'search', query: { q: query.value.trim(), ...extra } })
+}
+function runSaved(s: { q: string, scope: string }) {
+  query.value = s.q
+  go({ scope: s.scope })
 }
 function pick(s: string) {
   query.value = s
@@ -143,6 +153,14 @@ function startVoice() {
       <VExpandTransition>
         <VCard v-if="showDropdown" class="global-search__menu" :style="dropdownStyle" elevation="8" rounded="lg">
           <VList density="compact">
+            <template v-if="savedSearches.length">
+              <VListSubheader class="text-caption"><VIcon icon="mdi-bookmark-outline" size="14" class="me-1" /> عمليات بحث محفوظة</VListSubheader>
+              <VListItem v-for="s in savedSearches" :key="`sav-${s.id}`" prepend-icon="mdi-bookmark" :title="s.q" @mousedown="runSaved(s)" />
+            </template>
+            <template v-if="recent.length">
+              <VListSubheader class="text-caption"><VIcon icon="mdi-history" size="14" class="me-1" /> عمليات بحث أخيرة</VListSubheader>
+              <VListItem v-for="r in recent" :key="`rec-${r}`" prepend-icon="mdi-clock-outline" :title="r" @mousedown="pick(r)" />
+            </template>
             <VListSubheader v-if="alternatives.length" class="text-caption">هل تقصد</VListSubheader>
             <VListItem v-for="alt in alternatives" :key="`alt-${alt}`" prepend-icon="mdi-lightbulb-on-outline" :title="alt" @mousedown="pick(alt)" />
             <VListSubheader class="text-caption"><VIcon icon="mdi-robot-happy-outline" size="14" class="me-1" /> اقتراحات ذكية</VListSubheader>

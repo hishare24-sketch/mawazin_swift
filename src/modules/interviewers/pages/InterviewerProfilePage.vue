@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { COMMISSION_NOTE, INTERVIEWER_TYPE_META, KIND_META, PLATFORM_COMMISSION, useInterviewersStore } from '@/stores/InterviewersStore'
+import { COMMISSION_NOTE, INTERVIEWER_TIER_META, INTERVIEWER_TYPE_META, KIND_META, PLATFORM_COMMISSION, interviewerTier, useInterviewersStore } from '@/stores/InterviewersStore'
 import type { CustomEvalElement, MarketInterviewKind } from '@/stores/InterviewersStore'
 import { useProfileStore } from '@/stores/ProfileStore'
 import { useNotificationsStore } from '@/stores/NotificationsStore'
@@ -203,6 +203,9 @@ function confirmBooking() {
           <div class="d-flex flex-wrap ga-2 mb-4">
             <VChip :color="INTERVIEWER_TYPE_META[interviewer.type].color" variant="tonal" :prepend-icon="INTERVIEWER_TYPE_META[interviewer.type].icon">
               {{ INTERVIEWER_TYPE_META[interviewer.type].label }}
+            </VChip>
+            <VChip :color="INTERVIEWER_TIER_META[interviewerTier(interviewer)].color" variant="tonal" :prepend-icon="INTERVIEWER_TIER_META[interviewerTier(interviewer)].icon">
+              {{ INTERVIEWER_TIER_META[interviewerTier(interviewer)].label }}
             </VChip>
             <VChip variant="tonal" prepend-icon="mdi-translate">{{ interviewer.languages.join(' · ') }}</VChip>
             <VChip variant="tonal" prepend-icon="mdi-calendar-check">{{ interviewer.availability.join(' · ') }}</VChip>

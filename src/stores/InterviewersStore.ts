@@ -102,6 +102,25 @@ export const KIND_META: Record<MarketInterviewKind, { label: string, desc: strin
   comprehensive: { label: 'مقابلة شاملة', desc: 'حزمة تقنية + سلوكية + قيادية', minutes: '90–120 د' },
 }
 
+// Accreditation tiers — derived from sessions + rating, so promotion is automatic
+export type InterviewerTier = 'beginner' | 'intermediate' | 'advanced' | 'expert'
+export const INTERVIEWER_TIER_META: Record<InterviewerTier, { label: string, icon: string, color: string, req: string, perk: string }> = {
+  beginner: { label: 'مقيّم مبتدئ', icon: 'mdi-seed-outline', color: 'blue-grey', req: '3+ سنوات · 3 تزكيات · اجتياز مقابلة تقييمية', perk: 'تقييم مهارات أساسية · سعر مقترح من المنصة' },
+  intermediate: { label: 'مقيّم متوسط', icon: 'mdi-chevron-double-up', color: 'info', req: '10+ مقابلات بتقييم عالٍ', perk: 'جميع أنواع المقابلات · تحديد السعر الذاتي' },
+  advanced: { label: 'مقيّم متقدّم', icon: 'mdi-star-circle-outline', color: 'accent', req: '25+ مقابلة بتقييم عالٍ جدًا', perk: 'ظهور مميّز · استشارات إضافية' },
+  expert: { label: 'خبير معتمد', icon: 'mdi-crown-outline', color: 'warning', req: '50+ مقابلة بتقييم ممتاز', perk: 'كل المزايا · تدريب مقيّمين جدد · شراكات استراتيجية' },
+}
+export const INTERVIEWER_TIERS: InterviewerTier[] = ['beginner', 'intermediate', 'advanced', 'expert']
+export function interviewerTier(iv: { sessionsCount: number, rating: number }): InterviewerTier {
+  if (iv.sessionsCount >= 50 && iv.rating >= 4.8)
+    return 'expert'
+  if (iv.sessionsCount >= 25 && iv.rating >= 4.6)
+    return 'advanced'
+  if (iv.sessionsCount >= 10 && iv.rating >= 4.3)
+    return 'intermediate'
+  return 'beginner'
+}
+
 export const BOOKING_STATUS_META: Record<BookingStatus, { label: string, color: string }> = {
   requested: { label: 'بانتظار القبول', color: 'warning' },
   scheduled: { label: 'مجدولة', color: 'info' },
