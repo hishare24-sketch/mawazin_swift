@@ -4,6 +4,7 @@ import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '@/stores/AuthStore'
 import { useApplicationsStore } from '@/stores/ApplicationsStore'
 import { useSavedStore } from '@/stores/SavedStore'
+import { useWishesStore } from '@/stores/WishesStore'
 import StatCard from '@/components/shared/StatCard.vue'
 import OpportunityCard from '@/modules/opportunities/components/OpportunityCard.vue'
 import { mockOpportunities } from '@/modules/opportunities/services/mockOpportunities'
@@ -12,6 +13,7 @@ const { t } = useI18n()
 const authStore = useAuthStore()
 const applicationsStore = useApplicationsStore()
 const savedStore = useSavedStore()
+const wishesStore = useWishesStore()
 
 const userName = computed(() => authStore.authUser?.name ?? '')
 const isCompany = computed(() => authStore.role === 'company')
@@ -20,8 +22,8 @@ const recommended = computed(() => [...mockOpportunities].sort((a, b) => b.match
 
 const seekerStats = computed(() => [
   { title: 'طلباتي النشطة', value: applicationsStore.count, icon: 'mdi-file-send-outline', color: 'primary' },
-  { title: 'الفرص المحفوظة', value: savedStore.count, icon: 'mdi-bookmark-outline', color: 'accent' },
-  { title: t('dashboard.receivedEndorsements'), value: 11, icon: 'mdi-account-star-outline', color: 'secondary' },
+  { title: t('dashboard.incomingWishes'), value: wishesStore.pendingCount, icon: 'mdi-hand-heart-outline', color: 'accent' },
+  { title: 'الفرص المحفوظة', value: savedStore.count, icon: 'mdi-bookmark-outline', color: 'secondary' },
   { title: t('dashboard.completedAssessments'), value: 4, icon: 'mdi-clipboard-check-outline', color: 'success' },
 ])
 
@@ -34,11 +36,13 @@ const companyStats = [
 
 const stats = computed(() => (isCompany.value ? companyStats : seekerStats.value))
 
-const wishes = [
-  { company: 'شركة الحلول الذكية', amount: '16,000 ريال', duration: '6 أشهر', status: 'جديد', statusColor: 'accent' },
-  { company: 'مؤسسة البناء', amount: '12,000 ريال', duration: 'دائم', status: 'قيد الانتظار', statusColor: 'warning' },
-  { company: 'وكالة الإبداع', amount: '4,500 ريال', duration: 'مهمة', status: 'جديد', statusColor: 'accent' },
-]
+const wishes = computed(() => wishesStore.wishes.slice(0, 3))
+const wishStatusMeta: Record<string, { label: string, color: string }> = {
+  new: { label: 'جديد', color: 'accent' },
+  pending: { label: 'قيد الانتظار', color: 'warning' },
+  accepted: { label: 'مقبول', color: 'success' },
+  rejected: { label: 'مرفوض', color: 'error' },
+}
 
 const activities = [
   { icon: 'mdi-send-check-outline', text: 'تقدمت لفرصة "مطوّر واجهات أمامية"', time: 'قبل ساعة' },
@@ -119,8 +123,8 @@ const aiSuggestions = [
                   {{ wish.amount }} · {{ wish.duration }}
                 </VListItemSubtitle>
                 <template #append>
-                  <VChip :color="wish.statusColor" size="small" label>
-                    {{ wish.status }}
+                  <VChip :color="wishStatusMeta[wish.status].color" size="small" label>
+                    {{ wishStatusMeta[wish.status].label }}
                   </VChip>
                 </template>
               </VListItem>

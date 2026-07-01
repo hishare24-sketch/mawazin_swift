@@ -4,6 +4,8 @@ import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useDisplay, useTheme } from 'vuetify'
 import { useAuthStore } from '@/stores/AuthStore'
+import { useNotificationsStore } from '@/stores/NotificationsStore'
+import { useMessagesStore } from '@/stores/MessagesStore'
 import { navForRole } from './navigation'
 
 const { t, locale } = useI18n()
@@ -11,6 +13,8 @@ const router = useRouter()
 const theme = useTheme()
 const { mobile } = useDisplay()
 const authStore = useAuthStore()
+const notificationsStore = useNotificationsStore()
+const messagesStore = useMessagesStore()
 
 // On desktop the drawer is permanent (open by default); on mobile it starts closed
 const drawer = ref(!mobile.value)
@@ -108,12 +112,14 @@ const initials = computed(() => {
 
     <!-- Messages -->
     <VBtn icon variant="text" :to="{ name: 'messages' }">
-      <VIcon icon="mdi-message-outline" />
+      <VBadge :model-value="messagesStore.totalUnread > 0" :content="messagesStore.totalUnread" color="accent">
+        <VIcon icon="mdi-message-outline" />
+      </VBadge>
     </VBtn>
 
     <!-- Notifications -->
     <VBtn icon variant="text" :to="{ name: 'notifications' }">
-      <VBadge color="error" dot>
+      <VBadge :model-value="notificationsStore.unreadCount > 0" :content="notificationsStore.unreadCount" color="error">
         <VIcon icon="mdi-bell-outline" />
       </VBadge>
     </VBtn>
