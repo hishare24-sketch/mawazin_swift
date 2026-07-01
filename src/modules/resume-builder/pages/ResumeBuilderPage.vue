@@ -47,6 +47,19 @@ function saveResume() {
   router.push({ name: 'profile' })
 }
 
+const toastMsg = ref('')
+function currentName() {
+  return resumeName.value.trim() || `سيرة ${templateName.value}`
+}
+function exportResume(format: string) {
+  toastMsg.value = `جارٍ تصدير «${currentName()}» بصيغة ${format}...`
+}
+function shareResumeLink() {
+  const url = `${window.location.origin}/resume/preview`
+  navigator.clipboard?.writeText(url)
+  toastMsg.value = 'تم نسخ رابط المشاركة العام للسيرة.'
+}
+
 const summary = ref('مطوّر واجهات أمامية بخبرة 5 سنوات في بناء تطبيقات ويب حديثة وعالية الأداء باستخدام Vue.js و TypeScript. شغوف بتجربة المستخدم والحلول القابلة للتوسّع.')
 const summaryStyle = ref('professional')
 
@@ -248,12 +261,16 @@ function regenerateSummary() {
           prepend-inner-icon="mdi-file-account-outline"
         />
         <div class="d-flex flex-wrap justify-center ga-3">
-          <VBtn color="error" prepend-icon="mdi-file-pdf-box">تصدير PDF</VBtn>
-          <VBtn color="primary" prepend-icon="mdi-file-word-box">تصدير DOCX</VBtn>
-          <VBtn color="secondary" variant="tonal" prepend-icon="mdi-link-variant">مشاركة الرابط</VBtn>
+          <VBtn color="error" prepend-icon="mdi-file-pdf-box" @click="exportResume('PDF')">تصدير PDF</VBtn>
+          <VBtn color="primary" prepend-icon="mdi-file-word-box" @click="exportResume('DOCX')">تصدير DOCX</VBtn>
+          <VBtn color="secondary" variant="tonal" prepend-icon="mdi-link-variant" @click="shareResumeLink">مشاركة الرابط</VBtn>
         </div>
       </div>
     </VCard>
+
+    <VSnackbar :model-value="!!toastMsg" color="primary" location="top" timeout="3500" @update:model-value="toastMsg = ''">
+      {{ toastMsg }}
+    </VSnackbar>
 
     <!-- Navigation -->
     <div class="d-flex justify-space-between">

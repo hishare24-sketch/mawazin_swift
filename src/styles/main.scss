@@ -1,5 +1,8 @@
+@import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap');
+
 :root {
   --app-font: 'Tajawal', 'Segoe UI', 'Tahoma', 'Noto Sans Arabic', system-ui, sans-serif;
+  --brand-gradient: linear-gradient(135deg, #4f46e5 0%, #7c3aed 45%, #0ea5e9 100%);
 }
 
 * {
@@ -17,9 +20,10 @@ body {
 
 .v-application {
   font-family: var(--app-font) !important;
+  letter-spacing: 0 !important;
 }
 
-// Custom scrollbar
+// Custom scrollbar (indigo)
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
@@ -28,11 +32,11 @@ body {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(26, 54, 93, 0.25);
+  background: rgba(79, 70, 229, 0.28);
   border-radius: 8px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(26, 54, 93, 0.4);
+  background: rgba(79, 70, 229, 0.5);
 }
 
 // Utility
@@ -44,7 +48,45 @@ body {
   border-radius: 16px;
 }
 
-// Gradient used in auth + hero areas
+// Brand gradient (auth + hero areas) — !important to win over Vuetify's .v-card background
 .brand-gradient {
-  background: linear-gradient(135deg, #1a365d 0%, #319795 100%);
+  background: var(--brand-gradient) !important;
+}
+
+// Gradient text for headings / brand marks
+.text-gradient {
+  background: var(--brand-gradient);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+// Softer, more modern card shadows
+.v-card {
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04), 0 4px 16px rgba(15, 23, 42, 0.06) !important;
+  transition: box-shadow 0.22s ease, transform 0.22s ease;
+}
+
+// Interactive cards gently lift on hover
+.v-card.cursor-pointer:hover {
+  box-shadow: 0 8px 28px rgba(79, 70, 229, 0.16) !important;
+  transform: translateY(-3px);
+}
+
+// Buttons: subtle press feedback + smoother motion
+.v-btn {
+  transition: transform 0.15s ease, box-shadow 0.2s ease !important;
+}
+.v-btn--elevated:hover,
+.v-btn.bg-accent:hover,
+.v-btn.text-accent:hover {
+  transform: translateY(-1px);
+}
+.v-btn:active {
+  transform: translateY(0);
+}
+
+// Chips a touch rounder for a modern feel
+.v-chip {
+  font-weight: 500;
 }

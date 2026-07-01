@@ -105,6 +105,37 @@ function saveCert() {
   certDialog.value = false
 }
 
+// Edit profile (headline + summary) dialog
+const editDialog = ref(false)
+const editForm = ref({ headline: '', summary: '' })
+function openEdit() {
+  editForm.value = { headline: profile.headline, summary: profile.summary }
+  editDialog.value = true
+}
+function saveEdit() {
+  profile.headline = editForm.value.headline
+  profile.summary = editForm.value.summary
+  editDialog.value = false
+  toast('تم تحديث ملفك الشخصي')
+}
+
+// Lightweight toast for resume/endorsement actions
+const toastMsg = ref('')
+function toast(msg: string) {
+  toastMsg.value = msg
+}
+function requestEndorsement() {
+  toast('أرسل الـ AI طلب توصية مهني نيابةً عنك.')
+}
+function exportResume(name: string, format: string) {
+  toast(`جارٍ تصدير «${name}» بصيغة ${format}...`)
+}
+function shareResume(id: number) {
+  const url = `${window.location.origin}/resume/${id}`
+  navigator.clipboard?.writeText(url)
+  toast('تم نسخ رابط مشاركة السيرة.')
+}
+
 const endorsements = [
   { name: 'أحمد المنصور', relation: 'مدير سابق', type: 'نص', trusted: true },
   { name: 'سارة العتيبي', relation: 'زميلة', type: 'فيديو', trusted: false },
@@ -160,7 +191,7 @@ const profileCompletion = computed(() => {
             <VBtn color="primary" variant="outlined" prepend-icon="mdi-share-variant-outline" :to="{ name: 'public-resume', params: { token: 'me' } }">
               مشاركة الملف
             </VBtn>
-            <VBtn color="accent" prepend-icon="mdi-pencil">تعديل</VBtn>
+            <VBtn color="accent" prepend-icon="mdi-pencil" @click="openEdit">تعديل</VBtn>
           </div>
         </div>
 
@@ -293,7 +324,7 @@ const profileCompletion = computed(() => {
         <VCard class="pa-5">
           <div class="d-flex justify-space-between mb-4">
             <h3 class="text-subtitle-1 font-weight-bold">التوصيات والتزكيات</h3>
-            <VBtn color="accent" size="small" prepend-icon="mdi-plus">طلب توصية</VBtn>
+            <VBtn color="accent" size="small" prepend-icon="mdi-plus" @click="requestEndorsement">طلب توصية</VBtn>
           </div>
           <VRow>
             <VCol v-for="e in endorsements" :key="e.name" cols="12" sm="6">
@@ -341,8 +372,8 @@ const profileCompletion = computed(() => {
                   </template>
                   <VList density="compact">
                     <VListItem prepend-icon="mdi-pencil" title="تعديل" :to="{ name: 'resume-builder' }" />
-                    <VListItem prepend-icon="mdi-file-pdf-box" title="تصدير PDF" />
-                    <VListItem prepend-icon="mdi-share-variant" title="مشاركة الرابط" />
+                    <VListItem prepend-icon="mdi-file-pdf-box" title="تصدير PDF" @click="exportResume(r.name, 'PDF')" />
+                    <VListItem prepend-icon="mdi-share-variant" title="مشاركة الرابط" @click="shareResume(r.id)" />
                     <VListItem prepend-icon="mdi-delete-outline" title="حذف" base-color="error" @click="resumesStore.remove(r.id)" />
                   </VList>
                 </VMenu>
@@ -477,6 +508,28 @@ const profileCompletion = computed(() => {
     <VSnackbar :model-value="!!proofSnackbar" color="secondary" timeout="4000" @update:model-value="proofSnackbar = ''">
       {{ proofSnackbar }}
     </VSnackbar>
+
+    <VSnackbar :model-value="!!toastMsg" color="primary" location="top" timeout="3500" @update:model-value="toastMsg = ''">
+      {{ toastMsg }}
+    </VSnackbar>
+
+    <!-- Edit profile dialog -->
+    <VDialog v-model="editDialog" max-width="520">
+      <VCard class="pa-2">
+        <VCardTitle class="d-flex justify-space-between align-center">
+          <span>تعديل الملف الشخصي</span>
+          <VBtn icon="mdi-close" variant="text" size="small" @click="editDialog = false" />
+        </VCardTitle>
+        <VCardText>
+          <VTextField v-model="editForm.headline" label="العنوان المهني" placeholder="مثال: مطوّر واجهات أمامية · الرياض" class="mb-3" />
+          <VTextarea v-model="editForm.summary" label="النبذة التعريفية" rows="4" auto-grow />
+        </VCardText>
+        <VCardActions class="justify-end">
+          <VBtn variant="text" @click="editDialog = false">إلغاء</VBtn>
+          <VBtn color="accent" prepend-icon="mdi-content-save" @click="saveEdit">حفظ</VBtn>
+        </VCardActions>
+      </VCard>
+    </VDialog>
 
     <!-- Add experience dialog -->
     <VDialog v-model="expDialog" max-width="480">

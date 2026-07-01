@@ -1,46 +1,52 @@
 import type { ThemeDefinition } from 'vuetify'
 
-// نظام الألوان المعتمد من وثيقة واجهات الاستخدام (UI/UX)
+// هوية «Indigo Aurora» — نيلي عصري + فيروزي (تفاعلات AI) + عنبري (أزرار CTA)
 export const lightTheme: ThemeDefinition = {
   dark: false,
   colors: {
-    'primary': '#1A365D', // أزرق داكن — الثقة والاحترافية
-    'secondary': '#319795', // فيروزي — التفاعلات الإيجابية
-    'accent': '#ED8936', // برتقالي — الأزرار المهمة (تقدم، قبول، إرسال)
-    'success': '#38A169',
-    'info': '#3182CE',
-    'warning': '#DD6B20',
-    'error': '#E53E3E', // أحمر — الإلغاء، الرفض، التنبيهات
-    'background': '#F7FAFC', // خلفية فاتحة لراحة العين
+    'primary': '#4F46E5', // نيلي — الثقة والعلامة
+    'secondary': '#14B8A6', // فيروزي — تفاعلات الذكاء الاصطناعي
+    'accent': '#F59E0B', // عنبري — الأزرار المهمة (تقدم، قبول، إرسال)
+    'success': '#22C55E',
+    'info': '#3B82F6',
+    'warning': '#F97316',
+    'error': '#EF4444', // أحمر — الإلغاء، الرفض، التنبيهات
+    'background': '#F8FAFC', // خلفية فاتحة لراحة العين
     'surface': '#FFFFFF',
+    'surface-variant': '#EEF2FF', // نيلي فاتح جدًا للأسطح الثانوية
     'on-primary': '#FFFFFF',
     'on-secondary': '#FFFFFF',
-    'on-accent': '#FFFFFF',
-    'on-surface': '#2D3748', // نصوص داكنة للقراءة الواضحة
-    'on-background': '#2D3748',
+    'on-accent': '#1F2937',
+    'on-surface': '#0F172A', // نصوص داكنة للقراءة الواضحة
+    'on-background': '#0F172A',
   },
   variables: {
-    'border-color': '#2D3748',
-    'theme-on-surface-variant': '#718096',
+    'border-color': '#0F172A',
+    'theme-on-surface-variant': '#64748B',
   },
 }
 
 export const darkTheme: ThemeDefinition = {
   dark: true,
   colors: {
-    'primary': '#4299E1',
-    'secondary': '#4FD1C5',
-    'accent': '#F6AD55',
-    'success': '#48BB78',
-    'info': '#63B3ED',
-    'warning': '#ED8936',
-    'error': '#FC8181',
-    'background': '#1A202C',
-    'surface': '#2D3748',
-    'on-primary': '#1A202C',
-    'on-secondary': '#1A202C',
-    'on-accent': '#1A202C',
+    'primary': '#818CF8', // نيلي أفتح على الخلفية الداكنة
+    'secondary': '#2DD4BF',
+    'accent': '#FBBF24',
+    'success': '#4ADE80',
+    'info': '#60A5FA',
+    'warning': '#FB923C',
+    'error': '#F87171',
+    'background': '#0B1120', // كحلي/سليت عميق
+    'surface': '#1E293B',
+    'surface-variant': '#273449',
+    'on-primary': '#0B1120',
+    'on-secondary': '#0B1120',
+    'on-accent': '#0B1120',
     'on-surface': '#E2E8F0',
     'on-background': '#E2E8F0',
+  },
+  variables: {
+    'border-color': '#E2E8F0',
+    'theme-on-surface-variant': '#94A3B8',
   },
 }
