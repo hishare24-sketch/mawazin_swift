@@ -11,6 +11,8 @@ import DecisionMatrix from '../components/DecisionMatrix.vue'
 import CustomerChat from '../components/CustomerChat.vue'
 import DataCleaning from '../components/DataCleaning.vue'
 import TaskOrdering from '../components/TaskOrdering.vue'
+import PressureRoom from '../components/PressureRoom.vue'
+import ProjectDive from '../components/ProjectDive.vue'
 import FreeAnswer from '../components/FreeAnswer.vue'
 
 const route = useRoute()
@@ -47,6 +49,10 @@ function widgetFor(pattern: string) {
       return DataCleaning
     case 'reverse_plan':
       return TaskOrdering
+    case 'pressure':
+      return PressureRoom
+    case 'project_dive':
+      return ProjectDive
     default:
       return FreeAnswer
   }
@@ -194,7 +200,7 @@ onBeforeUnmount(() => {
         <VAvatar color="secondary" size="34"><VIcon icon="mdi-robot-happy-outline" color="white" size="18" /></VAvatar>
         <div class="pa-3 rounded-lg bg-grey-lighten-3 text-body-1 flex-grow-1">
           {{ currentQuestion.prompt }}
-          <div v-if="currentQuestion.scenario" class="mt-2 pa-2 rounded bg-white text-body-2 font-weight-bold">
+          <div v-if="currentQuestion.scenario && currentQuestion.pattern !== 'pressure'" class="mt-2 pa-2 rounded bg-white text-body-2 font-weight-bold">
             <VIcon icon="mdi-alert-decagram-outline" size="16" color="warning" /> {{ currentQuestion.scenario }}
           </div>
         </div>
