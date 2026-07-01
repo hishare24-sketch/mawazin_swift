@@ -1,17 +1,21 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
+import { useI18n } from 'vue-i18n'
 import { useAuthStore } from '@/stores/AuthStore'
 import { PROOF_META, skillConfidence, skillLevelLabel, useProfileStore } from '@/stores/ProfileStore'
 import type { ProofType, Skill } from '@/stores/ProfileStore'
 import { useResumesStore } from '@/stores/ResumesStore'
+import { useTrustStore } from '@/stores/TrustStore'
 import { ai } from '@/services/ai'
 import TrustScoreCard from '@/components/shared/TrustScoreCard.vue'
 import { LEVEL_META, TYPE_META, useInterviewsStore } from '@/stores/InterviewsStore'
 import { KIND_META, useInterviewersStore } from '@/stores/InterviewersStore'
 import type { Booking } from '@/stores/InterviewersStore'
 
+const { t } = useI18n()
 const interviewsStore = useInterviewsStore()
 const interviewersStore = useInterviewersStore()
+const trust = useTrustStore()
 
 // Certified-interviewer reports + digital certificate
 const certifiedReports = computed(() => interviewersStore.completedReports)
@@ -176,6 +180,7 @@ const privacyOptions = [
 ]
 
 const initials = computed(() => user.value?.name?.charAt(0).toUpperCase() ?? '?')
+const roleLabel = computed(() => (authStore.role ? t(`roles.${authStore.role}`) : ''))
 const profileCompletion = computed(() => {
   let score = 40
   if (profile.skills.length >= 3)
@@ -186,21 +191,45 @@ const profileCompletion = computed(() => {
     score += 20
   return Math.min(score, 100)
 })
+
+// At-a-glance metrics for the profile hero
+const totalProofs = computed(() =>
+  profile.skills.reduce((sum, s) => sum + s.proofs.length, 0),
+)
+const heroStats = computed(() => [
+  { label: 'اكتمال الملف', value: `${profileCompletion.value}%`, icon: 'mdi-account-check-outline', color: 'primary' },
+  { label: 'المهارات', value: profile.skills.length, icon: 'mdi-star-four-points-outline', color: 'accent' },
+  { label: 'الإثباتات', value: totalProofs.value, icon: 'mdi-shield-check-outline', color: 'secondary' },
+  { label: 'المقابلات', value: interviewsStore.completed.length, icon: 'mdi-account-tie-voice-outline', color: 'info' },
+])
 </script>
 
 <template>
   <div>
     <!-- Header card -->
-    <VCard class="mb-5 overflow-hidden">
-      <div class="brand-gradient" style="height: 110px" />
+    <VCard class="mb-5 overflow-hidden profile-hero">
+      <div class="brand-gradient profile-hero__banner" />
       <VCardText class="pt-0">
-        <div class="d-flex align-end flex-wrap ga-4" style="margin-top: -48px">
-          <VAvatar color="secondary" size="96" style="border: 4px solid white">
+        <div class="d-flex align-end flex-wrap ga-4 profile-hero__row">
+          <VAvatar color="secondary" size="104" class="profile-hero__avatar">
             <span class="text-h4 text-white font-weight-bold">{{ initials }}</span>
           </VAvatar>
           <div class="flex-grow-1 pb-2">
-            <h1 class="text-h5 font-weight-bold">{{ user?.name }}</h1>
-            <div class="text-body-2 text-medium-emphasis">{{ profile.headline }}</div>
+            <div class="d-flex align-center ga-2 flex-wrap">
+              <h1 class="text-h5 font-weight-bold mb-0">{{ user?.name }}</h1>
+              <VTooltip text="هوية موثّقة" location="top">
+                <template #activator="{ props }">
+                  <VIcon v-bind="props" icon="mdi-check-decagram" color="primary" size="22" />
+                </template>
+              </VTooltip>
+            </div>
+            <div class="text-body-2 text-medium-emphasis mt-1">{{ profile.headline }}</div>
+            <div class="d-flex align-center ga-2 mt-2 flex-wrap">
+              <VChip size="small" color="primary" variant="tonal" prepend-icon="mdi-shield-account-outline" label>{{ roleLabel }}</VChip>
+              <VChip size="small" :color="trust.level.color" variant="tonal" prepend-icon="mdi-star-check-outline" label>
+                ثقة {{ trust.score }}% · {{ trust.level.label }}
+              </VChip>
+            </div>
           </div>
           <div class="d-flex ga-2 pb-2">
             <VBtn color="primary" variant="outlined" prepend-icon="mdi-share-variant-outline" :to="{ name: 'public-resume', params: { token: 'me' } }">
@@ -210,7 +239,31 @@ const profileCompletion = computed(() => {
           </div>
         </div>
 
-        <p class="text-body-2 text-medium-emphasis mt-4 mb-0" style="max-width: 700px">{{ profile.summary }}</p>
+        <p class="text-body-2 text-medium-emphasis mt-4 mb-0" style="max-width: 720px">{{ profile.summary }}</p>
+
+        <!-- At-a-glance stat strip -->
+        <VRow class="mt-4" dense>
+          <VCol v-for="s in heroStats" :key="s.label" cols="6" md="3">
+            <div class="stat-tile d-flex align-center ga-3 pa-3">
+              <VAvatar :color="s.color" variant="tonal" size="42" rounded="lg">
+                <VIcon :icon="s.icon" size="22" />
+              </VAvatar>
+              <div>
+                <div class="text-h6 font-weight-bold lh-1">{{ s.value }}</div>
+                <div class="text-caption text-medium-emphasis">{{ s.label }}</div>
+              </div>
+            </div>
+          </VCol>
+        </VRow>
+
+        <!-- Profile completion -->
+        <div class="mt-4">
+          <div class="d-flex justify-space-between text-caption mb-1">
+            <span class="text-medium-emphasis">اكتمال الملف الشخصي</span>
+            <span class="font-weight-bold text-primary">{{ profileCompletion }}%</span>
+          </div>
+          <VProgressLinear :model-value="profileCompletion" color="primary" bg-color="surface-variant" height="8" rounded />
+        </div>
       </VCardText>
     </VCard>
 
@@ -648,3 +701,31 @@ const profileCompletion = computed(() => {
     </VDialog>
   </div>
 </template>
+
+<style scoped>
+.profile-hero__banner {
+  height: 148px;
+}
+.profile-hero__row {
+  margin-top: -52px;
+}
+/* Avatar cut cleanly into the banner — ring adapts to the theme surface */
+.profile-hero__avatar {
+  border: 4px solid rgb(var(--v-theme-surface));
+  box-shadow: 0 8px 22px rgba(6, 20, 12, 0.28);
+}
+.lh-1 {
+  line-height: 1.15;
+}
+/* At-a-glance metric tiles — opaque theme bg so it repaints on live theme switch */
+.stat-tile {
+  border: 1px solid rgba(140, 163, 150, 0.18);
+  border-radius: var(--ui-radius);
+  background-color: rgb(var(--v-theme-surface-variant));
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+}
+.stat-tile:hover {
+  border-color: rgba(var(--v-theme-primary), 0.45);
+  box-shadow: 0 4px 14px rgba(6, 20, 12, 0.12);
+}
+</style>

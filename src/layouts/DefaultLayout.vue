@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useDisplay, useTheme } from 'vuetify'
 import { useAuthStore } from '@/stores/AuthStore'
@@ -10,7 +10,21 @@ import { navForRole } from './navigation'
 
 const { t, locale } = useI18n()
 const router = useRouter()
+const route = useRoute()
 const theme = useTheme()
+
+// Global back navigation — shown only when a previous screen exists
+const canGoBack = computed(() => {
+  void route.fullPath // re-evaluate on every navigation
+  return !!(window.history.state && window.history.state.back)
+})
+const backIcon = computed(() => (locale.value === 'ar' ? 'mdi-arrow-right' : 'mdi-arrow-left'))
+function goBack() {
+  if (canGoBack.value)
+    router.back()
+  else
+    router.push({ name: 'dashboard' })
+}
 const { mobile } = useDisplay()
 const authStore = useAuthStore()
 const notificationsStore = useNotificationsStore()
@@ -60,22 +74,22 @@ const initials = computed(() => {
     :permanent="!mobile"
     :location="locale === 'ar' ? 'right' : 'left'"
     width="270"
-    color="primary"
-    theme="darkTheme"
+    color="surface"
+    border
   >
     <!-- Brand -->
     <div class="d-flex align-center pa-4 ga-3">
-      <VAvatar color="accent" size="40" rounded="lg">
-        <VIcon icon="mdi-briefcase-account" color="white" />
+      <VAvatar color="primary" size="40" rounded="lg">
+        <VIcon icon="mdi-briefcase-account" color="on-primary" />
       </VAvatar>
       <div v-if="!rail" class="text-truncate">
-        <div class="text-subtitle-1 font-weight-bold text-white">
+        <div class="text-subtitle-1 font-weight-bold">
           {{ t('app.name') }}
         </div>
       </div>
     </div>
 
-    <VDivider class="opacity-25" />
+    <VDivider />
 
     <!-- Nav items -->
     <VList nav density="comfortable" class="px-2 mt-2">
@@ -86,8 +100,8 @@ const initials = computed(() => {
         :title="t(`nav.${item.title}`)"
         :to="{ name: item.to }"
         rounded="lg"
-        color="accent"
-        class="mb-1"
+        color="primary"
+        class="mb-1 nav-item"
         @click="mobile && (drawer = false)"
       />
     </VList>
@@ -97,6 +111,14 @@ const initials = computed(() => {
     <VBtn icon variant="text" @click="onMenuClick">
       <VIcon icon="mdi-menu" />
     </VBtn>
+
+    <VTooltip :text="t('common.back')" location="bottom">
+      <template #activator="{ props }">
+        <VBtn v-show="canGoBack" v-bind="props" icon variant="text" @click="goBack">
+          <VIcon :icon="backIcon" />
+        </VBtn>
+      </template>
+    </VTooltip>
 
     <VSpacer />
 

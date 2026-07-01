@@ -30,24 +30,26 @@ export const darkTheme: ThemeDefinition = {
 export const lightTheme: ThemeDefinition = {
   dark: false,
   colors: {
-    'primary': '#4D7C0F', // ليموني داكن — تباين واضح على الأبيض
-    'secondary': '#059669', // زمردي
-    'accent': '#84CC16', // ليموني — أزرار CTA
-    'success': '#16A34A',
-    'info': '#0284C7',
-    'warning': '#D97706',
-    'error': '#DC2626',
-    'background': '#F3F8EF', // أبيض مائل للأخضر الفاتح
+    'primary': '#3F6212', // أخضر زيتوني عميق — تباين قوي على الأبيض
+    'secondary': '#047857', // زمردي أعمق
+    'accent': '#65A30D', // ليموني داكن — أزرار CTA بتباين أعلى
+    'success': '#15803D',
+    'info': '#0369A1',
+    'warning': '#B45309',
+    'error': '#B91C1C',
+    'background': '#EAF1E1', // خلفية خضراء فاتحة تفصل الكروت البيضاء بوضوح
     'surface': '#FFFFFF',
-    'surface-variant': '#EBF3E3',
+    'surface-variant': '#DCE9CC',
     'on-primary': '#FFFFFF',
     'on-secondary': '#FFFFFF',
     'on-accent': '#14210A', // نص داكن على الليموني
-    'on-surface': '#14210F', // نص أخضر داكن
-    'on-background': '#14210F',
+    'on-surface': '#101A0B', // نص أخضر داكن شبه أسود — أعلى تباين
+    'on-background': '#101A0B',
   },
   variables: {
-    'border-color': '#14210F',
-    'theme-on-surface-variant': '#5B7052',
+    'border-color': '#243318',
+    'theme-on-surface-variant': '#3E5531', // نص ثانوي أوضح
+    'border-opacity': 0.16,
+    'medium-emphasis-opacity': 0.72,
   },
 }
