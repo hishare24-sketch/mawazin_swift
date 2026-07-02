@@ -1,4 +1,4 @@
-export type UserRole = 'seeker' | 'company' | 'endorser' | 'admin' | 'interviewer'
+export type UserRole = 'seeker' | 'company' | 'endorser' | 'admin' | 'interviewer' | 'coach' | 'trainer' | 'consultant'
 
 // Mirrors the planned backend `user_roles` table (status lifecycle per role)
 export type RoleStatus = 'active' | 'inactive' | 'pending' | 'suspended'

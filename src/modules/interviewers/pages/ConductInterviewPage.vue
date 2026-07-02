@@ -42,6 +42,33 @@ const improvements = ref('')
 const recommendation = ref('')
 const levels = ['مبتدئ', 'متوسط', 'متقدم', 'خبير']
 
+// مكتبة قوالب التقارير — جودة موحّدة وتوفير وقت (تُخصَّص بعد التعبئة)
+const REPORT_TEMPLATES = [
+  {
+    name: 'تقني قوي',
+    strengths: 'أساس تقني متين وحلول منظمة\nيشرح قراراته قبل التنفيذ\nسرعة ملحوظة في التقاط المتطلبات',
+    improvements: 'رفع تغطية الاختبارات\nتوسيع الإلمام بأنماط التصميم المتقدمة',
+    recommendation: 'مرشح تقني قوي جاهز لمهام إنتاجية مع إشراف خفيف في البداية.',
+  },
+  {
+    name: 'واعد يحتاج صقلًا',
+    strengths: 'حماس واضح وقابلية تعلم عالية\nيتعامل مع الملاحظات بإيجابية',
+    improvements: 'تعميق الأساسيات قبل الأطر الحديثة\nبناء مشاريع عملية موثقة',
+    recommendation: 'يوصى ببرنامج تدريبي مركز ثم إعادة تقييم خلال 3 أشهر.',
+  },
+  {
+    name: 'جاهز لدور قيادي',
+    strengths: 'رؤية معمارية ناضجة\nتواصل مقنع مع الأطراف غير التقنية\nخبرة في توجيه المطورين',
+    improvements: 'توثيق القرارات المعمارية بشكل أنظم',
+    recommendation: 'مؤهل لقيادة فريق صغير فورًا مع مسار نمو لإدارة أوسع.',
+  },
+]
+function applyTemplate(t: typeof REPORT_TEMPLATES[number]) {
+  strengths.value = t.strengths
+  improvements.value = t.improvements
+  recommendation.value = t.recommendation
+}
+
 const overall = computed(() =>
   Math.round(competencies.value.reduce((s, c) => s + c.score, 0) / competencies.value.length),
 )
@@ -177,6 +204,12 @@ function submitReport() {
           </div>
 
           <VSelect v-model="level" :items="levels" label="المستوى المُحدَّد" density="compact" class="mb-3" />
+          <div class="d-flex align-center flex-wrap ga-1 mb-2">
+            <span class="text-caption text-medium-emphasis"><VIcon icon="mdi-file-document-multiple-outline" size="14" /> قوالب جاهزة:</span>
+            <VChip v-for="tp in REPORT_TEMPLATES" :key="tp.name" size="small" variant="tonal" color="secondary" label @click="applyTemplate(tp)">
+              {{ tp.name }}
+            </VChip>
+          </div>
           <VTextarea v-model="strengths" label="نقاط القوة (سطر لكل نقطة)" rows="2" auto-grow class="mb-2" />
           <VTextarea v-model="improvements" label="نقاط التحسين (سطر لكل نقطة)" rows="2" auto-grow class="mb-2" />
           <VTextarea v-model="recommendation" label="التوصية النهائية" rows="2" auto-grow />

@@ -47,7 +47,10 @@
     "company": "Employer",
     "endorser": "Endorser / Colleague",
     "admin": "System Admin",
-    "interviewer": "Certified Interviewer"
+    "interviewer": "Certified Interviewer",
+    "coach": "Career Coach",
+    "trainer": "Tech Trainer",
+    "consultant": "Industry Consultant"
   },
   "roleSwitcher": {
     "myRoles": "My Roles",
@@ -60,6 +63,9 @@
     "interviewerDesc": "Evaluate candidates for a fee — requires passing eligibility.",
     "companyDesc": "Post opportunities, receive applications, and hire top talent.",
     "endorserDesc": "Endorse colleagues and vouch for skills you witnessed firsthand.",
+    "coachDesc": "Long-term career coaching: paths, resumes and soft skills.",
+    "trainerDesc": "Intensive courses and workshops closing assessment gaps.",
+    "consultantDesc": "Strategic consulting for companies on market and team design.",
     "companyFormTitle": "Activate the employer role",
     "companyName": "Company / organization name",
     "industry": "Industry",
@@ -95,6 +101,9 @@
     "surveys": "Surveys",
     "surveysParticipate": "Surveys to Join",
     "wallet": "My Wallet",
+    "coachHome": "Coach Board",
+    "trainerHome": "Trainer Board",
+    "consultantHome": "Consultant Board",
     "team": "Roles & Permissions",
     "users": "Users"
   },

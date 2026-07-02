@@ -25,7 +25,7 @@ class AuthService {
     if (this.useMock) {
       await new Promise(r => setTimeout(r, 600))
       // Infer role from a "+role" hint in the email, default to seeker
-      const role = (['company', 'endorser', 'admin', 'interviewer'] as const).find(r => payload.email.includes(r)) ?? 'seeker'
+      const role = (['company', 'endorser', 'admin', 'interviewer', 'coach', 'trainer', 'consultant'] as const).find(r => payload.email.includes(r)) ?? 'seeker'
       return buildMockUser({
         email: payload.email,
         name: payload.email.split('@')[0] || 'مستخدم',

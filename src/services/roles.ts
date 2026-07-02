@@ -7,6 +7,9 @@ export const ROLE_PERMISSIONS: Record<UserRole, string[]> = {
   endorser: ['create_endorsement'],
   admin: ['*'],
   interviewer: ['conduct_interview', 'manage_interviewer_profile', 'write_evaluation'],
+  coach: ['coach_clients', 'manage_programs', 'publish_content'],
+  trainer: ['manage_courses', 'view_trainees'],
+  consultant: ['consult_companies', 'publish_insights'],
 }
 
 export interface RoleMeta {
@@ -27,10 +30,14 @@ export const ROLE_META: Record<UserRole, RoleMeta> = {
   company: { icon: 'mdi-office-building-outline', labelKey: 'company', home: 'dashboard', requestable: true, activation: 'instant' },
   endorser: { icon: 'mdi-hand-heart-outline', labelKey: 'endorser', home: 'endorser-home', requestable: false, activation: 'approval' },
   admin: { icon: 'mdi-shield-crown-outline', labelKey: 'admin', home: 'admin-dashboard', requestable: false, activation: 'approval' },
+  // أدوار توسعة النظام البيئي (وثيقة «شريك النجاح») — تفعيل فوري كنماذج عاملة
+  coach: { icon: 'mdi-compass-outline', labelKey: 'coach', home: 'coach-dashboard', requestable: true, activation: 'instant' },
+  trainer: { icon: 'mdi-school-outline', labelKey: 'trainer', home: 'trainer-dashboard', requestable: true, activation: 'instant' },
+  consultant: { icon: 'mdi-lightbulb-on-outline', labelKey: 'consultant', home: 'consultant-dashboard', requestable: true, activation: 'instant' },
 }
 
 /** الأدوار المهنية القابلة للتعدد والتبديل (admin حساب منفصل، endorser يبقى كما هو حاليًا) */
-export const SWITCHABLE_ROLES: UserRole[] = ['seeker', 'interviewer', 'company']
+export const SWITCHABLE_ROLES: UserRole[] = ['seeker', 'interviewer', 'company', 'coach', 'trainer', 'consultant']
 
 export function roleHome(role: UserRole | undefined): string {
   return role ? ROLE_META[role].home : 'dashboard'

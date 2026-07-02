@@ -12,7 +12,7 @@ export const navItems: NavItem[] = [
   { title: 'dashboard', icon: 'mdi-view-dashboard-outline', to: 'dashboard', roles: ['seeker', 'company'] },
 
   // Wallet — high in the list: money must never hide below the fold
-  { title: 'wallet', icon: 'mdi-wallet-outline', to: 'wallet', roles: ['seeker', 'company', 'interviewer', 'endorser', 'admin'] },
+  { title: 'wallet', icon: 'mdi-wallet-outline', to: 'wallet', roles: ['seeker', 'company', 'interviewer', 'endorser', 'admin', 'coach', 'trainer', 'consultant'] },
 
   // Admin
   { title: 'dashboard', icon: 'mdi-view-dashboard-outline', to: 'admin-dashboard', roles: ['admin'] },
@@ -26,7 +26,12 @@ export const navItems: NavItem[] = [
   // Interviewer (certified)
   { title: 'interviewerHome', icon: 'mdi-account-tie', to: 'interviewer-dashboard', roles: ['interviewer'] },
   { title: 'analytics', icon: 'mdi-chart-box-outline', to: 'interviewer-analytics', roles: ['interviewer'] },
-  { title: 'assistant', icon: 'mdi-robot-happy-outline', to: 'assistant', roles: ['interviewer'] },
+  { title: 'assistant', icon: 'mdi-robot-happy-outline', to: 'assistant', roles: ['interviewer', 'coach', 'trainer', 'consultant'] },
+
+  // Ecosystem expert roles
+  { title: 'coachHome', icon: 'mdi-compass-outline', to: 'coach-dashboard', roles: ['coach'] },
+  { title: 'trainerHome', icon: 'mdi-school-outline', to: 'trainer-dashboard', roles: ['trainer'] },
+  { title: 'consultantHome', icon: 'mdi-lightbulb-on-outline', to: 'consultant-dashboard', roles: ['consultant'] },
 
   // Seeker — ordered by usage priority (doc §1), keeping existing extras
   { title: 'profile', icon: 'mdi-account-circle-outline', to: 'profile', roles: ['seeker'] },
@@ -52,7 +57,7 @@ export const navItems: NavItem[] = [
   // Shared — survey creation per subscription plan (companies + interviewers + admin)
   { title: 'surveys', icon: 'mdi-poll', to: 'surveys', roles: ['admin', 'company', 'interviewer'] },
   // Participation is open to every user type
-  { title: 'surveysParticipate', icon: 'mdi-comment-quote-outline', to: 'surveys-participate', roles: ['seeker', 'company', 'interviewer', 'endorser'] },
+  { title: 'surveysParticipate', icon: 'mdi-comment-quote-outline', to: 'surveys-participate', roles: ['seeker', 'company', 'interviewer', 'endorser', 'coach', 'trainer', 'consultant'] },
 ]
 
 export function navForRole(role: UserRole | undefined): NavItem[] {

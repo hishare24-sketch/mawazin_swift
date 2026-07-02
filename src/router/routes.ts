@@ -281,6 +281,26 @@ export const routes: RouteRecordRaw[] = [
     meta: { layout: 'default', roles: ['admin'] },
   },
 
+  // ===== Ecosystem expert roles (coach / trainer / consultant) =====
+  {
+    path: '/coach',
+    name: 'coach-dashboard',
+    component: () => import('@/modules/experts/pages/CoachDashboardPage.vue'),
+    meta: { layout: 'default', roles: ['coach'] },
+  },
+  {
+    path: '/trainer',
+    name: 'trainer-dashboard',
+    component: () => import('@/modules/experts/pages/TrainerDashboardPage.vue'),
+    meta: { layout: 'default', roles: ['trainer'] },
+  },
+  {
+    path: '/consultant',
+    name: 'consultant-dashboard',
+    component: () => import('@/modules/experts/pages/ConsultantDashboardPage.vue'),
+    meta: { layout: 'default', roles: ['consultant'] },
+  },
+
   // ===== Surveys =====
   {
     path: '/surveys',

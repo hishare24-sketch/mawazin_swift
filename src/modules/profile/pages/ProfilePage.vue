@@ -42,10 +42,12 @@ const tab = ref('skills')
 
 // ===== Multi-role profile tabs (doc §3.4) =====
 const roleProfiles = useRoleProfilesStore()
-const ownedProRoles = computed<UserRole[]>(() => SWITCHABLE_ROLES.filter(r => authStore.ownsRole(r)))
+// أدوار لها ملف مخصص في هذه الصفحة (الأدوار الجديدة تدار من لوحاتها)
+const PROFILE_TAB_ROLES: UserRole[] = ['seeker', 'interviewer', 'company']
+const ownedProRoles = computed<UserRole[]>(() => PROFILE_TAB_ROLES.filter(r => authStore.ownsRole(r)))
 // Open on the tab of the currently active role
 const roleTab = ref<UserRole>(
-  SWITCHABLE_ROLES.includes(authStore.role as UserRole) ? authStore.role as UserRole : 'seeker',
+  PROFILE_TAB_ROLES.includes(authStore.role as UserRole) ? authStore.role as UserRole : 'seeker',
 )
 const ROLE_TAB_META: Record<string, { icon: string, label: string }> = {
   seeker: { icon: 'mdi-account-search-outline', label: 'واجهة الباحث' },
