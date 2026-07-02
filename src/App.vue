@@ -6,10 +6,16 @@ import { useTheme } from 'vuetify'
 import DefaultLayout from '@/layouts/DefaultLayout.vue'
 import BlankLayout from '@/layouts/BlankLayout.vue'
 import FormsLayout from '@/layouts/FormsLayout.vue'
+import { useThemeStore } from '@/stores/ThemeStore'
 
 const route = useRoute()
 const { locale } = useI18n()
 const theme = useTheme()
+
+// Dynamic theming: bind the store to Vuetify's theme engine and apply the
+// persisted preset/mode/custom colors before first paint
+const themeStore = useThemeStore()
+themeStore.bind(theme)
 
 const layouts = {
   default: DefaultLayout,
@@ -34,12 +40,10 @@ watch(
   { immediate: true },
 )
 
-// Expose current theme name (used by theme switcher later)
-const isDark = computed(() => theme.global.current.value.dark)
 </script>
 
 <template>
-  <VApp :theme="isDark ? 'darkTheme' : 'lightTheme'">
+  <VApp :theme="themeStore.activeThemeName">
     <Component :is="layoutComponent">
       <RouterView v-slot="{ Component }">
         <Transition name="fade" mode="out-in">

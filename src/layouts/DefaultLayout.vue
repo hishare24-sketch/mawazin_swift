@@ -2,7 +2,7 @@
 import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
-import { useDisplay, useTheme } from 'vuetify'
+import { useDisplay } from 'vuetify'
 import { useAuthStore } from '@/stores/AuthStore'
 import { useNotificationsStore } from '@/stores/NotificationsStore'
 import { useMessagesStore } from '@/stores/MessagesStore'
@@ -10,6 +10,8 @@ import { useGamificationStore } from '@/stores/GamificationStore'
 import GlobalSearchBar from '@/components/shared/GlobalSearchBar.vue'
 import RewardFeedback from '@/components/shared/RewardFeedback.vue'
 import RoleSwitcher from '@/components/shared/RoleSwitcher.vue'
+import ThemeCustomizer from '@/components/shared/ThemeCustomizer.vue'
+import { useThemeStore } from '@/stores/ThemeStore'
 import { usePeerRequestsStore } from '@/stores/PeerRequestsStore'
 import { useWalletStore } from '@/stores/WalletStore'
 import { navForRole } from './navigation'
@@ -17,7 +19,6 @@ import { navForRole } from './navigation'
 const { t, locale } = useI18n()
 const router = useRouter()
 const route = useRoute()
-const theme = useTheme()
 
 // Global back navigation — shown only when a previous screen exists
 const canGoBack = computed(() => {
@@ -63,10 +64,13 @@ const items = computed(() => navForRole(authStore.role))
 const user = computed(() => authStore.authUser)
 const roleLabel = computed(() => (authStore.role ? t(`roles.${authStore.role}`) : ''))
 
-const isDark = computed(() => theme.global.current.value.dark)
+const themeStore = useThemeStore()
+const isDark = computed(() => themeStore.isDark)
+// المختلط: القوائم داكنة والمحتوى فاتح
+const chromeTheme = computed(() => (themeStore.isMixed ? 'darkTheme' : undefined))
 
 function toggleTheme() {
-  theme.global.name.value = isDark.value ? 'lightTheme' : 'darkTheme'
+  themeStore.toggleDark()
 }
 
 function toggleLocale() {
@@ -105,6 +109,7 @@ onBeforeUnmount(() => window.removeEventListener('scroll', onScroll))
     width="270"
     color="surface"
     border
+    :theme="chromeTheme"
   >
     <!-- Brand -->
     <div class="d-flex align-center pa-4 ga-3">
@@ -140,7 +145,7 @@ onBeforeUnmount(() => window.removeEventListener('scroll', onScroll))
     </VList>
   </VNavigationDrawer>
 
-  <VAppBar flat border color="surface" height="68">
+  <VAppBar flat border color="surface" height="68" :theme="chromeTheme">
     <VBtn icon variant="text" @click="onMenuClick">
       <VIcon icon="mdi-menu" />
     </VBtn>
@@ -166,6 +171,16 @@ onBeforeUnmount(() => window.removeEventListener('scroll', onScroll))
     <VBtn icon variant="text" @click="toggleTheme">
       <VIcon :icon="isDark ? 'mdi-weather-sunny' : 'mdi-weather-night'" />
     </VBtn>
+
+    <!-- Theme customizer (5 presets × 3 modes + custom colors) -->
+    <VMenu :close-on-content-click="false" location="bottom end">
+      <template #activator="{ props }">
+        <VBtn v-bind="props" icon variant="text">
+          <VIcon icon="mdi-palette-outline" />
+        </VBtn>
+      </template>
+      <ThemeCustomizer />
+    </VMenu>
 
     <!-- Messages -->
     <VBtn icon variant="text" :to="{ name: 'messages' }">
