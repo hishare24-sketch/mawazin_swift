@@ -1,5 +1,15 @@
 export type UserRole = 'seeker' | 'company' | 'endorser' | 'admin' | 'interviewer'
 
+// Mirrors the planned backend `user_roles` table (status lifecycle per role)
+export type RoleStatus = 'active' | 'inactive' | 'pending' | 'suspended'
+
+export interface RoleEntry {
+  role: UserRole
+  status: RoleStatus
+  activated_at?: string
+  created_at?: string
+}
+
 export interface User {
   id: number
   uuid: string
@@ -8,7 +18,10 @@ export interface User {
   phone?: string
   image_path?: string
   token: string
+  /** الدور النشط حاليًا — يقابل عمود current_role في المخطط الخلفي */
   role: UserRole
+  /** الأدوار المملوكة وحالاتها — يقابل جدول user_roles */
+  roles: RoleEntry[]
   permissions: string[]
   created_at?: string
 }

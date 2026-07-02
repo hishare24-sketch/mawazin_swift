@@ -136,25 +136,25 @@ export const routes: RouteRecordRaw[] = [
     path: '/interviewer',
     name: 'interviewer-dashboard',
     component: () => import('@/modules/interviewers/pages/InterviewerDashboardPage.vue'),
-    meta: { layout: 'default' },
+    meta: { layout: 'default', roles: ['interviewer'] },
   },
   {
     path: '/interviewer/session/:id',
     name: 'conduct-interview',
     component: () => import('@/modules/interviewers/pages/ConductInterviewPage.vue'),
-    meta: { layout: 'default' },
+    meta: { layout: 'default', roles: ['interviewer'] },
   },
   {
     path: '/interviewer/analytics',
     name: 'interviewer-analytics',
     component: () => import('@/modules/interviewers/pages/InterviewerAnalyticsPage.vue'),
-    meta: { layout: 'default' },
+    meta: { layout: 'default', roles: ['interviewer'] },
   },
   {
     path: '/applications',
     name: 'applications',
     component: () => import('@/modules/applications/pages/ApplicationsPage.vue'),
-    meta: { layout: 'default' },
+    meta: { layout: 'default', roles: ['seeker'] },
   },
   {
     path: '/wishes',
@@ -226,7 +226,7 @@ export const routes: RouteRecordRaw[] = [
     path: '/resume-builder',
     name: 'resume-builder',
     component: () => import('@/modules/resume-builder/pages/ResumeBuilderPage.vue'),
-    meta: { layout: 'default' },
+    meta: { layout: 'default', roles: ['seeker'] },
   },
   {
     path: '/assistant',
@@ -240,13 +240,13 @@ export const routes: RouteRecordRaw[] = [
     path: '/endorsements',
     name: 'endorser-home',
     component: () => import('@/modules/endorsements/pages/EndorserHomePage.vue'),
-    meta: { layout: 'default' },
+    meta: { layout: 'default', roles: ['endorser'] },
   },
   {
     path: '/endorsements/add',
     name: 'add-endorsement',
     component: () => import('@/modules/endorsements/pages/AddEndorsementPage.vue'),
-    meta: { layout: 'default' },
+    meta: { layout: 'default', roles: ['endorser'] },
   },
 
   // ===== Admin =====
@@ -254,19 +254,19 @@ export const routes: RouteRecordRaw[] = [
     path: '/admin',
     name: 'admin-dashboard',
     component: () => import('@/modules/admin/pages/AdminDashboardPage.vue'),
-    meta: { layout: 'default' },
+    meta: { layout: 'default', roles: ['admin'] },
   },
   {
     path: '/admin/users',
     name: 'admin-users',
     component: () => import('@/modules/team/pages/UsersPage.vue'),
-    meta: { layout: 'default' },
+    meta: { layout: 'default', roles: ['admin'] },
   },
   {
     path: '/admin/roles',
     name: 'admin-roles',
     component: () => import('@/modules/team/pages/RolesPage.vue'),
-    meta: { layout: 'default' },
+    meta: { layout: 'default', roles: ['admin'] },
   },
 
   // ===== Surveys =====
@@ -288,31 +288,31 @@ export const routes: RouteRecordRaw[] = [
     path: '/company/opportunities/create',
     name: 'create-opportunity',
     component: () => import('@/modules/opportunities/pages/CreateOpportunityPage.vue'),
-    meta: { layout: 'default' },
+    meta: { layout: 'default', roles: ['company'] },
   },
   {
     path: '/company/candidates',
     name: 'candidates',
     component: () => import('@/modules/candidates/pages/CandidatesPage.vue'),
-    meta: { layout: 'default' },
+    meta: { layout: 'default', roles: ['company'] },
   },
   {
     path: '/company/candidates/:id',
     name: 'candidate-profile',
     component: () => import('@/modules/candidates/pages/CandidateProfilePage.vue'),
-    meta: { layout: 'default' },
+    meta: { layout: 'default', roles: ['company'] },
   },
   {
     path: '/company/wishes',
     name: 'company-wishes',
     component: () => import('@/modules/wishes/pages/CompanyWishesPage.vue'),
-    meta: { layout: 'default' },
+    meta: { layout: 'default', roles: ['company'] },
   },
   {
     path: '/company/analytics',
     name: 'analytics',
     component: () => import('@/modules/analytics/pages/AnalyticsPage.vue'),
-    meta: { layout: 'default' },
+    meta: { layout: 'default', roles: ['company'] },
   },
 
   // ===== Errors =====

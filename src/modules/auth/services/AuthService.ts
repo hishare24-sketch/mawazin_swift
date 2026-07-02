@@ -1,14 +1,6 @@
 import axios from 'axios'
 import type { LoginPayload, RegisterPayload, User } from '@/interfaces/Auth'
-
-// Default permission sets per role (until backend provides them)
-const ROLE_PERMISSIONS: Record<User['role'], string[]> = {
-  seeker: ['view_opportunities', 'apply_opportunity', 'view_profile', 'manage_resume'],
-  company: ['view_candidates', 'create_opportunity', 'send_wish', 'view_analytics'],
-  endorser: ['create_endorsement'],
-  admin: ['*'],
-  interviewer: ['conduct_interview', 'manage_interviewer_profile', 'write_evaluation'],
-}
+import { ROLE_PERMISSIONS, defaultRoleEntries } from '@/services/roles'
 
 function buildMockUser(partial: Partial<User> & Pick<User, 'email' | 'role' | 'name'>): User {
   return {
@@ -18,6 +10,7 @@ function buildMockUser(partial: Partial<User> & Pick<User, 'email' | 'role' | 'n
     email: partial.email,
     phone: partial.phone,
     role: partial.role,
+    roles: partial.roles ?? defaultRoleEntries(partial.role),
     token: `mock-token-${Date.now()}`,
     permissions: ROLE_PERMISSIONS[partial.role],
     created_at: new Date().toISOString(),
