@@ -7,6 +7,7 @@ import type { InterviewerType, MarketInterviewKind } from '@/stores/Interviewers
 import { ai } from '@/services/ai'
 import { useAuthStore } from '@/stores/AuthStore'
 import { useNotificationsStore } from '@/stores/NotificationsStore'
+import { useRoleProfilesStore } from '@/stores/RoleProfilesStore'
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -46,6 +47,14 @@ function finish() {
   // A "reject" recommendation leaves the request pending (doc: approval role).
   authStore.requestRole('interviewer')
   const approved = eligibility.value.recommendation !== 'reject'
+  // Seed the interviewer_profiles record from the wizard answers
+  useRoleProfilesStore().updateInterviewer({
+    specializations: [INTERVIEWER_TYPE_META[type.value].label],
+    interview_types: selectedKinds.value.map(k => KIND_META[k].label),
+    hourly_rate: pricing.value[0] ? Math.round((pricing.value[0].min + pricing.value[0].max) / 2) : 0,
+    certificates: certs.value > 0 ? [`${certs.value} شهادة مهنية موثّقة`] : [],
+    is_approved: approved,
+  })
   if (approved) {
     authStore.activateRole('interviewer')
     authStore.switchRole('interviewer')

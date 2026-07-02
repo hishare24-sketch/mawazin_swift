@@ -14,6 +14,9 @@ import { ALL_SKILLS, TAXONOMY, categorizeSkill, getCategory } from '@/services/t
 import { LEVEL_META, TYPE_META, useInterviewsStore } from '@/stores/InterviewsStore'
 import { KIND_META, useInterviewersStore } from '@/stores/InterviewersStore'
 import type { Booking } from '@/stores/InterviewersStore'
+import { SWITCHABLE_ROLES } from '@/services/roles'
+import { useRoleProfilesStore } from '@/stores/RoleProfilesStore'
+import type { UserRole } from '@/interfaces/Auth'
 
 const { t } = useI18n()
 const interviewsStore = useInterviewsStore()
@@ -36,6 +39,39 @@ const profile = useProfileStore()
 const resumesStore = useResumesStore()
 const user = computed(() => authStore.authUser)
 const tab = ref('skills')
+
+// ===== Multi-role profile tabs (doc §3.4) =====
+const roleProfiles = useRoleProfilesStore()
+const ownedProRoles = computed<UserRole[]>(() => SWITCHABLE_ROLES.filter(r => authStore.ownsRole(r)))
+// Open on the tab of the currently active role
+const roleTab = ref<UserRole>(
+  SWITCHABLE_ROLES.includes(authStore.role as UserRole) ? authStore.role as UserRole : 'seeker',
+)
+const ROLE_TAB_META: Record<string, { icon: string, label: string }> = {
+  seeker: { icon: 'mdi-account-search-outline', label: 'واجهة الباحث' },
+  interviewer: { icon: 'mdi-star-check-outline', label: 'واجهة المقيّم' },
+  company: { icon: 'mdi-office-building-outline', label: 'واجهة جهة التوظيف' },
+}
+
+// Seeker preferences (seeker_profiles columns)
+const AVAILABILITY_OPTIONS = [
+  { value: 'immediate', title: 'جاهز فورًا' },
+  { value: 'within_month', title: 'خلال شهر' },
+  { value: 'within_three_months', title: 'خلال 3 أشهر' },
+  { value: 'not_available', title: 'غير متاح حاليًا' },
+]
+const EMPLOYMENT_TYPES = [
+  { value: 'full_time', title: 'دوام كامل' },
+  { value: 'part_time', title: 'دوام جزئي' },
+  { value: 'remote', title: 'عن بُعد' },
+  { value: 'freelance', title: 'عمل حر' },
+  { value: 'contract', title: 'عقد مؤقت' },
+]
+const COMPANY_SIZES = ['1-10', '11-50', '51-200', '201-500', '500+']
+const VISIBILITY_OPTIONS = [
+  { value: 'public', title: 'عام' },
+  { value: 'private', title: 'خاص' },
+]
 
 // Add-skill dialog
 const skillDialog = ref(false)
@@ -291,12 +327,30 @@ const heroStats = computed(() => [
       </VCardText>
     </VCard>
 
-    <!-- Trust score -->
-    <div class="mb-5">
-      <TrustScoreCard />
-    </div>
+    <!-- Role profile tabs (multi-role accounts only) -->
+    <VTabs
+      v-if="ownedProRoles.length > 1"
+      v-model="roleTab"
+      color="primary"
+      class="mb-5 role-profile-tabs"
+      density="comfortable"
+      grow
+    >
+      <VTab v-for="r in ownedProRoles" :key="r" :value="r" :prepend-icon="ROLE_TAB_META[r].icon">
+        {{ ROLE_TAB_META[r].label }}
+        <VChip v-if="authStore.roleStatus(r) === 'pending'" size="x-small" color="warning" label class="ms-1">
+          {{ t('roleSwitcher.pending') }}
+        </VChip>
+      </VTab>
+    </VTabs>
 
-    <VTabs v-model="tab" color="primary" class="mb-4" show-arrows>
+    <div v-show="roleTab === 'seeker'">
+      <!-- Trust score -->
+      <div class="mb-5">
+        <TrustScoreCard />
+      </div>
+
+      <VTabs v-model="tab" color="primary" class="mb-4" show-arrows>
       <VTab value="skills" prepend-icon="mdi-star-outline">المهارات</VTab>
       <VTab value="experience" prepend-icon="mdi-briefcase-outline">الخبرات</VTab>
       <VTab value="certificates" prepend-icon="mdi-certificate-outline">الشهادات</VTab>
@@ -307,6 +361,7 @@ const heroStats = computed(() => [
         التقييمات
         <VChip v-if="reviewsCount" size="x-small" color="amber" class="ms-1" label>{{ reviewsCount }}</VChip>
       </VTab>
+      <VTab value="prefs" prepend-icon="mdi-tune">التفضيلات</VTab>
       <VTab value="privacy" prepend-icon="mdi-shield-lock-outline">الخصوصية</VTab>
     </VTabs>
 
@@ -576,7 +631,159 @@ const heroStats = computed(() => [
           </div>
         </VCard>
       </VWindowItem>
+
+      <!-- Seeker preferences (seeker_profiles) -->
+      <VWindowItem value="prefs">
+        <VCard class="pa-5">
+          <h3 class="text-subtitle-1 font-weight-bold mb-1">تفضيلات التوظيف والجاهزية</h3>
+          <p class="text-caption text-medium-emphasis mb-4">تساعد هذه التفضيلات محرّك الترشيح الذكي على مطابقتك بالفرص الأنسب</p>
+          <VRow dense>
+            <VCol cols="12" md="6">
+              <VSelect v-model="profile.prefs.availability" :items="AVAILABILITY_OPTIONS" label="الجاهزية للعمل" prepend-inner-icon="mdi-calendar-clock-outline" />
+            </VCol>
+            <VCol cols="12" md="6">
+              <VTextField v-model="profile.prefs.location" label="موقعك الحالي" prepend-inner-icon="mdi-map-marker-outline" />
+            </VCol>
+            <VCol cols="12" md="6">
+              <VTextField v-model.number="profile.prefs.expected_salary" type="number" label="الراتب المتوقع (شهريًا)" prepend-inner-icon="mdi-cash-multiple" clearable />
+            </VCol>
+            <VCol cols="12" md="6">
+              <VSelect v-model="profile.prefs.preferred_employment_types" :items="EMPLOYMENT_TYPES" label="أنواع العمل المفضّلة" prepend-inner-icon="mdi-briefcase-outline" multiple chips closable-chips />
+            </VCol>
+            <VCol cols="12" md="6">
+              <VCombobox v-model="profile.prefs.preferred_fields" label="المجالات المفضّلة" prepend-inner-icon="mdi-tag-multiple-outline" multiple chips closable-chips />
+            </VCol>
+            <VCol cols="12" md="6">
+              <VCombobox v-model="profile.prefs.preferred_locations" label="المواقع المفضّلة" prepend-inner-icon="mdi-map-marker-multiple-outline" multiple chips closable-chips />
+            </VCol>
+          </VRow>
+          <VDivider class="my-3" />
+          <div class="d-flex align-center justify-space-between py-1">
+            <div>
+              <div class="text-body-2 font-weight-bold">العرض الذاتي</div>
+              <div class="text-caption text-medium-emphasis">اعرض نفسك للجهات كمرشح متاح دون انتظار فرصة منشورة</div>
+            </div>
+            <VSwitch v-model="profile.prefs.self_offer_active" color="secondary" hide-details density="compact" />
+          </div>
+        </VCard>
+      </VWindowItem>
     </VWindow>
+    </div>
+
+    <!-- ===== Interviewer profile (interviewer_profiles) ===== -->
+    <div v-if="roleTab === 'interviewer'">
+      <VCard class="pa-5 mb-5">
+        <div class="d-flex align-center justify-space-between flex-wrap ga-2 mb-1">
+          <h3 class="text-subtitle-1 font-weight-bold">ملف المقيّم المعتمد</h3>
+          <VChip v-if="roleProfiles.interviewer.is_approved || authStore.hasRole('interviewer')" color="success" size="small" label prepend-icon="mdi-check-decagram">
+            معتمد
+          </VChip>
+          <VChip v-else color="warning" size="small" label prepend-icon="mdi-clock-outline">
+            {{ t('roleSwitcher.pending') }}
+          </VChip>
+        </div>
+        <div class="d-flex justify-space-between text-caption mb-1 mt-3">
+          <span class="text-medium-emphasis">اكتمال ملف المقيّم</span>
+          <span class="font-weight-bold text-primary">{{ roleProfiles.interviewerCompletion }}%</span>
+        </div>
+        <VProgressLinear :model-value="roleProfiles.interviewerCompletion" color="primary" height="8" rounded class="mb-4" />
+        <VRow dense>
+          <VCol cols="12" md="6">
+            <VCombobox v-model="roleProfiles.interviewer.specializations" label="التخصصات التي تقيّمها" prepend-inner-icon="mdi-star-check-outline" multiple chips closable-chips />
+          </VCol>
+          <VCol cols="12" md="6">
+            <VTextField v-model.number="roleProfiles.interviewer.hourly_rate" type="number" label="السعر لكل ساعة (ر.س)" prepend-inner-icon="mdi-cash-multiple" />
+          </VCol>
+          <VCol cols="12" md="6">
+            <VCombobox v-model="roleProfiles.interviewer.interview_types" label="أنواع المقابلات" prepend-inner-icon="mdi-format-list-checks" multiple chips closable-chips />
+          </VCol>
+          <VCol cols="12" md="6">
+            <VCombobox v-model="roleProfiles.interviewer.certificates" label="الشهادات والخبرات" prepend-inner-icon="mdi-certificate-outline" multiple chips closable-chips />
+          </VCol>
+        </VRow>
+        <VRow dense class="mt-1">
+          <VCol v-for="stat in [
+            { label: 'مقابلات منفّذة', value: roleProfiles.interviewer.total_interviews, icon: 'mdi-account-tie-voice-outline', color: 'primary' },
+            { label: 'متوسط التقييم', value: roleProfiles.interviewer.average_rating || '—', icon: 'mdi-star-outline', color: 'amber' },
+            { label: 'إجمالي الأرباح', value: `${roleProfiles.interviewer.total_earnings} ر.س`, icon: 'mdi-wallet-outline', color: 'secondary' },
+          ]" :key="stat.label" cols="4">
+            <div class="text-center pa-3 rounded-lg" style="background: rgba(var(--v-theme-primary), 0.06)">
+              <VIcon :icon="stat.icon" :color="stat.color" size="20" class="mb-1" />
+              <div class="text-body-2 font-weight-bold">{{ stat.value }}</div>
+              <div class="text-caption text-medium-emphasis">{{ stat.label }}</div>
+            </div>
+          </VCol>
+        </VRow>
+      </VCard>
+      <VCard class="pa-5">
+        <h3 class="text-subtitle-1 font-weight-bold mb-3">خصوصية دور المقيّم</h3>
+        <div class="d-flex align-center justify-space-between flex-wrap ga-2 py-2">
+          <span class="text-body-2">ظهور ملف المقيّم في السوق</span>
+          <VBtnToggle v-model="roleProfiles.interviewer.visibility" mandatory density="compact" color="primary" variant="outlined">
+            <VBtn v-for="opt in VISIBILITY_OPTIONS" :key="opt.value" :value="opt.value" size="small">{{ opt.title }}</VBtn>
+          </VBtnToggle>
+        </div>
+        <div class="d-flex align-center justify-space-between py-1">
+          <span class="text-body-2">إشعارات طلبات التقييم الجديدة</span>
+          <VSwitch v-model="roleProfiles.interviewer.notifications_enabled" color="secondary" hide-details density="compact" />
+        </div>
+        <div class="d-flex align-center justify-space-between py-1">
+          <span class="text-body-2">إظهار أدواري الأخرى في ملفي العام</span>
+          <VSwitch v-model="roleProfiles.linkRolesPublicly" color="secondary" hide-details density="compact" />
+        </div>
+      </VCard>
+    </div>
+
+    <!-- ===== Employer profile (employer_profiles) ===== -->
+    <div v-if="roleTab === 'company'">
+      <VCard class="pa-5 mb-5">
+        <div class="d-flex align-center justify-space-between flex-wrap ga-2 mb-1">
+          <h3 class="text-subtitle-1 font-weight-bold">ملف جهة التوظيف</h3>
+          <VChip v-if="roleProfiles.employer.is_verified" color="success" size="small" label prepend-icon="mdi-check-decagram">
+            شركة موثّقة
+          </VChip>
+        </div>
+        <div class="d-flex justify-space-between text-caption mb-1 mt-3">
+          <span class="text-medium-emphasis">اكتمال ملف الجهة</span>
+          <span class="font-weight-bold text-primary">{{ roleProfiles.employerCompletion }}%</span>
+        </div>
+        <VProgressLinear :model-value="roleProfiles.employerCompletion" color="primary" height="8" rounded class="mb-4" />
+        <VRow dense>
+          <VCol cols="12" md="6">
+            <VTextField v-model="roleProfiles.employer.company_name" label="اسم الجهة / الشركة" prepend-inner-icon="mdi-office-building-outline" />
+          </VCol>
+          <VCol cols="12" md="6">
+            <VTextField v-model="roleProfiles.employer.industry" label="المجال" prepend-inner-icon="mdi-tag-outline" />
+          </VCol>
+          <VCol cols="12" md="6">
+            <VSelect v-model="roleProfiles.employer.company_size" :items="COMPANY_SIZES" label="حجم الشركة" prepend-inner-icon="mdi-account-group-outline" />
+          </VCol>
+          <VCol cols="12" md="6">
+            <VTextField v-model="roleProfiles.employer.company_website" label="الموقع الإلكتروني" prepend-inner-icon="mdi-web" dir="ltr" />
+          </VCol>
+          <VCol cols="12">
+            <VTextarea v-model="roleProfiles.employer.company_description" label="نبذة عن الشركة" prepend-inner-icon="mdi-text" rows="3" auto-grow />
+          </VCol>
+        </VRow>
+      </VCard>
+      <VCard class="pa-5">
+        <h3 class="text-subtitle-1 font-weight-bold mb-3">خصوصية دور جهة التوظيف</h3>
+        <div class="d-flex align-center justify-space-between flex-wrap ga-2 py-2">
+          <span class="text-body-2">ظهور الشركة للمرشحين ونتائج البحث</span>
+          <VBtnToggle v-model="roleProfiles.employer.visibility" mandatory density="compact" color="primary" variant="outlined">
+            <VBtn v-for="opt in VISIBILITY_OPTIONS" :key="opt.value" :value="opt.value" size="small">{{ opt.title }}</VBtn>
+          </VBtnToggle>
+        </div>
+        <div class="d-flex align-center justify-space-between py-1">
+          <span class="text-body-2">إشعارات المتقدمين الجدد</span>
+          <VSwitch v-model="roleProfiles.employer.notifications_enabled" color="secondary" hide-details density="compact" />
+        </div>
+        <div class="d-flex align-center justify-space-between py-1">
+          <span class="text-body-2">إظهار أدواري الأخرى في ملفي العام</span>
+          <VSwitch v-model="roleProfiles.linkRolesPublicly" color="secondary" hide-details density="compact" />
+        </div>
+      </VCard>
+    </div>
 
     <!-- Add skill dialog -->
     <VDialog v-model="skillDialog" max-width="420">

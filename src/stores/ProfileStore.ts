@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import { computed, ref, watch } from 'vue'
+import type { SeekerPrefs } from '@/interfaces/RoleProfiles'
 import { ai } from '@/services/ai'
 import { useGamificationStore } from '@/stores/GamificationStore'
 
@@ -50,6 +51,7 @@ interface ProfileState {
   skills: Skill[]
   experiences: Experience[]
   certificates: Certificate[]
+  prefs: SeekerPrefs
 }
 
 const seed: ProfileState = {
@@ -81,6 +83,16 @@ const seed: ProfileState = {
     { id: 1, name: 'Vue.js Professional', issuer: 'Vue School', date: '2023' },
     { id: 2, name: 'TypeScript Deep Dive', issuer: 'Frontend Masters', date: '2022' },
   ],
+  // Mirrors the seeker_profiles preference columns
+  prefs: {
+    location: 'الرياض',
+    availability: 'within_month',
+    expected_salary: null,
+    preferred_employment_types: ['full_time'],
+    preferred_fields: [],
+    preferred_locations: [],
+    self_offer_active: false,
+  },
 }
 
 function load(): ProfileState {
@@ -105,6 +117,7 @@ export const useProfileStore = defineStore('profile', () => {
   const skills = ref<Skill[]>(state.skills)
   const experiences = ref<Experience[]>(state.experiences)
   const certificates = ref<Certificate[]>(state.certificates)
+  const prefs = ref<SeekerPrefs>({ ...structuredClone(seed.prefs), ...state.prefs })
 
   // Pending proof requests others sent to me (e.g. a manager asking me to verify a skill)
   const pendingProofRequests = ref<ProofRequest[]>([
@@ -135,9 +148,10 @@ export const useProfileStore = defineStore('profile', () => {
       skills: skills.value,
       experiences: experiences.value,
       certificates: certificates.value,
+      prefs: prefs.value,
     }))
   }
-  watch([headline, summary, skills, experiences, certificates], persist, { deep: true })
+  watch([headline, summary, skills, experiences, certificates, prefs], persist, { deep: true })
 
   function addSkill(name: string, selfLevel: number, category?: string) {
     if (!name.trim())
@@ -173,7 +187,7 @@ export const useProfileStore = defineStore('profile', () => {
   }
 
   return {
-    headline, summary, skills, experiences, certificates,
+    headline, summary, skills, experiences, certificates, prefs,
     pendingProofRequests, unverifiedSkills, resolveProofRequest,
     addSkill, removeSkill, addProof, addExperience, removeExperience, addCertificate, removeCertificate,
   }
