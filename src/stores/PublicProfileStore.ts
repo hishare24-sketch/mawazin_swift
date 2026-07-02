@@ -2,6 +2,7 @@ import { defineStore } from 'pinia'
 import { computed, ref, watch } from 'vue'
 import type { UserRole } from '@/interfaces/Auth'
 import { useAuthStore } from '@/stores/AuthStore'
+import { useWalletStore } from '@/stores/WalletStore'
 import { useExpertRolesStore } from '@/stores/ExpertRolesStore'
 import { useInterviewersStore } from '@/stores/InterviewersStore'
 import { useInterviewsStore } from '@/stores/InterviewsStore'
@@ -45,6 +46,9 @@ export interface ContactLinks {
   github?: string
   twitter?: string
   website?: string
+  instagram?: string
+  youtube?: string
+  behance?: string
 }
 
 export interface PublicSections {
@@ -56,6 +60,45 @@ export interface PublicSections {
   experience: boolean
   portfolio: boolean
   roles: boolean
+  followers: boolean
+  ratings: boolean
+  comments: boolean
+}
+
+/** تعليق زائر على الصفحة — صاحبها يشرف عليه (إخفاء/حذف) */
+export interface PageComment {
+  id: number
+  author: string
+  initial: string
+  text: string
+  date: string
+  hidden: boolean
+}
+
+// ===== باقات الاشتراك — الباقة تحدد أقسام الصفحة المتاحة للإظهار =====
+export type ProfileTier = 'free' | 'pro' | 'elite'
+
+export const TIER_META: Record<ProfileTier, { label: string, price: number, color: string, icon: string, pitch: string }> = {
+  free: { label: 'الأساسية', price: 0, color: 'surface-variant', icon: 'mdi-account-outline', pitch: 'هويتك الأساسية: القصة والمهارات والمصداقية' },
+  pro: { label: 'الاحترافية', price: 49, color: 'primary', icon: 'mdi-briefcase-outline', pitch: 'أضف الإنجازات والخبرات ومعرض الأعمال والتوصيات وشارات الأدوار' },
+  elite: { label: 'النخبة', price: 99, color: 'accent', icon: 'mdi-crown-outline', pitch: 'التفاعل الكامل: متابعون وتقييم الزوار وتعليقاتهم' },
+}
+
+const TIER_RANK: Record<ProfileTier, number> = { free: 0, pro: 1, elite: 2 }
+
+/** الحد الأدنى من الباقة لكل قسم */
+export const SECTION_TIER: Record<keyof PublicSections, ProfileTier> = {
+  stats: 'free',
+  story: 'free',
+  skills: 'free',
+  achievements: 'pro',
+  testimonials: 'pro',
+  experience: 'pro',
+  portfolio: 'pro',
+  roles: 'pro',
+  followers: 'elite',
+  ratings: 'elite',
+  comments: 'elite',
 }
 
 interface PublicProfileState {
@@ -67,6 +110,7 @@ interface PublicProfileState {
   story: string
   contactEnabled: boolean
   links: ContactLinks
+  tier: ProfileTier
   sections: PublicSections
   /** المهارات المختارة للعرض العام (قد تكون مجموعة جزئية من مهارات الملف الخاص) */
   selectedSkillIds: number[]
@@ -76,6 +120,14 @@ interface PublicProfileState {
   views: number
   shares: number
   contacts: number
+  // —— التفاعل الاجتماعي ——
+  followersCount: number
+  /** حالة زائر هذا المتصفح (محاكاة الطرف الآخر في العرض) */
+  visitorFollows: boolean
+  ratingSum: number
+  ratingCount: number
+  visitorRating: number
+  comments: PageComment[]
 }
 
 const STORAGE_KEY = 'publicProfile'
@@ -90,8 +142,10 @@ const seed: PublicProfileState = {
   links: {
     linkedin: 'https://linkedin.com/in/ahmed-almansour',
     github: 'https://github.com/ahmed-almansour',
+    twitter: 'https://x.com/ahmed_dev',
   },
-  sections: { stats: true, story: true, achievements: true, testimonials: true, skills: true, experience: true, portfolio: true, roles: true },
+  tier: 'elite',
+  sections: { stats: true, story: true, achievements: true, testimonials: true, skills: true, experience: true, portfolio: true, roles: true, followers: true, ratings: true, comments: true },
   selectedSkillIds: [1, 2, 3],
   achievements: [
     { id: 1, text: 'خفّضت زمن تحميل لوحة تحكم رئيسية بنسبة 40% بإعادة هيكلة تحميل الحزم', kind: 'self' },
@@ -109,11 +163,28 @@ const seed: PublicProfileState = {
   views: 128,
   shares: 9,
   contacts: 4,
+  followersCount: 214,
+  visitorFollows: false,
+  ratingSum: 173,
+  ratingCount: 37,
+  visitorRating: 0,
+  comments: [
+    { id: 1, author: 'نورة القحطاني', initial: 'ن', text: 'تعاملت معه في مشروع سابق — احترافية والتزام يستحقان الإشادة.', date: '2026-06-27', hidden: false },
+    { id: 2, author: 'فهد العنزي', initial: 'ف', text: 'معرض أعماله يتحدث عنه. بالتوفيق!', date: '2026-06-24', hidden: false },
+  ],
 }
 
 function load(): PublicProfileState {
   try {
-    return { ...structuredClone(seed), ...JSON.parse(localStorage.getItem(STORAGE_KEY) ?? '{}') }
+    const stored = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? '{}')
+    const base = structuredClone(seed)
+    // دمج عميق للكائنات المتداخلة كي تكتسب الجلسات القديمة المفاتيح الجديدة
+    return {
+      ...base,
+      ...stored,
+      links: { ...base.links, ...(stored.links ?? {}) },
+      sections: { ...base.sections, ...(stored.sections ?? {}) },
+    }
   }
   catch {
     return structuredClone(seed)
@@ -158,7 +229,7 @@ export const usePublicProfileStore = defineStore('publicProfile', () => {
    */
   const roleBadges = computed(() => {
     const roleProfiles = useRoleProfilesStore()
-    if (!roleProfiles.linkRolesPublicly || !state.value.sections.roles)
+    if (!roleProfiles.linkRolesPublicly || !canShow('roles'))
       return []
     const badges: { role: UserRole, fact: string }[] = []
     if (auth.ownsRole('interviewer')) {
@@ -207,6 +278,103 @@ export const usePublicProfileStore = defineStore('publicProfile', () => {
     state.value.selectedSkillIds = list.includes(skillId)
       ? list.filter(x => x !== skillId)
       : [...list, skillId]
+  }
+
+  // ===== الباقة والبوابات =====
+  /** هل يسمح مستوى الباقة بإظهار هذا القسم؟ (بمعزل عن مفتاح الإظهار) */
+  function tierAllows(key: keyof PublicSections): boolean {
+    return TIER_RANK[state.value.tier] >= TIER_RANK[SECTION_TIER[key]]
+  }
+  /** القسم يظهر للزوار فقط إذا سمحت الباقة وفعّله صاحب الملف */
+  function canShow(key: keyof PublicSections): boolean {
+    return tierAllows(key) && state.value.sections[key]
+  }
+  /** ترقية/تخفيض الباقة — الترقية مدفوعة من المحفظة (محاكاة اشتراك شهري) */
+  function setTier(tier: ProfileTier): boolean {
+    if (tier === state.value.tier)
+      return true
+    const upgrade = TIER_RANK[tier] > TIER_RANK[state.value.tier]
+    if (upgrade) {
+      const paid = useWalletStore().pay(TIER_META[tier].price, `اشتراك باقة «${TIER_META[tier].label}» — الصفحة التعريفية`)
+      if (!paid)
+        return false
+    }
+    state.value.tier = tier
+    useNotificationsStore().push({
+      icon: TIER_META[tier].icon,
+      color: upgrade ? 'success' : 'info',
+      title: upgrade ? `ترقّيت إلى باقة «${TIER_META[tier].label}»` : `انتقلت إلى باقة «${TIER_META[tier].label}»`,
+      body: TIER_META[tier].pitch,
+      category: 'system',
+      actionTo: '/my-public-profile',
+      actionLabel: 'إدارة صفحتي',
+    })
+    return true
+  }
+
+  // ===== التفاعل الاجتماعي (جانب الزائر) =====
+  function toggleFollow() {
+    state.value.visitorFollows = !state.value.visitorFollows
+    state.value.followersCount += state.value.visitorFollows ? 1 : -1
+    if (state.value.visitorFollows) {
+      useNotificationsStore().push({
+        icon: 'mdi-account-heart-outline',
+        color: 'accent',
+        title: 'متابع جديد لصفحتك',
+        body: 'انضم متابع جديد إلى جمهور صفحتك التعريفية.',
+        category: 'system',
+        actionTo: '/my-public-profile',
+        actionLabel: 'مؤشرات صفحتي',
+      })
+    }
+  }
+
+  const avgRating = computed(() =>
+    state.value.ratingCount ? Math.round((state.value.ratingSum / state.value.ratingCount) * 10) / 10 : 0,
+  )
+  /** تقييم الزائر للصفحة — تعديل تقييمه السابق لا يضاعف العدّاد */
+  function rate(stars: number) {
+    if (stars < 1 || stars > 5)
+      return
+    if (state.value.visitorRating) {
+      state.value.ratingSum += stars - state.value.visitorRating
+    }
+    else {
+      state.value.ratingSum += stars
+      state.value.ratingCount++
+    }
+    state.value.visitorRating = stars
+  }
+
+  const visibleComments = computed(() => state.value.comments.filter(c => !c.hidden))
+  function addComment(author: string, text: string) {
+    const c: PageComment = {
+      id: nextId++,
+      author,
+      initial: author.trim().charAt(0),
+      text: text.trim(),
+      date: new Date().toISOString().slice(0, 10),
+      hidden: false,
+    }
+    state.value.comments.unshift(c)
+    useNotificationsStore().push({
+      icon: 'mdi-comment-account-outline',
+      color: 'info',
+      title: 'تعليق جديد على صفحتك',
+      body: `${author}: ${text.slice(0, 60)}${text.length > 60 ? '…' : ''}`,
+      category: 'system',
+      actionTo: '/my-public-profile',
+      actionLabel: 'إدارة التعليقات',
+    })
+    return c
+  }
+  function setCommentHidden(id: number, hidden: boolean) {
+    const c = state.value.comments.find(x => x.id === id)
+    if (c)
+      c.hidden = hidden
+  }
+  function removeComment(id: number) {
+    state.value.comments = state.value.comments.filter(c => c.id !== id)
   }
 
   /** «تواصل معي»: رسالة من زائر تدخل صندوق رسائل صاحب الملف مباشرة */
@@ -258,6 +426,9 @@ export const usePublicProfileStore = defineStore('publicProfile', () => {
     addPortfolio, removePortfolio,
     toggleTestimonial, toggleSkill,
     contact, strength,
+    tierAllows, canShow, setTier,
+    toggleFollow, avgRating, rate,
+    visibleComments, addComment, setCommentHidden, removeComment,
     publicPath, publicUrl, shareOnLinkedIn,
   }
 })

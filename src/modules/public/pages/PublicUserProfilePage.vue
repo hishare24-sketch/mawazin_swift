@@ -85,8 +85,22 @@ const externalLinks = computed(() => [
   { key: 'linkedin', icon: 'mdi-linkedin', url: s.value.links.linkedin },
   { key: 'github', icon: 'mdi-github', url: s.value.links.github },
   { key: 'twitter', icon: 'mdi-twitter', url: s.value.links.twitter },
+  { key: 'instagram', icon: 'mdi-instagram', url: s.value.links.instagram },
+  { key: 'youtube', icon: 'mdi-youtube', url: s.value.links.youtube },
+  { key: 'behance', icon: 'mdi-alpha-b-circle-outline', url: s.value.links.behance },
   { key: 'website', icon: 'mdi-web', url: s.value.links.website },
 ].filter(l => l.url))
+
+// —— تفاعل الزائر: تعليق جديد ——
+const commentName = ref('')
+const commentText = ref('')
+function postComment() {
+  if (!commentName.value.trim() || !commentText.value.trim())
+    return
+  pub.addComment(commentName.value.trim(), commentText.value.trim())
+  commentName.value = ''
+  commentText.value = ''
+}
 </script>
 
 <template>
@@ -100,10 +114,17 @@ const externalLinks = computed(() => [
               <span class="text-h4 font-weight-bold text-white">{{ pub.displayName.trim().charAt(0) }}</span>
             </VAvatar>
             <div class="flex-grow-1">
-              <h1 class="text-h5 font-weight-bold text-white">{{ pub.displayName }}</h1>
+              <div class="d-flex align-center ga-2 flex-wrap">
+                <h1 class="text-h5 font-weight-bold text-white">{{ pub.displayName }}</h1>
+                <VChip v-if="s.tier === 'elite'" size="x-small" color="accent" label prepend-icon="mdi-crown-outline">نخبة</VChip>
+              </div>
               <div class="text-body-1 text-white opacity-90">{{ s.publicHeadline }}</div>
-              <div class="text-caption text-white opacity-75 d-flex align-center ga-1">
-                <VIcon icon="mdi-map-marker-outline" size="14" />{{ s.location }}
+              <div class="text-caption text-white opacity-75 d-flex align-center ga-2 flex-wrap">
+                <span><VIcon icon="mdi-map-marker-outline" size="14" />{{ s.location }}</span>
+                <span v-if="pub.canShow('followers')"><VIcon icon="mdi-account-group-outline" size="14" /> {{ s.followersCount }} متابعًا</span>
+                <span v-if="pub.canShow('ratings') && s.ratingCount">
+                  <VIcon icon="mdi-star" size="14" color="amber" /> {{ pub.avgRating }} ({{ s.ratingCount }} تقييمًا)
+                </span>
               </div>
               <div v-if="externalLinks.length" class="d-flex ga-1 mt-2">
                 <VBtn
@@ -120,9 +141,20 @@ const externalLinks = computed(() => [
               </div>
             </div>
             <div class="d-flex flex-column ga-2">
-              <VBtn v-if="s.contactEnabled" color="accent" prepend-icon="mdi-message-arrow-right-outline" @click="contactDialog = true">
-                تواصل معي
-              </VBtn>
+              <div class="d-flex ga-2">
+                <VBtn
+                  v-if="pub.canShow('followers')"
+                  :color="s.visitorFollows ? 'success' : 'accent'"
+                  :variant="s.visitorFollows ? 'tonal' : 'flat'"
+                  :prepend-icon="s.visitorFollows ? 'mdi-account-check-outline' : 'mdi-account-plus-outline'"
+                  @click="pub.toggleFollow()"
+                >
+                  {{ s.visitorFollows ? 'تُتابعه' : 'متابعة' }}
+                </VBtn>
+                <VBtn v-if="s.contactEnabled" color="accent" :variant="pub.canShow('followers') ? 'outlined' : 'flat'" prepend-icon="mdi-message-arrow-right-outline" @click="contactDialog = true">
+                  تواصل معي
+                </VBtn>
+              </div>
               <div class="d-flex ga-1">
                 <VBtn size="small" variant="outlined" color="white" :prepend-icon="copied ? 'mdi-check' : 'mdi-link-variant'" @click="share">
                   {{ copied ? 'نُسخ' : 'مشاركة' }}
@@ -143,7 +175,7 @@ const externalLinks = computed(() => [
         </div>
 
         <!-- شريط المصداقية الموثّقة (مصغّر عمدًا — القصة أولًا) -->
-        <VCardText v-if="s.sections.stats">
+        <VCardText v-if="pub.canShow('stats')">
           <VRow dense class="text-center">
             <VCol v-for="f in pub.verifiedFacts" :key="f.label" cols="6" md="3">
               <VIcon :icon="f.icon" color="primary" size="20" class="mb-1" />
@@ -167,13 +199,13 @@ const externalLinks = computed(() => [
       <VRow>
         <VCol cols="12" md="7">
           <!-- القصة المهنية -->
-          <VCard v-if="s.sections.story" class="pa-5 mb-4">
+          <VCard v-if="pub.canShow('story')" class="pa-5 mb-4">
             <h2 class="text-subtitle-1 font-weight-bold mb-2">قصتي المهنية</h2>
             <p class="text-body-2 mb-0" style="line-height: 2">{{ s.story }}</p>
           </VCard>
 
           <!-- أبرز الإنجازات -->
-          <VCard v-if="s.sections.achievements && s.achievements.length" class="pa-5 mb-4">
+          <VCard v-if="pub.canShow('achievements') && s.achievements.length" class="pa-5 mb-4">
             <h2 class="text-subtitle-1 font-weight-bold mb-3">
               <VIcon icon="mdi-rocket-launch-outline" color="primary" size="20" class="me-1" />أبرز الإنجازات
             </h2>
@@ -189,7 +221,7 @@ const externalLinks = computed(() => [
           </VCard>
 
           <!-- الخبرات (سردية موجزة) -->
-          <VCard v-if="s.sections.experience && profile.experiences.length" class="pa-5 mb-4">
+          <VCard v-if="pub.canShow('experience') && profile.experiences.length" class="pa-5 mb-4">
             <h2 class="text-subtitle-1 font-weight-bold mb-3">
               <VIcon icon="mdi-briefcase-outline" color="secondary" size="20" class="me-1" />الخبرات
             </h2>
@@ -201,7 +233,7 @@ const externalLinks = computed(() => [
           </VCard>
 
           <!-- معرض الأعمال -->
-          <VCard v-if="s.sections.portfolio && s.portfolio.length" class="pa-5">
+          <VCard v-if="pub.canShow('portfolio') && s.portfolio.length" class="pa-5">
             <h2 class="text-subtitle-1 font-weight-bold mb-3">
               <VIcon icon="mdi-palette-outline" color="accent" size="20" class="me-1" />معرض الأعمال
             </h2>
@@ -222,7 +254,7 @@ const externalLinks = computed(() => [
 
         <VCol cols="12" md="5">
           <!-- التوصيات (الدليل الاجتماعي) -->
-          <VCard v-if="s.sections.testimonials && pub.visibleTestimonials.length" class="pa-5 mb-4">
+          <VCard v-if="pub.canShow('testimonials') && pub.visibleTestimonials.length" class="pa-5 mb-4">
             <h2 class="text-subtitle-1 font-weight-bold mb-3">
               <VIcon icon="mdi-comment-quote-outline" color="amber" size="20" class="me-1" />ماذا يقولون عني
             </h2>
@@ -239,7 +271,7 @@ const externalLinks = computed(() => [
           </VCard>
 
           <!-- المهارات المختارة -->
-          <VCard v-if="s.sections.skills && pub.publicSkills.length" class="pa-5">
+          <VCard v-if="pub.canShow('skills') && pub.publicSkills.length" class="pa-5 mb-4">
             <h2 class="text-subtitle-1 font-weight-bold mb-3">
               <VIcon icon="mdi-star-outline" color="primary" size="20" class="me-1" />المهارات
             </h2>
@@ -254,6 +286,57 @@ const externalLinks = computed(() => [
           </VCard>
         </VCol>
       </VRow>
+
+      <!-- تقييم الزوار -->
+      <VCard v-if="pub.canShow('ratings')" class="pa-5 mt-4">
+        <div class="d-flex align-center ga-3 flex-wrap">
+          <div class="flex-grow-1">
+            <h2 class="text-subtitle-1 font-weight-bold mb-1">
+              <VIcon icon="mdi-star-outline" color="amber" size="20" class="me-1" />قيّم هذه الصفحة
+            </h2>
+            <p class="text-caption text-medium-emphasis mb-0">
+              {{ s.visitorRating ? 'شكرًا لتقييمك — يمكنك تعديله متى شئت.' : 'رأيك يساعد الآخرين على الوثوق بهذا الملف.' }}
+            </p>
+          </div>
+          <div class="text-center">
+            <VRating
+              :model-value="s.visitorRating"
+              color="warning"
+              hover
+              size="32"
+              @update:model-value="pub.rate(Number($event))"
+            />
+            <div class="text-caption text-medium-emphasis">المتوسط {{ pub.avgRating }} من {{ s.ratingCount }} تقييمًا</div>
+          </div>
+        </div>
+      </VCard>
+
+      <!-- تعليقات الزوار -->
+      <VCard v-if="pub.canShow('comments')" class="pa-5 mt-4">
+        <h2 class="text-subtitle-1 font-weight-bold mb-3">
+          <VIcon icon="mdi-comment-multiple-outline" color="info" size="20" class="me-1" />التعليقات ({{ pub.visibleComments.length }})
+        </h2>
+        <div v-for="c in pub.visibleComments" :key="c.id" class="d-flex align-start ga-3 mb-3">
+          <VAvatar size="32" color="info" variant="tonal"><span class="text-caption font-weight-bold">{{ c.initial }}</span></VAvatar>
+          <div class="flex-grow-1">
+            <div class="d-flex align-center ga-2">
+              <span class="text-body-2 font-weight-bold">{{ c.author }}</span>
+              <span class="text-caption text-medium-emphasis">{{ c.date }}</span>
+            </div>
+            <p class="text-body-2 mb-0">{{ c.text }}</p>
+          </div>
+        </div>
+        <p v-if="!pub.visibleComments.length" class="text-caption text-medium-emphasis">كن أول من يعلّق.</p>
+        <VDivider class="my-3" />
+        <VRow dense align="center">
+          <VCol cols="12" sm="3"><VTextField v-model="commentName" label="اسمك" density="compact" hide-details /></VCol>
+          <VCol cols="12" sm="7"><VTextField v-model="commentText" label="أضف تعليقًا..." density="compact" hide-details @keyup.enter="postComment" /></VCol>
+          <VCol cols="12" sm="2">
+            <VBtn color="info" block height="40" :disabled="!commentName.trim() || !commentText.trim()" prepend-icon="mdi-send" @click="postComment">نشر</VBtn>
+          </VCol>
+        </VRow>
+        <p class="text-caption text-medium-emphasis mt-2 mb-0">التعليقات تخضع لإشراف صاحب الصفحة.</p>
+      </VCard>
 
       <!-- CTA المنصة (تسويق مزدوج) -->
       <VCard class="brand-gradient pa-5 mt-4 text-center" theme="darkTheme">

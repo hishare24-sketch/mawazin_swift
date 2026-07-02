@@ -3,6 +3,7 @@ import { createPinia, setActivePinia } from 'pinia'
 import { useMessagesStore } from './MessagesStore'
 import { useNotificationsStore } from './NotificationsStore'
 import { usePublicProfileStore } from './PublicProfileStore'
+import { useWalletStore } from './WalletStore'
 
 beforeEach(() => {
   localStorage.clear()
@@ -71,6 +72,61 @@ describe('publicProfileStore', () => {
     expect(p.strength.nextTip).toContain('إنجازات')
     p.addAchievement('إنجاز ثالث ملموس')
     expect(p.strength.nextTip ?? '').not.toContain('إنجازات')
+  })
+
+  it('gates sections by subscription tier and owner toggle together', () => {
+    const p = usePublicProfileStore()
+    p.state.tier = 'free'
+    expect(p.canShow('story')).toBe(true)
+    expect(p.canShow('portfolio')).toBe(false) // يتطلب الاحترافية
+    expect(p.canShow('comments')).toBe(false) // يتطلب النخبة
+    p.state.tier = 'pro'
+    expect(p.canShow('portfolio')).toBe(true)
+    expect(p.canShow('comments')).toBe(false)
+    p.state.tier = 'elite'
+    expect(p.canShow('comments')).toBe(true)
+    p.state.sections.comments = false // مفتاح صاحب الملف يتغلب على الباقة
+    expect(p.canShow('comments')).toBe(false)
+  })
+
+  it('charges the wallet on upgrade and blocks it when balance is low', () => {
+    const p = usePublicProfileStore()
+    const wallet = useWalletStore()
+    p.state.tier = 'free'
+    const before = wallet.available
+    expect(p.setTier('pro')).toBe(true)
+    expect(wallet.available).toBe(before - 49)
+    // تخفيض بلا رسوم
+    expect(p.setTier('free')).toBe(true)
+    expect(wallet.available).toBe(before - 49)
+    // ترقية أكبر من الرصيد تُرفض
+    wallet.pay(wallet.available, 'تصفير الرصيد للاختبار')
+    expect(p.setTier('elite')).toBe(false)
+    expect(p.state.tier).toBe('free')
+  })
+
+  it('follows, rates without double counting, and moderates comments', () => {
+    const p = usePublicProfileStore()
+    const followers = p.state.followersCount
+    p.toggleFollow()
+    expect(p.state.followersCount).toBe(followers + 1)
+    p.toggleFollow()
+    expect(p.state.followersCount).toBe(followers)
+
+    const count = p.state.ratingCount
+    p.rate(5)
+    expect(p.state.ratingCount).toBe(count + 1)
+    p.rate(3) // تعديل تقييم الزائر نفسه لا يضيف عدّادًا جديدًا
+    expect(p.state.ratingCount).toBe(count + 1)
+    expect(p.state.visitorRating).toBe(3)
+    expect(p.avgRating).toBeGreaterThan(0)
+
+    const c = p.addComment('زائر', 'تعليق تجريبي')
+    expect(p.visibleComments.some(x => x.id === c.id)).toBe(true)
+    p.setCommentHidden(c.id, true)
+    expect(p.visibleComments.some(x => x.id === c.id)).toBe(false)
+    p.removeComment(c.id)
+    expect(p.state.comments.some(x => x.id === c.id)).toBe(false)
   })
 
   it('exposes public url and skill selection subset', () => {

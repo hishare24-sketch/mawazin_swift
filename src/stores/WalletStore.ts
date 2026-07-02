@@ -217,6 +217,18 @@ export const useWalletStore = defineStore('wallet', () => {
     return txn
   }
 
+  /** دفع رسوم من الرصيد المتاح (اشتراكات وخدمات المنصة) */
+  function pay(amount: number, title: string): boolean {
+    if (amount <= 0 || amount > available.value)
+      return false
+    pushTxn({ type: 'fee', amount: -amount, status: 'completed', title })
+    useNotificationsStore().push({
+      icon: 'mdi-credit-card-check-outline', color: 'info', title: 'تم الدفع من محفظتك',
+      body: `${amount} ر.س — ${title}`, category: 'system', actionTo: '/wallet', actionLabel: 'عرض المحفظة',
+    })
+    return true
+  }
+
   /** تحويل النقاط المكتسبة إلى رصيد (10 نقاط = 1 ر.س) */
   function convertPoints(points: number): boolean {
     if (points < POINTS_PER_RIYAL)
@@ -258,7 +270,7 @@ export const useWalletStore = defineStore('wallet', () => {
     txns, methods,
     available, pending, processingWithdrawals, totalIn, totalOut, defaultMethod,
     monthlyFlow, byType, balanceSeries,
-    deposit, withdraw, credit, convertPoints,
+    deposit, withdraw, credit, pay, convertPoints,
     addBank, addCard, removeMethod, setDefault,
   }
 })
