@@ -333,6 +333,12 @@ export const routes: RouteRecordRaw[] = [
 
   // ===== Surveys =====
   {
+    path: '/surveys-center',
+    name: 'surveys-hub',
+    component: () => import('@/modules/surveys/pages/SurveysHubPage.vue'),
+    meta: { layout: 'default' },
+  },
+  {
     path: '/surveys',
     name: 'surveys',
     component: () => import('@/modules/surveys/pages/SurveysPage.vue'),
@@ -387,6 +393,12 @@ export const routes: RouteRecordRaw[] = [
     name: 'analytics',
     component: () => import('@/modules/analytics/pages/AnalyticsPage.vue'),
     meta: { layout: 'default', roles: ['company'] },
+  },
+  {
+    path: '/analytics',
+    name: 'unified-analytics',
+    component: () => import('@/modules/analytics/pages/UnifiedAnalyticsPage.vue'),
+    meta: { layout: 'default' },
   },
 
   // ===== Errors =====

@@ -4,6 +4,9 @@ import PageHeader from '@/components/shared/PageHeader.vue'
 import EmptyState from '@/components/shared/EmptyState.vue'
 import { QUESTION_TYPE_META, useSurveysStore } from '@/stores/SurveysStore'
 
+// embedded: تُعرض داخل مركز الاستبيانات الموحّد بلا ترويسة مكررة
+withDefaults(defineProps<{ embedded?: boolean }>(), { embedded: false })
+
 const router = useRouter()
 const store = useSurveysStore()
 
@@ -15,6 +18,7 @@ function participate(token: string) {
 <template>
   <div>
     <PageHeader
+      v-if="!embedded"
       title="استبيانات للمشاركة"
       subtitle="شارك برأيك في استبيانات الجهات داخل المنصة واكسب نقاطًا تحفيزية"
       icon="mdi-poll"

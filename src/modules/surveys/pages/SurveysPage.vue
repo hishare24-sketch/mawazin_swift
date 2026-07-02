@@ -6,6 +6,9 @@ import { DEFAULT_SETTINGS, FREE_SURVEY_LIMIT, QUESTION_TYPE_META, SURVEY_STATUS_
 import type { Survey, SurveyQuestion, SurveyQuestionType, SurveySettings } from '@/stores/SurveysStore'
 import { bankFor } from '../services/questionBanks'
 
+// embedded: تُعرض داخل مركز الاستبيانات الموحّد بلا ترويسة مكررة
+withDefaults(defineProps<{ embedded?: boolean }>(), { embedded: false })
+
 const router = useRouter()
 const store = useSurveysStore()
 
@@ -187,7 +190,7 @@ const STATUS_META = SURVEY_STATUS_META
 
 <template>
   <div>
-    <PageHeader title="الاستبيانات التفاعلية" subtitle="منشئ احترافي بعشرة أنماط أسئلة، نشر داخلي وخارجي، وتحليل ذكي للنتائج" icon="mdi-poll" />
+    <PageHeader v-if="!embedded" title="الاستبيانات التفاعلية" subtitle="منشئ احترافي بعشرة أنماط أسئلة، نشر داخلي وخارجي، وتحليل ذكي للنتائج" icon="mdi-poll" />
 
     <h3 class="text-h6 font-weight-bold mb-3">أنشئ استبياناً جديداً</h3>
     <VRow class="mb-5">

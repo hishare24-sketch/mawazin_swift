@@ -15,7 +15,7 @@ import WhatsNewDialog from '@/components/shared/WhatsNewDialog.vue'
 import { useThemeStore } from '@/stores/ThemeStore'
 import { usePeerRequestsStore } from '@/stores/PeerRequestsStore'
 import { useWalletStore } from '@/stores/WalletStore'
-import { navForRole } from './navigation'
+import { navSections } from './navigation'
 
 const { t, locale } = useI18n()
 const router = useRouter()
@@ -61,7 +61,7 @@ function onMenuClick() {
   else rail.value = !rail.value
 }
 
-const items = computed(() => navForRole(authStore.role))
+const sections = computed(() => navSections(authStore.role))
 const user = computed(() => authStore.authUser)
 const roleLabel = computed(() => (authStore.role ? t(`roles.${authStore.role}`) : ''))
 
@@ -126,23 +126,29 @@ onBeforeUnmount(() => window.removeEventListener('scroll', onScroll))
 
     <VDivider />
 
-    <!-- Nav items -->
+    <!-- Nav items: قسم «حسابي» الموحّد لكل الأدوار ثم «مساحة الدور» النشط -->
     <VList nav density="comfortable" class="px-2 mt-2">
-      <VListItem
-        v-for="item in items"
-        :key="`${item.title}-${item.to}`"
-        :prepend-icon="item.icon"
-        :title="t(`nav.${item.title}`)"
-        :to="{ name: item.to }"
-        rounded="lg"
-        color="primary"
-        class="mb-1 nav-item"
-        @click="mobile && (drawer = false)"
-      >
-        <template v-if="!rail && navBadge(item.to)" #append>
-          <VChip size="x-small" color="error" label>{{ navBadge(item.to) }}</VChip>
-        </template>
-      </VListItem>
+      <template v-for="group in sections" :key="group.section">
+        <VListSubheader v-if="!rail" class="nav-subheader">
+          {{ group.section === 'account' ? t('nav.sectionAccount') : t('nav.sectionRole', { role: roleLabel }) }}
+        </VListSubheader>
+        <VDivider v-else class="my-2" />
+        <VListItem
+          v-for="item in group.items"
+          :key="`${item.title}-${item.to}`"
+          :prepend-icon="item.icon"
+          :title="t(`nav.${item.title}`)"
+          :to="{ name: item.to }"
+          rounded="lg"
+          color="primary"
+          class="mb-1 nav-item"
+          @click="mobile && (drawer = false)"
+        >
+          <template v-if="!rail && navBadge(item.to)" #append>
+            <VChip size="x-small" color="error" label>{{ navBadge(item.to) }}</VChip>
+          </template>
+        </VListItem>
+      </template>
     </VList>
   </VNavigationDrawer>
 

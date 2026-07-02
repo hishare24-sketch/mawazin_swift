@@ -79,6 +79,10 @@
     "extraRolesHint": "يمكنك تفعيل أدوار أخرى الآن أو لاحقًا من قائمة حسابك."
   },
   "nav": {
+    "sectionAccount": "حسابي",
+    "sectionRole": "مساحة الدور: {role}",
+    "surveysHub": "الاستبيانات",
+    "unifiedAnalytics": "التحليلات الموحّدة",
     "hub": "المركز الموحّد",
     "publicProfile": "صفحتي التعريفية",
     "dashboard": "الرئيسية",

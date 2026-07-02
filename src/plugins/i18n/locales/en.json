@@ -79,6 +79,10 @@
     "extraRolesHint": "You can activate more roles now or later from your account menu."
   },
   "nav": {
+    "sectionAccount": "My account",
+    "sectionRole": "Role space: {role}",
+    "surveysHub": "Surveys",
+    "unifiedAnalytics": "Unified Analytics",
     "hub": "Unified Hub",
     "publicProfile": "My Public Page",
     "dashboard": "Dashboard",
