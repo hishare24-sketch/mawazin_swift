@@ -78,6 +78,14 @@
     "extraRoles": "Additional roles (optional)",
     "extraRolesHint": "You can activate more roles now or later from your account menu."
   },
+  "accounts": {
+    "myAccounts": "My accounts",
+    "personal": "Personal account",
+    "delegated": "Delegation mode",
+    "managing": "Managing now",
+    "banner": "You are managing: {name}",
+    "exit": "Back to my account"
+  },
   "nav": {
     "sectionAccount": "My account",
     "sectionRole": "Role space: {role}",

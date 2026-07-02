@@ -78,6 +78,14 @@
     "extraRoles": "أدوار إضافية (اختياري)",
     "extraRolesHint": "يمكنك تفعيل أدوار أخرى الآن أو لاحقًا من قائمة حسابك."
   },
+  "accounts": {
+    "myAccounts": "حساباتي",
+    "personal": "حسابي الشخصي",
+    "delegated": "وضع التفويض",
+    "managing": "تديره الآن",
+    "banner": "أنت تدير حساب: {name}",
+    "exit": "العودة إلى حسابي"
+  },
   "nav": {
     "sectionAccount": "حسابي",
     "sectionRole": "مساحة الدور: {role}",
