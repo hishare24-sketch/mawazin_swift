@@ -7,6 +7,7 @@ import { ROLE_META, SWITCHABLE_ROLES, roleHome } from '@/services/roles'
 import { useAuthStore } from '@/stores/AuthStore'
 import { useGamificationStore } from '@/stores/GamificationStore'
 import { useNotificationsStore } from '@/stores/NotificationsStore'
+import { useRoleRequestsStore } from '@/stores/RoleRequestsStore'
 
 const { t } = useI18n()
 const router = useRouter()
@@ -50,7 +51,15 @@ function requestRole(r: UserRole) {
     companyDialog.value = true
     return
   }
-  authStore.requestRole(r)
+  const entry = authStore.requestRole(r)
+  if (entry?.status === 'pending') {
+    // أدوار الموافقة: يدخل الطلب طابور اعتماد المدير، وتُحاكى مراجعة المنصة
+    const requests = useRoleRequestsStore()
+    const req = requests.add(r, `طلب دور ${t(`roles.${r}`)} عبر مبدّل الأدوار`, true)
+    requests.simulatePlatformReview(req.id)
+    snackbar.value = t('roleSwitcher.pendingNote')
+    return
+  }
   useGamificationStore().record('roleActivated', t('roleSwitcher.activated', { role: t(`roles.${r}`) }))
   snackbar.value = t('roleSwitcher.activated', { role: t(`roles.${r}`) })
   switchTo(r)

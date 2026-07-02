@@ -14,7 +14,7 @@ describe('ecosystem roles core', () => {
     for (const r of ['coach', 'trainer', 'consultant'] as const) {
       expect(SWITCHABLE_ROLES).toContain(r)
       expect(ROLE_META[r].requestable).toBe(true)
-      expect(ROLE_META[r].activation).toBe('instant')
+      expect(ROLE_META[r].activation).toBe('approval') // ضبط جودة عبر طابور الاعتماد
       expect(ROLE_META[r].home).toContain(r)
     }
   })

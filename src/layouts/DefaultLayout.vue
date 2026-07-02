@@ -11,6 +11,7 @@ import GlobalSearchBar from '@/components/shared/GlobalSearchBar.vue'
 import RewardFeedback from '@/components/shared/RewardFeedback.vue'
 import RoleSwitcher from '@/components/shared/RoleSwitcher.vue'
 import ThemeCustomizer from '@/components/shared/ThemeCustomizer.vue'
+import WhatsNewDialog from '@/components/shared/WhatsNewDialog.vue'
 import { useThemeStore } from '@/stores/ThemeStore'
 import { usePeerRequestsStore } from '@/stores/PeerRequestsStore'
 import { useWalletStore } from '@/stores/WalletStore'
@@ -237,6 +238,9 @@ onBeforeUnmount(() => window.removeEventListener('scroll', onScroll))
 
   <!-- Global reward toasts + badge-unlock celebrations -->
   <RewardFeedback />
+
+  <!-- What's new after each deploy (once per build) -->
+  <WhatsNewDialog />
 
   <!-- Scroll to top -->
   <VScaleTransition>

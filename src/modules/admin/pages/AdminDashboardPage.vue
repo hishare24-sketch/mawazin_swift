@@ -1,6 +1,18 @@
 <script setup lang="ts">
+import { ref } from 'vue'
 import PageHeader from '@/components/shared/PageHeader.vue'
 import StatCard from '@/components/shared/StatCard.vue'
+import { useRoleRequestsStore } from '@/stores/RoleRequestsStore'
+import { ROLE_META } from '@/services/roles'
+import { useI18n } from 'vue-i18n'
+
+const { t } = useI18n()
+const roleRequests = useRoleRequestsStore()
+const snackbar = ref('')
+function decideRequest(id: number, approve: boolean, name: string) {
+  roleRequests.decide(id, approve)
+  snackbar.value = approve ? `اعتُمد طلب ${name} وفُعّل الدور` : `رُفض طلب ${name}`
+}
 
 const stats = [
   { title: 'إجمالي المستخدمين', value: '14,208', icon: 'mdi-account-multiple-outline', color: 'primary' },
@@ -43,6 +55,34 @@ const health = [
         <StatCard v-bind="s" />
       </VCol>
     </VRow>
+
+    <!-- طابور اعتماد الأدوار — يقفل حلقة الانضمام والاعتماد -->
+    <VCard class="pa-5 mb-4">
+      <div class="d-flex align-center ga-2 mb-1">
+        <VIcon icon="mdi-shield-account-outline" color="warning" />
+        <h2 class="text-subtitle-1 font-weight-bold">طلبات اعتماد الأدوار</h2>
+        <VChip v-if="roleRequests.pending.length" size="x-small" color="warning" label>{{ roleRequests.pending.length }}</VChip>
+      </div>
+      <p class="text-caption text-medium-emphasis mb-3">أدوار الموافقة (مقيّم/مرشد/مدرب/مستشار) تنتظر قرارك — الاعتماد يفعّل الدور فورًا مع إشعار لصاحبه.</p>
+      <template v-if="roleRequests.pending.length">
+        <div v-for="r in roleRequests.pending" :key="r.id" class="d-flex align-center ga-3 py-2 flex-wrap">
+          <VAvatar color="warning" variant="tonal" size="38"><VIcon :icon="ROLE_META[r.role].icon" size="20" /></VAvatar>
+          <div class="flex-grow-1">
+            <div class="text-body-2 font-weight-bold">
+              {{ r.userName }}
+              <VChip size="x-small" variant="tonal" color="primary" label class="ms-1">{{ t(`roles.${r.role}`) }}</VChip>
+              <VChip v-if="r.mine" size="x-small" variant="tonal" color="info" label class="ms-1">من هذا الحساب</VChip>
+            </div>
+            <div class="text-caption text-medium-emphasis">{{ r.note }} · {{ r.date }}</div>
+          </div>
+          <div class="d-flex ga-1">
+            <VBtn size="small" color="success" prepend-icon="mdi-check" @click="decideRequest(r.id, true, r.userName)">اعتماد</VBtn>
+            <VBtn size="small" color="error" variant="outlined" prepend-icon="mdi-close" @click="decideRequest(r.id, false, r.userName)">رفض</VBtn>
+          </div>
+        </div>
+      </template>
+      <p v-else class="text-caption text-medium-emphasis mb-0">لا طلبات معلقة — كل الأدوار معتمدة.</p>
+    </VCard>
 
     <VRow>
       <VCol cols="12" md="5">
@@ -90,5 +130,9 @@ const health = [
         </VCard>
       </VCol>
     </VRow>
+
+    <VSnackbar :model-value="!!snackbar" color="primary" location="top" timeout="2500" @update:model-value="snackbar = ''">
+      {{ snackbar }}
+    </VSnackbar>
   </div>
 </template>

@@ -9,6 +9,7 @@ import { useAuthStore } from '@/stores/AuthStore'
 import { useNotificationsStore } from '@/stores/NotificationsStore'
 import { useGamificationStore } from '@/stores/GamificationStore'
 import { useRoleProfilesStore } from '@/stores/RoleProfilesStore'
+import { useRoleRequestsStore } from '@/stores/RoleRequestsStore'
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -67,6 +68,10 @@ function finish() {
       body: 'فُعّل دور المقيّم المعتمد في حسابك — يمكنك التبديل إليه من قائمة حسابك.',
       category: 'system',
     })
+  }
+  if (!approved) {
+    // دون الحد الأدنى: يدخل الطلب طابور اعتماد المدير للمراجعة اليدوية
+    useRoleRequestsStore().add('interviewer', `أهلية AI: ${eligibility.value.score}% (${recLabel[eligibility.value.recommendation]})`, true)
   }
   doneSnackbar.value = true
   setTimeout(() => {
