@@ -1,10 +1,21 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
+import { useRouter } from 'vue-router'
 import PageHeader from '@/components/shared/PageHeader.vue'
+import type { AppNotification } from '@/stores/NotificationsStore'
 import { useNotificationsStore } from '@/stores/NotificationsStore'
 
 const store = useNotificationsStore()
+const router = useRouter()
 const filter = ref<'all' | 'unread'>('all')
+
+// الإجراء المباشر من الإشعار: تعليمه كمقروء ثم الانتقال لتنفيذ الإجراء
+function runAction(n: AppNotification) {
+  if (!n.actionTo)
+    return
+  store.markRead(n.id)
+  router.push(n.actionTo)
+}
 
 const filtered = computed(() =>
   filter.value === 'unread' ? store.notifications.filter(n => !n.read) : store.notifications,
@@ -38,6 +49,17 @@ const filtered = computed(() =>
               <VBadge v-if="!n.read" color="error" dot inline class="ms-1" />
             </VListItemTitle>
             <VListItemSubtitle>{{ n.body }}</VListItemSubtitle>
+            <VBtn
+              v-if="n.actionTo"
+              size="small"
+              color="primary"
+              variant="tonal"
+              class="mt-2 align-self-start"
+              prepend-icon="mdi-arrow-left-circle-outline"
+              @click.stop="runAction(n)"
+            >
+              {{ n.actionLabel ?? 'تنفيذ الإجراء' }}
+            </VBtn>
             <template #append>
               <span class="text-caption text-medium-emphasis">{{ n.time }}</span>
             </template>

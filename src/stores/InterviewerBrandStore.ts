@@ -25,6 +25,30 @@ export interface Article {
   date: string
 }
 
+/** توصية زميل مهنة (مقيّم ↔ مقيّم) — تُعرض في الملف العام وتدعم التبادل */
+export interface PeerEndorsement {
+  id: number
+  peerName: string
+  peerTitle: string
+  peerInitial: string
+  text: string
+  date: string
+  status: 'pending' | 'received'
+  /** رددتَ التوصية للزميل نفسه — تظهر شارة «متبادلة» */
+  reciprocated: boolean
+}
+
+/** قصة نجاح لا تُنشر إلا بموافقة صاحبها الصريحة */
+export interface SuccessStory {
+  id: number
+  candidateName: string
+  candidateInitial: string
+  headline: string
+  story: string
+  status: 'awaiting_consent' | 'approved' | 'declined'
+  date: string
+}
+
 interface BrandState {
   slug: string
   views: number
@@ -35,6 +59,8 @@ interface BrandState {
   featuredReviewIds: number[]
   promos: Promo[]
   articles: Article[]
+  peerEndorsements: PeerEndorsement[]
+  successStories: SuccessStory[]
 }
 
 const STORAGE_KEY = 'interviewerBrand'
@@ -52,6 +78,13 @@ const seed: BrandState = {
   ],
   articles: [
     { id: 1, title: 'خمسة أخطاء تُسقط المرشح التقني في أول 10 دقائق', body: 'أكثر ما يفشل المرشحون فيه ليس الأسئلة الصعبة، بل الأساسيات: شرح القرار قبل الكود، وقراءة المتطلب مرتين، والسؤال عند الغموض بدل الافتراض...', status: 'published', date: '2026-06-18' },
+  ],
+  peerEndorsements: [
+    { id: 1, peerName: 'د. ريم القحطاني', peerTitle: 'مستشارة قيادة وموارد بشرية · PMP', peerInitial: 'ر', text: 'من أدق المقيّمين التقنيين الذين عملت معهم — تقاريره مرجع يعتمد عليه فريقنا في قرارات التطوير.', date: '2026-06-22', status: 'received', reciprocated: true },
+    { id: 2, peerName: 'م. عمر باوزير', peerTitle: 'مهندس بيانات أول · مقيّم معتمد', peerInitial: 'ع', text: 'حضرت معه جلسات تقييم مشتركة؛ أسئلته تصل لجوهر مستوى المرشح بسرعة وبأسلوب محترم.', date: '2026-06-10', status: 'received', reciprocated: false },
+  ],
+  successStories: [
+    { id: 1, candidateName: 'محمد الحارثي', candidateInitial: 'م', headline: 'من رفضين متتاليين إلى عرض عمل خلال شهر', story: 'بعد جلسة تقييم شاملة وخطة تطوير من ثلاث نقاط، عالج محمد فجوة الاختبارات لديه وعاد ليجتاز مقابلته التالية بثقة.', status: 'approved', date: '2026-06-15' },
   ],
 }
 
@@ -177,7 +210,98 @@ export const useInterviewerBrandStore = defineStore('interviewerBrand', () => {
     })
   }
 
+  // ===== توصيات الزملاء المتبادلة (مقيّم ↔ مقيّم) =====
+  const receivedPeerEndorsements = computed(() =>
+    state.value.peerEndorsements.filter(e => e.status === 'received'),
+  )
+  /** طلب توصية من زميل مقيّم — يرد الزميل بعد مهلة (محاكاة) وتُعرض في الملف العام */
+  function requestPeerEndorsement(peerName: string, peerTitle: string, peerInitial: string) {
+    const e: PeerEndorsement = {
+      id: nextId++,
+      peerName,
+      peerTitle,
+      peerInitial,
+      text: '',
+      date: new Date().toISOString().slice(0, 10),
+      status: 'pending',
+      reciprocated: false,
+    }
+    state.value.peerEndorsements.unshift(e)
+    setTimeout(() => {
+      const cur = state.value.peerEndorsements.find(x => x.id === e.id)
+      if (!cur || cur.status !== 'pending')
+        return
+      cur.status = 'received'
+      cur.text = 'عملنا معًا في جلسات تقييم مشتركة — خبرة عميقة وتقارير تستحق الثقة.'
+      useNotificationsStore().push({
+        icon: 'mdi-account-heart-outline',
+        color: 'success',
+        title: 'وصلتك توصية زميل',
+        body: `${peerName} أضاف توصية مهنية لملفك العام — ردّ الجميل بتوصية متبادلة.`,
+        category: 'endorsement',
+        actionTo: '/interviewer',
+        actionLabel: 'عرض التوصية',
+      })
+    }, 10000)
+    return e
+  }
+  /** ردّ التوصية للزميل — تُعلَّم «متبادلة» وترفع مصداقية الطرفين */
+  function reciprocatePeerEndorsement(id: number) {
+    const e = state.value.peerEndorsements.find(x => x.id === id)
+    if (!e || e.status !== 'received' || e.reciprocated)
+      return
+    e.reciprocated = true
+    useGamificationStore().award(20, `أوصيت بزميلك ${e.peerName} — توصية متبادلة`)
+  }
+
+  // ===== قصص النجاح (لا تُنشر إلا بموافقة صاحبها) =====
+  const approvedStories = computed(() =>
+    state.value.successStories.filter(s => s.status === 'approved'),
+  )
+  /** إضافة قصة نجاح — تُرسل لصاحبها للموافقة قبل أي ظهور علني (محاكاة رد المرشح) */
+  function addSuccessStory(candidateName: string, headline: string, story: string) {
+    const s: SuccessStory = {
+      id: nextId++,
+      candidateName,
+      candidateInitial: candidateName.trim().charAt(0),
+      headline,
+      story,
+      status: 'awaiting_consent',
+      date: new Date().toISOString().slice(0, 10),
+    }
+    state.value.successStories.unshift(s)
+    setTimeout(() => {
+      const cur = state.value.successStories.find(x => x.id === s.id)
+      if (!cur || cur.status !== 'awaiting_consent')
+        return
+      cur.status = 'approved'
+      useNotificationsStore().push({
+        icon: 'mdi-check-decagram-outline',
+        color: 'success',
+        title: 'وافق المرشح على نشر قصته',
+        body: `«${s.headline}» أصبحت ظاهرة في ملفك العام.`,
+        category: 'system',
+        actionTo: '/interviewer',
+        actionLabel: 'عرض قصص النجاح',
+      })
+    }, 10000)
+    return s
+  }
+  function removeSuccessStory(id: number) {
+    state.value.successStories = state.value.successStories.filter(s => s.id !== id)
+  }
+
   const publicPath = computed(() => `expert/${state.value.slug}`)
+  const publicUrl = computed(() => `${window.location.origin}${import.meta.env.BASE_URL}${publicPath.value}`)
+
+  /** رابط مشاركة LinkedIn للملف العام أو لشهادة/إنجاز محدد */
+  function linkedInShareUrl() {
+    return `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(publicUrl.value)}`
+  }
+  function shareOnLinkedIn() {
+    window.open(linkedInShareUrl(), '_blank', 'noopener')
+    recordShare()
+  }
 
   return {
     state, me,
@@ -187,6 +311,8 @@ export const useInterviewerBrandStore = defineStore('interviewerBrand', () => {
     addPromo, togglePromo, removePromo, activePromos,
     submitArticle, publishedArticles,
     referralLink, creditReferral,
-    publicPath,
+    receivedPeerEndorsements, requestPeerEndorsement, reciprocatePeerEndorsement,
+    approvedStories, addSuccessStory, removeSuccessStory,
+    publicPath, publicUrl, linkedInShareUrl, shareOnLinkedIn,
   }
 })

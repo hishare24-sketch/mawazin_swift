@@ -9,13 +9,12 @@ export interface ChangeItem {
 }
 
 export const LATEST_CHANGES: { title: string, items: ChangeItem[] } = {
-  title: 'تحديثات كبيرة وصلت للتو',
+  title: 'تحديثات جديدة وصلت للتو',
   items: [
-    { icon: 'mdi-compass-outline', text: 'ثلاثة أدوار جديدة: مرشد مهني، مدرب تقني، مستشار مهني — اطلبها من قائمة حسابك ← «طلب دور جديد»' },
-    { icon: 'mdi-shield-check-outline', text: 'اعتماد الأدوار الجديدة صار بموافقة المنصة — تابع حالة طلبك من قائمة أدوارك' },
-    { icon: 'mdi-account-star-outline', text: 'ملف عام تسويقي للمقيّم قابل للمشاركة خارج المنصة + لوحة تسويق شخصي بالإحالات والعروض', to: 'interviewer-dashboard' },
-    { icon: 'mdi-wallet-outline', text: 'محفظة مالية كاملة: شحن وسحب ووسائل دفع وتقارير إحصائية', to: 'wallet' },
-    { icon: 'mdi-palette-outline', text: '5 ثيمات ديناميكية وألوان مخصصة — أيقونة اللوحة 🎨 في الشريط العلوي' },
-    { icon: 'mdi-poll', text: 'استبيانات بعشرة أنماط أسئلة ونقاط تحفيزية + قسم «استبيانات للمشاركة» للجميع', to: 'surveys-participate' },
+    { icon: 'mdi-storefront-outline', text: 'سوق الخبراء الموحّد: اكتشف المرشدين والمدربين والمستشارين واطلب خدمتهم مباشرة', to: 'experts-market' },
+    { icon: 'mdi-bell-badge-outline', text: 'إجراء مباشر من الإشعار: قدّم على الفرصة أو أكّد الموعد بزر واحد داخل الإشعارات', to: 'notifications' },
+    { icon: 'mdi-account-heart-outline', text: 'توصيات زملاء المهنة المتبادلة بين المقيّمين — تظهر في ملفك العام بشارة «متبادلة»', to: 'interviewer-dashboard' },
+    { icon: 'mdi-trophy-variant-outline', text: 'قصص نجاح مرشحيك في ملفك العام — لا تُنشر إلا بموافقة صاحبها الصريحة', to: 'interviewer-dashboard' },
+    { icon: 'mdi-linkedin', text: 'شارك ملفك العام وشهاداتك على LinkedIn بنقرة من لوحة التسويق الشخصي' },
   ],
 }

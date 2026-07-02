@@ -12,18 +12,21 @@ export interface AppNotification {
   time: string
   read: boolean
   category: NotificationCategory
+  /** مسار يُنفّذ الإجراء مباشرة من الإشعار (مثل فتح الفرصة للتقديم) */
+  actionTo?: string
+  actionLabel?: string
 }
 
 const STORAGE_KEY = 'notifications'
 
 const seed: AppNotification[] = [
-  { id: 1, icon: 'mdi-briefcase-search-outline', color: 'primary', title: 'فرصة جديدة تناسبك', body: 'فرصة "مطوّر واجهات أمامية" بنسبة تطابق 94%', time: 'قبل 10 دقائق', read: false, category: 'opportunity' },
-  { id: 2, icon: 'mdi-hand-heart-outline', color: 'accent', title: 'رغبة واردة', body: 'أبدت "شركة الحلول الذكية" رغبتها في خدماتك', time: 'قبل ساعة', read: false, category: 'wish' },
-  { id: 3, icon: 'mdi-account-star-outline', color: 'secondary', title: 'توصية جديدة', body: 'أضاف أحمد المنصور توصية لملفك', time: 'قبل 3 ساعات', read: false, category: 'endorsement' },
-  { id: 4, icon: 'mdi-message-text-outline', color: 'info', title: 'رسالة جديدة', body: 'راسلتك "شركة تقنية المستقبل" بخصوص طلبك', time: 'أمس', read: true, category: 'message' },
+  { id: 1, icon: 'mdi-briefcase-search-outline', color: 'primary', title: 'فرصة جديدة تناسبك', body: 'فرصة "مطوّر واجهات أمامية" بنسبة تطابق 94%', time: 'قبل 10 دقائق', read: false, category: 'opportunity', actionTo: '/opportunities/1', actionLabel: 'عرض الفرصة والتقديم' },
+  { id: 2, icon: 'mdi-hand-heart-outline', color: 'accent', title: 'رغبة واردة', body: 'أبدت "شركة الحلول الذكية" رغبتها في خدماتك', time: 'قبل ساعة', read: false, category: 'wish', actionTo: '/wishes', actionLabel: 'الرد على الرغبة' },
+  { id: 3, icon: 'mdi-account-star-outline', color: 'secondary', title: 'توصية جديدة', body: 'أضاف أحمد المنصور توصية لملفك', time: 'قبل 3 ساعات', read: false, category: 'endorsement', actionTo: '/profile', actionLabel: 'عرض ملفي' },
+  { id: 4, icon: 'mdi-message-text-outline', color: 'info', title: 'رسالة جديدة', body: 'راسلتك "شركة تقنية المستقبل" بخصوص طلبك', time: 'أمس', read: true, category: 'message', actionTo: '/messages', actionLabel: 'فتح المحادثة' },
   { id: 5, icon: 'mdi-robot-happy-outline', color: 'success', title: 'تحديث من المساعد', body: 'أكملت 80% من ملفك — أضف توصية لرفع فرصك', time: 'قبل يومين', read: true, category: 'system' },
-  { id: 6, icon: 'mdi-calendar-check-outline', color: 'success', title: 'دعوة مقابلة', body: 'دعتك "شركة تقنية المستقبل" لمقابلة يوم الأحد 10 صباحاً', time: 'قبل يومين', read: false, category: 'message' },
-  { id: 7, icon: 'mdi-clipboard-check-outline', color: 'warning', title: 'اختبار مقترح', body: 'أكمل اختبار "Vue.js المتقدم" لرفع نسبة تطابقك', time: 'قبل 3 أيام', read: true, category: 'system' },
+  { id: 6, icon: 'mdi-calendar-check-outline', color: 'success', title: 'دعوة مقابلة', body: 'دعتك "شركة تقنية المستقبل" لمقابلة يوم الأحد 10 صباحاً', time: 'قبل يومين', read: false, category: 'message', actionTo: '/interviews', actionLabel: 'تأكيد الموعد' },
+  { id: 7, icon: 'mdi-clipboard-check-outline', color: 'warning', title: 'اختبار مقترح', body: 'أكمل اختبار "Vue.js المتقدم" لرفع نسبة تطابقك', time: 'قبل 3 أيام', read: true, category: 'system', actionTo: '/assessments', actionLabel: 'بدء الاختبار' },
 ]
 
 function load(): AppNotification[] {
@@ -31,7 +34,12 @@ function load(): AppNotification[] {
   if (!raw)
     return seed.map(n => ({ ...n }))
   try {
-    return JSON.parse(raw) as AppNotification[]
+    const stored = JSON.parse(raw) as AppNotification[]
+    // ترحيل الجلسات القديمة: إشعارات ما قبل ميزة «الإجراء المباشر» تكتسبها من الـ seed المطابق
+    return stored.map((n) => {
+      const s = seed.find(x => x.id === n.id)
+      return s && !n.actionTo ? { ...n, actionTo: s.actionTo, actionLabel: s.actionLabel } : n
+    })
   }
   catch {
     return seed.map(n => ({ ...n }))
@@ -56,6 +64,8 @@ export const useNotificationsStore = defineStore('notifications', () => {
       title: n.title,
       body: n.body,
       category: n.category,
+      actionTo: n.actionTo,
+      actionLabel: n.actionLabel,
     })
   }
 

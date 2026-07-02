@@ -54,6 +54,39 @@ function savePromo() {
   newPromo.value = { title: '', kind: 'discount', pct: 20 }
 }
 
+// توصيات الزملاء المتبادلة — زملاء المهنة من سوق المقيّمين (عداي)
+const peerDialog = ref(false)
+const colleagues = computed(() => store.interviewers.filter(i => i.id !== MY_INTERVIEWER_ID))
+const selectedPeerId = ref<number | null>(null)
+function requestEndorsement() {
+  const peer = colleagues.value.find(c => c.id === selectedPeerId.value)
+  if (!peer)
+    return
+  brand.requestPeerEndorsement(peer.name, peer.title, peer.initial)
+  peerDialog.value = false
+  selectedPeerId.value = null
+  notifications.push({ icon: 'mdi-account-heart-outline', color: 'info', title: 'أُرسل طلب التوصية', body: `طلبت توصية مهنية من ${peer.name} — ستصلك فور ردّه.`, category: 'endorsement' })
+}
+
+// قصة نجاح جديدة — تُرسل لصاحبها للموافقة قبل النشر
+const storyDialog = ref(false)
+const newStory = ref({ candidateName: '', headline: '', story: '' })
+const storyValid = computed(() => !!newStory.value.candidateName.trim() && !!newStory.value.headline.trim() && !!newStory.value.story.trim())
+function saveStory() {
+  if (!storyValid.value)
+    return
+  brand.addSuccessStory(newStory.value.candidateName.trim(), newStory.value.headline.trim(), newStory.value.story.trim())
+  storyDialog.value = false
+  newStory.value = { candidateName: '', headline: '', story: '' }
+  notifications.push({ icon: 'mdi-email-fast-outline', color: 'info', title: 'أُرسل طلب الموافقة', body: 'لن تُنشر القصة في ملفك العام إلا بعد موافقة صاحبها.', category: 'system' })
+}
+
+const STORY_STATUS_META = {
+  awaiting_consent: { label: 'بانتظار الموافقة', color: 'warning' },
+  approved: { label: 'منشورة بموافقة', color: 'success' },
+  declined: { label: 'اعتُذر عنها', color: 'error' },
+} as const
+
 // مقال جديد
 const articleDialog = ref(false)
 const newArticle = ref({ title: '', body: '' })
@@ -287,6 +320,9 @@ function addSuggestion(s: EvalElementSuggestion) {
               <VBtn size="small" color="secondary" variant="tonal" :prepend-icon="linkCopied ? 'mdi-check' : 'mdi-link-variant'" @click="copyPublicLink">
                 {{ linkCopied ? 'نُسخ الرابط' : 'مشاركة الملف' }}
               </VBtn>
+              <VBtn size="small" color="info" variant="tonal" prepend-icon="mdi-linkedin" @click="brand.shareOnLinkedIn()">
+                LinkedIn
+              </VBtn>
             </div>
           </div>
           <p class="text-caption text-medium-emphasis mb-3">ملفك العام بطاقة تسويقية — شاركه على LinkedIn ووسائل التواصل لجذب حجوزات جديدة.</p>
@@ -360,6 +396,62 @@ function addSuggestion(s: EvalElementSuggestion) {
               <p class="text-caption text-medium-emphasis mt-1">المقالات تُعرض في ملفك العام بعد مراجعة المنصة — تبني سلطتك المهنية.</p>
             </VCol>
           </VRow>
+
+          <VDivider class="my-3" />
+
+          <VRow>
+            <!-- توصيات الزملاء المتبادلة -->
+            <VCol cols="12" md="6">
+              <div class="d-flex align-center justify-space-between mb-1">
+                <div class="text-body-2 font-weight-bold"><VIcon icon="mdi-account-heart-outline" size="16" color="secondary" /> توصيات زملاء المهنة</div>
+                <VBtn size="x-small" variant="tonal" color="secondary" prepend-icon="mdi-plus" @click="peerDialog = true">اطلب توصية</VBtn>
+              </div>
+              <div v-for="e in brand.state.peerEndorsements" :key="e.id" class="d-flex align-center ga-2 py-1">
+                <VChip size="x-small" :color="e.status === 'received' ? 'success' : 'warning'" label>
+                  {{ e.status === 'received' ? 'مستلمة' : 'بانتظار الرد' }}
+                </VChip>
+                <span class="text-caption flex-grow-1">{{ e.peerName }}</span>
+                <VChip v-if="e.reciprocated" size="x-small" color="secondary" variant="tonal" label prepend-icon="mdi-swap-horizontal">متبادلة</VChip>
+                <VBtn v-else-if="e.status === 'received'" size="x-small" variant="text" color="secondary" prepend-icon="mdi-swap-horizontal" @click="brand.reciprocatePeerEndorsement(e.id)">
+                  ردّ التوصية
+                </VBtn>
+              </div>
+              <p class="text-caption text-medium-emphasis mt-1">التوصيات المتبادلة بين المقيّمين ترفع مصداقية الطرفين وتظهر في الملف العام بشارة «متبادلة».</p>
+            </VCol>
+
+            <!-- قصص النجاح (بموافقة أصحابها) -->
+            <VCol cols="12" md="6">
+              <div class="d-flex align-center justify-space-between mb-1">
+                <div class="text-body-2 font-weight-bold"><VIcon icon="mdi-trophy-variant-outline" size="16" color="success" /> قصص نجاح مرشحيّ</div>
+                <VBtn size="x-small" variant="tonal" color="success" prepend-icon="mdi-plus" @click="storyDialog = true">قصة جديدة</VBtn>
+              </div>
+              <div v-for="s in brand.state.successStories" :key="s.id" class="d-flex align-center ga-2 py-1">
+                <VChip size="x-small" :color="STORY_STATUS_META[s.status].color" label>{{ STORY_STATUS_META[s.status].label }}</VChip>
+                <span class="text-caption flex-grow-1">{{ s.headline }}</span>
+                <VBtn icon="mdi-delete-outline" size="x-small" variant="text" color="error" @click="brand.removeSuccessStory(s.id)" />
+              </div>
+              <p class="text-caption text-medium-emphasis mt-1">لا تُنشر أي قصة في ملفك العام قبل موافقة صاحبها الصريحة — الخصوصية أولًا.</p>
+            </VCol>
+          </VRow>
+
+          <VDivider class="my-3" />
+
+          <!-- شهاداتي القابلة للمشاركة -->
+          <div class="text-body-2 font-weight-bold mb-2"><VIcon icon="mdi-certificate-outline" size="16" color="primary" /> شهاداتي وإنجازاتي — شاركها على LinkedIn</div>
+          <div class="d-flex flex-wrap ga-2">
+            <VChip
+              v-for="a in brand.achievements.filter(x => x.earned)"
+              :key="a.id"
+              color="primary"
+              variant="tonal"
+              label
+              @click="brand.shareOnLinkedIn()"
+            >
+              <VIcon :icon="a.icon" start size="16" />{{ a.label }}
+              <VIcon icon="mdi-linkedin" end size="16" color="info" />
+            </VChip>
+          </div>
+          <p class="text-caption text-medium-emphasis mt-2 mb-0">النقر على الشهادة يفتح مشاركة LinkedIn لملفك العام الموثّق — كل شهادة مشتقة من أداء حقيقي على المنصة.</p>
         </VCard>
       </VCol>
 
@@ -392,6 +484,47 @@ function addSuggestion(s: EvalElementSuggestion) {
           <VSpacer />
           <VBtn variant="text" @click="promoDialog = false">إلغاء</VBtn>
           <VBtn color="accent" variant="flat" :disabled="!newPromo.title.trim()" @click="savePromo">تفعيل العرض</VBtn>
+        </VCardActions>
+      </VCard>
+    </VDialog>
+
+    <!-- Peer endorsement request dialog -->
+    <VDialog v-model="peerDialog" max-width="440">
+      <VCard class="pa-2">
+        <VCardTitle>طلب توصية من زميل مقيّم</VCardTitle>
+        <VCardText>
+          <VSelect
+            v-model="selectedPeerId"
+            :items="colleagues.map(c => ({ title: `${c.name} — ${c.title}`, value: c.id }))"
+            label="اختر الزميل"
+            density="comfortable"
+          />
+          <p class="text-caption text-medium-emphasis mb-0">تصلك التوصية فور ردّ الزميل وتظهر في ملفك العام — ويمكنك ردّها لتصبح «متبادلة».</p>
+        </VCardText>
+        <VCardActions>
+          <VSpacer />
+          <VBtn variant="text" @click="peerDialog = false">إلغاء</VBtn>
+          <VBtn color="secondary" variant="flat" :disabled="!selectedPeerId" prepend-icon="mdi-send" @click="requestEndorsement">إرسال الطلب</VBtn>
+        </VCardActions>
+      </VCard>
+    </VDialog>
+
+    <!-- New success story dialog -->
+    <VDialog v-model="storyDialog" max-width="560">
+      <VCard class="pa-2">
+        <VCardTitle>قصة نجاح جديدة</VCardTitle>
+        <VCardText>
+          <VTextField v-model="newStory.candidateName" label="اسم المرشح صاحب القصة" class="mb-3" />
+          <VTextField v-model="newStory.headline" label="عنوان القصة" placeholder="من رفض متكرر إلى عرض عمل" class="mb-3" />
+          <VTextarea v-model="newStory.story" label="القصة" rows="4" auto-grow counter="500" />
+          <VAlert color="warning" variant="tonal" density="compact" border="start" class="text-caption">
+            تُرسل القصة أولًا لصاحبها للموافقة — ولا تظهر في ملفك العام إلا بعد موافقته الصريحة.
+          </VAlert>
+        </VCardText>
+        <VCardActions>
+          <VSpacer />
+          <VBtn variant="text" @click="storyDialog = false">إلغاء</VBtn>
+          <VBtn color="success" variant="flat" :disabled="!storyValid" prepend-icon="mdi-email-fast-outline" @click="saveStory">طلب موافقة صاحبها</VBtn>
         </VCardActions>
       </VCard>
     </VDialog>

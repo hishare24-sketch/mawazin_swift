@@ -61,4 +61,42 @@ describe('interviewerBrandStore', () => {
     expect(b.marketingStats.referrals).toBe(refs + 1)
     expect(g.points).toBe(points + 50)
   })
+
+  it('receives a peer endorsement after the colleague responds and supports reciprocating once', () => {
+    const b = useInterviewerBrandStore()
+    const e = b.requestPeerEndorsement('د. ريم القحطاني', 'مستشارة قيادة', 'ر')
+    expect(e.status).toBe('pending')
+    expect(b.receivedPeerEndorsements.some(x => x.id === e.id)).toBe(false)
+    vi.advanceTimersByTime(11000)
+    const received = b.state.peerEndorsements.find(x => x.id === e.id)!
+    expect(received.status).toBe('received')
+    expect(received.text.length).toBeGreaterThan(0)
+    expect(b.receivedPeerEndorsements.some(x => x.id === e.id)).toBe(true)
+
+    const g = useGamificationStore()
+    const points = g.points
+    b.reciprocatePeerEndorsement(e.id)
+    expect(received.reciprocated).toBe(true)
+    expect(g.points).toBe(points + 20)
+    b.reciprocatePeerEndorsement(e.id) // لا تُمنح النقاط مرتين
+    expect(g.points).toBe(points + 20)
+  })
+
+  it('publishes success stories only after the candidate consents', () => {
+    const b = useInterviewerBrandStore()
+    const s = b.addSuccessStory('محمد الحارثي', 'عنوان القصة', 'نص القصة')
+    expect(s.status).toBe('awaiting_consent')
+    expect(b.approvedStories.some(x => x.id === s.id)).toBe(false)
+    vi.advanceTimersByTime(11000)
+    expect(b.approvedStories.some(x => x.id === s.id)).toBe(true)
+    b.removeSuccessStory(s.id)
+    expect(b.state.successStories.some(x => x.id === s.id)).toBe(false)
+  })
+
+  it('builds the LinkedIn share url around the public profile url', () => {
+    const b = useInterviewerBrandStore()
+    const url = b.linkedInShareUrl()
+    expect(url.startsWith('https://www.linkedin.com/sharing/share-offsite/?url=')).toBe(true)
+    expect(url).toContain(encodeURIComponent(b.publicUrl))
+  })
 })

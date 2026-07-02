@@ -75,6 +75,8 @@ export const useRoleRequestsStore = defineStore('roleRequests', () => {
         title: approve ? 'اعتُمد دورك الجديد' : 'اعتُذر عن طلب الدور',
         body: approve ? 'أصبح الدور نشطًا — بدّل إليه من قائمة حسابك.' : 'يمكنك تحسين ملفك وإعادة الطلب لاحقًا.',
         category: 'system',
+        actionTo: approve ? `/${r.role}` : undefined,
+        actionLabel: approve ? 'فتح لوحة الدور' : undefined,
       })
     }
     else {

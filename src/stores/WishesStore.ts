@@ -152,6 +152,8 @@ export const useWishesStore = defineStore('wishes', () => {
         title: accepted ? 'قبل المرشح رغبتك' : 'اعتذر المرشح عن رغبتك',
         body: `${w.candidateName} — ${w.role} (${w.amount})`,
         category: 'wish',
+        actionTo: '/company/wishes',
+        actionLabel: 'متابعة الرغبة',
       })
     }, 6000)
   }

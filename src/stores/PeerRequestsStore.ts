@@ -12,6 +12,7 @@ export type PeerRequestType
     | 'interview' // مقابلة
     | 'consultation' // استشارة
     | 'training' // تدريب
+    | 'coaching' // إرشاد مهني
 
 export type PeerRequestStatus = 'pending' | 'accepted' | 'in_progress' | 'done' | 'rejected'
 
@@ -35,6 +36,7 @@ export const PEER_TYPE_META: Record<PeerRequestType, { label: string, icon: stri
   interview: { label: 'مقابلة', icon: 'mdi-account-tie-voice-outline', color: 'success', desc: 'إجراء مقابلة تقييمية أو وظيفية' },
   consultation: { label: 'استشارة', icon: 'mdi-lightbulb-on-outline', color: 'warning', desc: 'استشارة مهنية أو فنية من خبير' },
   training: { label: 'تدريب', icon: 'mdi-school-outline', color: 'teal', desc: 'جلسة تدريبية في مجال محدد' },
+  coaching: { label: 'إرشاد مهني', icon: 'mdi-compass-outline', color: 'primary', desc: 'مرافقة مهنية دورية مع مرشد لتحقيق هدفك الوظيفي' },
 }
 
 export const PEER_STATUS_META: Record<PeerRequestStatus, { label: string, color: string }> = {

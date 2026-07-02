@@ -101,6 +101,11 @@ function book() {
                 <VBtn size="small" variant="outlined" color="white" :prepend-icon="copied ? 'mdi-check' : 'mdi-link-variant'" @click="share">
                   {{ copied ? 'نُسخ' : 'مشاركة' }}
                 </VBtn>
+                <VTooltip text="مشاركة على LinkedIn" location="bottom">
+                  <template #activator="{ props }">
+                    <VBtn v-bind="props" size="small" variant="outlined" color="white" icon="mdi-linkedin" @click="brand.shareOnLinkedIn()" />
+                  </template>
+                </VTooltip>
                 <VTooltip text="تحميل بطاقة مشاركة (صورة)" location="bottom">
                   <template #activator="{ props }">
                     <VBtn v-bind="props" size="small" variant="outlined" color="white" icon="mdi-image-outline" @click="downloadShareCard" />
@@ -156,6 +161,25 @@ function book() {
             <p v-if="!featuredReviews.length" class="text-caption text-medium-emphasis">لا تقييمات مثبتة بعد.</p>
           </VCard>
 
+          <!-- قصص نجاح (بموافقة أصحابها) -->
+          <VCard v-if="brand.approvedStories.length" class="pa-5 mb-4">
+            <h2 class="text-subtitle-1 font-weight-bold mb-1">
+              <VIcon icon="mdi-trophy-variant-outline" color="success" size="20" class="me-1" />قصص نجاح
+            </h2>
+            <p class="text-caption text-medium-emphasis mb-3">تُنشر كل قصة بموافقة صاحبها الصريحة.</p>
+            <div v-for="s in brand.approvedStories" :key="s.id" class="mb-3 pa-3 rounded-lg story-quote">
+              <div class="d-flex align-center ga-2 mb-1">
+                <VAvatar size="28" color="success" variant="tonal"><span class="text-caption font-weight-bold">{{ s.candidateInitial }}</span></VAvatar>
+                <span class="text-body-2 font-weight-bold">{{ s.headline }}</span>
+              </div>
+              <p class="text-body-2 mb-1">{{ s.story }}</p>
+              <div class="text-caption text-medium-emphasis d-flex align-center ga-1">
+                {{ s.candidateName }} · {{ s.date }}
+                <VChip size="x-small" color="success" variant="tonal" label prepend-icon="mdi-check-decagram-outline">بموافقة صاحبها</VChip>
+              </div>
+            </div>
+          </VCard>
+
           <!-- مقالات الخبير -->
           <VCard v-if="brand.publishedArticles.length" class="pa-5">
             <h2 class="text-subtitle-1 font-weight-bold mb-3">
@@ -180,6 +204,24 @@ function book() {
               <span class="text-body-2">{{ p.title }}<b v-if="p.pct"> ({{ p.pct }}%)</b></span>
             </div>
             <VBtn color="accent" size="small" block class="mt-3" @click="book">استفد من العرض</VBtn>
+          </VCard>
+
+          <!-- توصيات زملاء المهنة -->
+          <VCard v-if="brand.receivedPeerEndorsements.length" class="pa-5 mb-4">
+            <h2 class="text-subtitle-1 font-weight-bold mb-3">
+              <VIcon icon="mdi-account-heart-outline" color="secondary" size="20" class="me-1" />توصيات زملاء المهنة
+            </h2>
+            <div v-for="e in brand.receivedPeerEndorsements" :key="e.id" class="mb-3">
+              <div class="d-flex align-center ga-2 mb-1">
+                <VAvatar size="28" color="secondary" variant="tonal"><span class="text-caption font-weight-bold">{{ e.peerInitial }}</span></VAvatar>
+                <div class="flex-grow-1">
+                  <div class="text-body-2 font-weight-bold">{{ e.peerName }}</div>
+                  <div class="text-caption text-medium-emphasis">{{ e.peerTitle }}</div>
+                </div>
+                <VChip v-if="e.reciprocated" size="x-small" color="secondary" variant="tonal" label prepend-icon="mdi-swap-horizontal">متبادلة</VChip>
+              </div>
+              <p class="text-body-2 mb-0">«{{ e.text }}»</p>
+            </div>
           </VCard>
 
           <!-- الإنجازات والشهادات -->
@@ -217,5 +259,9 @@ function book() {
 .review-quote {
   background: rgba(var(--v-theme-primary), 0.05);
   border-inline-start: 3px solid rgb(var(--v-theme-primary));
+}
+.story-quote {
+  background: rgba(var(--v-theme-success), 0.05);
+  border-inline-start: 3px solid rgb(var(--v-theme-success));
 }
 </style>
