@@ -11,6 +11,7 @@ export interface ChangeItem {
 export const LATEST_CHANGES: { title: string, items: ChangeItem[] } = {
   title: 'تحديثات جديدة وصلت للتو',
   items: [
+    { icon: 'mdi-storefront-outline', text: 'المنصة تتصدر: قسم «المنصة» أول القائمة بكل الأسواق + صفحة «استكشاف الأشخاص» الجديدة — والقائمة صارت قابلة للطي وبعرضين على الموبايل (قائمة/شبكة)', to: 'people-explorer' },
     { icon: 'mdi-crown-outline', text: 'باقة حساب واحدة (أساسية/احترافية/نخبة) تحكم كل التمكين: صفحتك التعريفية والاستبيانات والتفويض — من صفحة «باقتي»', to: 'account-plan' },
     { icon: 'mdi-account-convert-outline', text: 'كل الأدوار فورية للجميع — والاعتماد صار شارة جودة اختيارية ترفع ترتيبك، لا بوابة دخول', to: 'unified-hub' },
     { icon: 'mdi-cellphone', text: 'تجربة موبايل أسرع: شريط تنقّل سفلي لأهم وجهاتك (المركز، صفحتي، الاستبيانات، المحفظة)' },

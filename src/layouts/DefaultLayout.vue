@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onBeforeUnmount, onMounted, ref } from 'vue'
+import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useDisplay } from 'vuetify'
@@ -66,6 +66,32 @@ const sections = computed(() => navSections(authStore.role, { multiRole: authSto
 
 // التحكم الكامل من القائمة الجانبية: ترويسة «مساحة الدور» تفتح مبدّل الأدوار inline
 const roleControlOpen = ref(false)
+
+// —— سلاسة القائمة: أقسام قابلة للطي (محفوظة) ——
+const NAV_COLLAPSED_KEY = 'navCollapsed'
+const collapsedSections = ref<Record<string, boolean>>(JSON.parse(localStorage.getItem(NAV_COLLAPSED_KEY) ?? '{}'))
+watch(collapsedSections, v => localStorage.setItem(NAV_COLLAPSED_KEY, JSON.stringify(v)), { deep: true })
+function toggleSection(s: string) {
+  collapsedSections.value = { ...collapsedSections.value, [s]: !collapsedSections.value[s] }
+}
+function sectionTitle(section: string): string {
+  if (section === 'platform')
+    return t('nav.sectionPlatform')
+  if (section === 'account')
+    return t('nav.sectionAccount')
+  return t('nav.sectionRole', { role: roleLabel.value })
+}
+const SECTION_ICONS: Record<string, string> = {
+  platform: 'mdi-storefront-outline',
+  account: 'mdi-account-circle-outline',
+  role: 'mdi-account-convert-outline',
+}
+
+// —— طريقتا عرض للقائمة على الموبايل: قائمة تفصيلية أو شبكة أيقونات سريعة ——
+const NAV_VIEW_KEY = 'navViewMode'
+const navView = ref<'list' | 'grid'>((localStorage.getItem(NAV_VIEW_KEY) as 'list' | 'grid') ?? 'list')
+watch(navView, v => localStorage.setItem(NAV_VIEW_KEY, v))
+const gridMode = computed(() => mobile.value && navView.value === 'grid')
 
 // الشريط العلوي = مبدّل الحسابات (شخصي / مفوَّضة)
 const delegation = useDelegationStore()
@@ -141,50 +167,89 @@ onBeforeUnmount(() => window.removeEventListener('scroll', onScroll))
 
     <VDivider />
 
-    <!-- Nav items: قسم «حسابي» الموحّد لكل الأدوار ثم «مساحة الدور» النشط -->
-    <VList nav density="comfortable" class="px-2 mt-2">
+    <!-- تبديل طريقة العرض (موبايل): قائمة تفصيلية أو شبكة سريعة -->
+    <div v-if="mobile" class="d-flex justify-end px-3 pt-2">
+      <VBtnToggle v-model="navView" mandatory density="compact" variant="outlined" color="primary">
+        <VBtn value="list" size="x-small" icon="mdi-format-list-bulleted" />
+        <VBtn value="grid" size="x-small" icon="mdi-view-grid-outline" />
+      </VBtnToggle>
+    </div>
+
+    <!-- الأقسام الثلاثة: المنصة أولًا (النافذة قبل المرآة) ثم حسابي ثم مساحة الدور -->
+    <VList nav density="comfortable" class="px-2 mt-1">
       <template v-for="group in sections" :key="group.section">
-        <VListSubheader v-if="!rail && group.section === 'account'" class="nav-subheader">
-          {{ t('nav.sectionAccount') }}
-        </VListSubheader>
-        <!-- ترويسة «مساحة الدور» تفاعلية: تفتح مبدّل الأدوار داخل القائمة نفسها -->
+        <!-- ترويسة القسم: قابلة للطي، وترويسة الدور تحمل مبدّل الأدوار أيضًا -->
         <VListItem
-          v-else-if="!rail && group.section === 'role'"
-          class="role-section-header mb-1"
+          v-if="!rail"
+          class="nav-section-header mb-1"
           density="compact"
-          @click="roleControlOpen = !roleControlOpen"
+          @click="toggleSection(group.section)"
         >
+          <template #prepend>
+            <VIcon :icon="SECTION_ICONS[group.section]" size="16" color="medium-emphasis" class="me-1" />
+          </template>
           <VListItemTitle class="text-caption font-weight-bold text-medium-emphasis">
-            {{ t('nav.sectionRole', { role: roleLabel }) }}
+            {{ sectionTitle(group.section) }}
           </VListItemTitle>
           <template #append>
-            <VIcon :icon="roleControlOpen ? 'mdi-chevron-up' : 'mdi-swap-horizontal'" size="16" color="medium-emphasis" />
+            <VBtn
+              v-if="group.section === 'role'"
+              icon="mdi-swap-horizontal"
+              size="x-small"
+              variant="text"
+              color="primary"
+              @click.stop="roleControlOpen = !roleControlOpen; collapsedSections[group.section] && toggleSection(group.section)"
+            />
+            <VIcon :icon="collapsedSections[group.section] ? 'mdi-chevron-down' : 'mdi-chevron-up'" size="16" color="medium-emphasis" />
           </template>
         </VListItem>
-        <VDivider v-if="rail" class="my-2" />
+        <VDivider v-else class="my-2" />
 
-        <!-- مبدّل الأدوار الكامل داخل القائمة الجانبية -->
-        <VExpandTransition>
-          <div v-if="group.section === 'role' && roleControlOpen && !rail" class="role-switcher-inline mb-2">
-            <RoleSwitcher />
-          </div>
-        </VExpandTransition>
+        <div v-if="!collapsedSections[group.section] || rail">
+            <!-- مبدّل الأدوار الكامل داخل القائمة -->
+            <VExpandTransition>
+              <div v-if="group.section === 'role' && roleControlOpen && !rail" class="role-switcher-inline mb-2">
+                <RoleSwitcher />
+              </div>
+            </VExpandTransition>
 
-        <VListItem
-          v-for="item in group.items"
-          :key="`${item.title}-${item.to}`"
-          :prepend-icon="item.icon"
-          :title="t(`nav.${item.title}`)"
-          :to="{ name: item.to }"
-          rounded="lg"
-          color="primary"
-          class="mb-1 nav-item"
-          @click="mobile && (drawer = false)"
-        >
-          <template v-if="!rail && navBadge(item.to)" #append>
-            <VChip size="x-small" color="error" label>{{ navBadge(item.to) }}</VChip>
-          </template>
-        </VListItem>
+            <!-- عرض الشبكة (موبايل): وصول سريع بأيقونات كبيرة -->
+            <VRow v-if="gridMode && !rail" dense class="px-1 mb-2">
+              <VCol v-for="item in group.items" :key="`g-${item.title}-${item.to}`" cols="4">
+                <VCard
+                  variant="tonal"
+                  color="primary"
+                  class="pa-2 text-center nav-grid-tile"
+                  :to="{ name: item.to }"
+                  @click="drawer = false"
+                >
+                  <VBadge :model-value="navBadge(item.to) > 0" color="error" dot>
+                    <VIcon :icon="item.icon" size="22" />
+                  </VBadge>
+                  <div class="text-caption mt-1 nav-grid-label">{{ t(`nav.${item.title}`) }}</div>
+                </VCard>
+              </VCol>
+            </VRow>
+
+            <!-- عرض القائمة الافتراضي -->
+            <template v-else>
+              <VListItem
+                v-for="item in group.items"
+                :key="`${item.title}-${item.to}`"
+                :prepend-icon="item.icon"
+                :title="t(`nav.${item.title}`)"
+                :to="{ name: item.to }"
+                rounded="lg"
+                color="primary"
+                class="mb-1 nav-item"
+                @click="mobile && (drawer = false)"
+              >
+                <template v-if="!rail && navBadge(item.to)" #append>
+                  <VChip size="x-small" color="error" label>{{ navBadge(item.to) }}</VChip>
+                </template>
+              </VListItem>
+            </template>
+        </div>
       </template>
     </VList>
   </VNavigationDrawer>
@@ -353,19 +418,19 @@ onBeforeUnmount(() => window.removeEventListener('scroll', onScroll))
     </VContainer>
   </VMain>
 
-  <!-- تنقّل سفلي للموبايل: أهم وجهات «حسابي» في متناول الإبهام -->
+  <!-- تنقّل سفلي للموبايل: المنصة أولًا — النافذة قبل المرآة -->
   <VBottomNavigation v-if="mobile" grow color="primary" :theme="chromeTheme" density="comfortable">
+    <VBtn :to="{ name: 'opportunities' }" size="small">
+      <VIcon icon="mdi-briefcase-search-outline" />
+      <span class="text-caption">الفرص</span>
+    </VBtn>
+    <VBtn :to="{ name: 'people-explorer' }" size="small">
+      <VIcon icon="mdi-account-group-outline" />
+      <span class="text-caption">الناس</span>
+    </VBtn>
     <VBtn :to="{ name: 'unified-hub' }" size="small">
       <VIcon icon="mdi-view-dashboard-variant-outline" />
-      <span class="text-caption">المركز</span>
-    </VBtn>
-    <VBtn :to="{ name: 'public-profile-manage' }" size="small">
-      <VIcon icon="mdi-card-account-details-star-outline" />
-      <span class="text-caption">صفحتي</span>
-    </VBtn>
-    <VBtn :to="{ name: 'surveys-hub' }" size="small">
-      <VIcon icon="mdi-poll" />
-      <span class="text-caption">الاستبيانات</span>
+      <span class="text-caption">مركزك</span>
     </VBtn>
     <VBtn :to="{ name: 'wallet' }" size="small">
       <VIcon icon="mdi-wallet-outline" />
@@ -401,9 +466,19 @@ onBeforeUnmount(() => window.removeEventListener('scroll', onScroll))
 </template>
 
 <style scoped>
-.role-section-header {
+.nav-section-header {
   border-radius: 8px;
   background: rgba(var(--v-theme-primary), 0.04);
+  min-height: 32px;
+}
+.nav-grid-tile {
+  min-height: 68px;
+}
+.nav-grid-label {
+  line-height: 1.2;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .role-switcher-inline {
   border: 1px dashed rgba(var(--v-theme-primary), 0.25);

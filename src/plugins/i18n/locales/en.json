@@ -87,8 +87,10 @@
     "exit": "Back to my account"
   },
   "nav": {
+    "sectionPlatform": "The Platform",
     "sectionAccount": "My account",
     "sectionRole": "Role space: {role}",
+    "peopleExplorer": "Explore People",
     "surveysHub": "Surveys",
     "settings": "Settings",
     "unifiedAnalytics": "Unified Analytics",

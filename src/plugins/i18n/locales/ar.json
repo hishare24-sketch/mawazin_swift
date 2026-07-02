@@ -87,8 +87,10 @@
     "exit": "العودة إلى حسابي"
   },
   "nav": {
+    "sectionPlatform": "المنصة",
     "sectionAccount": "حسابي",
     "sectionRole": "مساحة الدور: {role}",
+    "peopleExplorer": "استكشاف الأشخاص",
     "surveysHub": "الاستبيانات",
     "settings": "الإعدادات",
     "unifiedAnalytics": "التحليلات الموحّدة",
