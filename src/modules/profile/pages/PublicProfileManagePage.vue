@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import PageHeader from '@/components/shared/PageHeader.vue'
+import { fileToDataUrl } from '@/services/imageTools'
 import { ACCOUNT_TIER_META, useAccountPlanStore } from '@/stores/AccountPlanStore'
 import { useNotificationsStore } from '@/stores/NotificationsStore'
 import { useProfileStore } from '@/stores/ProfileStore'
@@ -88,10 +89,15 @@ function addAchievement() {
   newAchievement.value = ''
 }
 
-// عمل جديد في المعرض
+// عمل جديد في المعرض (مع صورة اختيارية تُصغَّر قبل التخزين)
 const portfolioDialog = ref(false)
-const newWork = ref({ title: '', desc: '', link: '', tag: '' })
+const newWork = ref({ title: '', desc: '', link: '', tag: '', image: '' })
 const workValid = computed(() => !!newWork.value.title.trim() && !!newWork.value.desc.trim() && !!newWork.value.tag.trim())
+async function pickWorkImage(e: Event) {
+  const file = (e.target as HTMLInputElement).files?.[0]
+  if (file)
+    newWork.value.image = await fileToDataUrl(file, 640)
+}
 function addWork() {
   if (!workValid.value)
     return
@@ -100,9 +106,41 @@ function addWork() {
     desc: newWork.value.desc.trim(),
     link: newWork.value.link.trim() || undefined,
     tag: newWork.value.tag.trim(),
+    image: newWork.value.image || undefined,
   })
   portfolioDialog.value = false
-  newWork.value = { title: '', desc: '', link: '', tag: '' }
+  newWork.value = { title: '', desc: '', link: '', tag: '', image: '' }
+}
+
+// —— الصورة الشخصية الحقيقية ——
+const avatarInput = ref<HTMLInputElement>()
+const workImageInput = ref<HTMLInputElement>()
+async function pickAvatar(e: Event) {
+  const file = (e.target as HTMLInputElement).files?.[0]
+  if (file) {
+    pub.setAvatarImage(await fileToDataUrl(file, 256))
+    saved()
+  }
+}
+
+// —— سحب وإفلات ترتيب الأقسام ——
+const dragIdx = ref(-1)
+function onSectionDrop(toIdx: number) {
+  if (dragIdx.value >= 0)
+    pub.reorderSection(dragIdx.value, toIdx)
+  dragIdx.value = -1
+  saved()
+}
+
+// —— روابط مخصصة ——
+const newLinkLabel = ref('')
+const newLinkUrl = ref('')
+function addCustomLink() {
+  if (pub.addCustomLink(newLinkLabel.value, newLinkUrl.value)) {
+    newLinkLabel.value = ''
+    newLinkUrl.value = ''
+    saved()
+  }
 }
 
 const SECTION_LABELS: Record<keyof typeof s.value.sections, string> = {
@@ -190,7 +228,8 @@ function saved() {
           <h2 class="text-subtitle-1 font-weight-bold mb-3"><VIcon icon="mdi-account-edit-outline" size="20" color="primary" class="me-1" />الهوية</h2>
           <VRow dense>
             <VCol cols="12" sm="6"><VTextField v-model="s.slug" label="معرّف الرابط (slug)" prefix="/u/" dir="ltr" density="compact" @blur="saved" /></VCol>
-            <VCol cols="12" sm="6"><VTextField v-model="s.location" label="الموقع" density="compact" @blur="saved" /></VCol>
+            <VCol cols="12" sm="4"><VTextField v-model="s.location" label="الموقع (يظهر كرابط خريطة)" density="compact" @blur="saved" /></VCol>
+            <VCol cols="12" sm="2"><VTextField v-model="s.timezone" label="منطقتي الزمنية" placeholder="GMT+3" density="compact" @blur="saved" /></VCol>
             <VCol cols="12"><VTextField v-model="s.publicHeadline" label="المسمى التسويقي (يظهر تحت اسمك)" density="compact" @blur="saved" /></VCol>
             <VCol cols="12">
               <VTextField v-model="s.tagline" label="عبارتك المؤثرة — جملة واحدة تلخّص رسالتك («أبني حلولًا تترك أثرًا»)" density="compact" prepend-inner-icon="mdi-format-quote-close" @blur="saved" />
@@ -223,6 +262,19 @@ function saved() {
               <VTextField v-model="s.links[l.key]" :label="l.label" :prepend-inner-icon="l.icon" dir="ltr" density="compact" clearable @blur="saved" />
             </VCol>
           </VRow>
+          <VDivider class="my-3" />
+          <p class="text-caption text-medium-emphasis mb-2">روابط مخصصة لأي منصة أخرى (مدونة، Dribbble، قناة...):</p>
+          <div v-for="cl in s.customLinks" :key="cl.id" class="d-flex align-center ga-2 py-1">
+            <VIcon icon="mdi-link-variant" size="16" color="secondary" />
+            <span class="text-body-2 font-weight-bold">{{ cl.label }}</span>
+            <span class="text-caption text-medium-emphasis flex-grow-1 text-truncate" dir="ltr">{{ cl.url }}</span>
+            <VBtn icon="mdi-delete-outline" size="x-small" variant="text" color="error" @click="pub.removeCustomLink(cl.id); saved()" />
+          </div>
+          <div class="d-flex ga-2 mt-2">
+            <VTextField v-model="newLinkLabel" label="التسمية" density="compact" hide-details style="max-width: 160px" />
+            <VTextField v-model="newLinkUrl" label="الرابط" dir="ltr" density="compact" hide-details @keyup.enter="addCustomLink" />
+            <VBtn color="secondary" height="40" :disabled="!newLinkLabel.trim() || !newLinkUrl.trim()" @click="addCustomLink"><VIcon icon="mdi-plus" /></VBtn>
+          </div>
         </VCard>
       </VWindowItem>
 
@@ -252,6 +304,21 @@ function saved() {
             <!-- شكل الصورة والحركة -->
             <VCard class="pa-5 mb-4">
               <h2 class="text-subtitle-1 font-weight-bold mb-3"><VIcon icon="mdi-image-frame" size="20" color="secondary" class="me-1" />الصورة والحركة</h2>
+              <div class="d-flex align-center ga-3 mb-4">
+                <VAvatar size="56" color="secondary" variant="tonal" :rounded="s.appearance.avatarShape === 'square' ? '0' : s.appearance.avatarShape === 'rounded' ? 'lg' : undefined">
+                  <VImg v-if="s.avatarImage" :src="s.avatarImage" cover />
+                  <span v-else class="text-h6 font-weight-bold">{{ pub.displayName.trim().charAt(0) }}</span>
+                </VAvatar>
+                <div class="d-flex flex-column ga-1">
+                  <VBtn size="x-small" variant="tonal" color="secondary" prepend-icon="mdi-camera-outline" @click="avatarInput?.click()">
+                    {{ s.avatarImage ? 'تغيير الصورة' : 'رفع صورة حقيقية' }}
+                  </VBtn>
+                  <VBtn v-if="s.avatarImage" size="x-small" variant="text" color="error" prepend-icon="mdi-delete-outline" @click="pub.setAvatarImage(null); saved()">
+                    إزالة (العودة للحرف)
+                  </VBtn>
+                </div>
+                <input ref="avatarInput" type="file" accept="image/*" class="d-none" @change="pickAvatar">
+              </div>
               <p class="text-caption text-medium-emphasis mb-2">شكل صورتك الشخصية:</p>
               <VBtnToggle :model-value="s.appearance.avatarShape" density="compact" mandatory variant="outlined" divided class="mb-3" @update:model-value="s.appearance.avatarShape = $event; saved()">
                 <VBtn v-for="sh in AVATAR_SHAPES" :key="sh.value" :value="sh.value" size="small" :prepend-icon="sh.icon">{{ sh.label }}</VBtn>
@@ -383,8 +450,19 @@ function saved() {
             <!-- ترتيب الأقسام -->
             <VCard class="pa-5">
               <h2 class="text-subtitle-1 font-weight-bold mb-1"><VIcon icon="mdi-sort" size="20" color="info" class="me-1" />ترتيب أقسام صفحتك</h2>
-              <p class="text-caption text-medium-emphasis mb-2">حرّك الأقسام لتقرر ما يقرؤه الزائر أولًا.</p>
-              <div v-for="(key, i) in s.sectionOrder" :key="key" class="d-flex align-center ga-2 py-1">
+              <p class="text-caption text-medium-emphasis mb-2">اسحب الأقسام (أو استخدم الأسهم) لتقرر ما يقرؤه الزائر أولًا.</p>
+              <div
+                v-for="(key, i) in s.sectionOrder"
+                :key="key"
+                class="d-flex align-center ga-2 py-1 drag-row"
+                :class="{ 'drag-source': dragIdx === i }"
+                draggable="true"
+                @dragstart="dragIdx = i"
+                @dragover.prevent
+                @drop="onSectionDrop(i)"
+                @dragend="dragIdx = -1"
+              >
+                <VIcon icon="mdi-drag" size="18" class="drag-handle" />
                 <VChip size="small" variant="tonal" color="info" label>{{ i + 1 }}</VChip>
                 <span class="text-body-2 flex-grow-1">{{ SECTION_LABELS[key] }}</span>
                 <VBtn icon="mdi-arrow-up" size="x-small" variant="text" :disabled="i === 0" @click="pub.moveSection(key, -1); saved()" />
@@ -548,6 +626,14 @@ function saved() {
             <VCol cols="6"><VTextField v-model="newWork.tag" label="وسم (Vue 3، تصميم...)" density="compact" /></VCol>
             <VCol cols="6"><VTextField v-model="newWork.link" label="رابط (اختياري)" dir="ltr" density="compact" /></VCol>
           </VRow>
+          <div class="d-flex align-center ga-2 mt-2">
+            <VBtn size="small" variant="tonal" color="accent" prepend-icon="mdi-image-plus-outline" @click="workImageInput?.click()">
+              {{ newWork.image ? 'تغيير الصورة' : 'صورة للعمل (اختياري)' }}
+            </VBtn>
+            <VImg v-if="newWork.image" :src="newWork.image" width="72" height="44" cover class="rounded" />
+            <VBtn v-if="newWork.image" icon="mdi-close" size="x-small" variant="text" @click="newWork.image = ''" />
+            <input ref="workImageInput" type="file" accept="image/*" class="d-none" @change="pickWorkImage">
+          </div>
         </VCardText>
         <VCardActions>
           <VSpacer />
@@ -576,5 +662,20 @@ function saved() {
   border-radius: 6px;
   background: transparent;
   cursor: pointer;
+}
+
+/* سحب وإفلات ترتيب الأقسام */
+.drag-row {
+  cursor: grab;
+  border-radius: 8px;
+}
+.drag-row:active {
+  cursor: grabbing;
+}
+.drag-source {
+  opacity: 0.4;
+}
+.drag-handle {
+  opacity: 0.5;
 }
 </style>

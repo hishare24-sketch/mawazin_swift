@@ -91,16 +91,45 @@ function sendTestimonial() {
 }
 
 // —— طرق العرض المتعددة: الزائر يختار كيف يقرأ الصفحة ——
-type ViewMode = 'classic' | 'compact' | 'visual' | 'academic' | 'resume'
+type ViewMode = 'classic' | 'compact' | 'visual' | 'academic' | 'resume' | 'custom'
 const viewMode = ref<ViewMode>('classic')
 
-/** الأقسام المسموحة لكل طريقة عرض — null تعني كل الأقسام */
+/** الأقسام المسموحة لكل طريقة عرض — null تعني كل الأقسام (custom يُدار بمجموعة الزائر) */
 const MODE_SECTIONS: Record<ViewMode, readonly (keyof PublicSections)[] | null> = {
   classic: null,
   compact: ['stats', 'roles', 'achievements', 'skills'],
   visual: ['stats', 'portfolio', 'skills', 'testimonials', 'roles'],
   academic: ['stats', 'story', 'experience', 'skills'],
   resume: ['stats', 'story', 'achievements', 'experience', 'portfolio', 'testimonials', 'skills'],
+  custom: null,
+}
+
+// —— العرض المخصص: الزائر يركّب صفحته بنفسه من الأقسام المتاحة ——
+const CUSTOM_LABELS: Partial<Record<keyof PublicSections, string>> = {
+  stats: 'المصداقية',
+  roles: 'الأدوار',
+  story: 'القصة',
+  achievements: 'الإنجازات',
+  experience: 'الخبرات',
+  portfolio: 'الأعمال',
+  testimonials: 'التوصيات',
+  skills: 'المهارات',
+  ratings: 'التقييم',
+  comments: 'التعليقات',
+}
+const customSet = ref<Set<keyof PublicSections>>(new Set())
+watch(viewMode, (m) => {
+  // أول دخول للعرض المخصص: ابدأ بكل الأقسام المتاحة ثم انتقِ
+  if (m === 'custom' && !customSet.value.size)
+    customSet.value = new Set((Object.keys(CUSTOM_LABELS) as (keyof PublicSections)[]).filter(k => pub.canShow(k)))
+})
+function toggleCustomSection(k: keyof PublicSections) {
+  const set = new Set(customSet.value)
+  if (set.has(k))
+    set.delete(k)
+  else
+    set.add(k)
+  customSet.value = set
 }
 
 /** ترتيب العمود الرئيسي — العرض المرئي يقدّم المعرض على كل شيء */
@@ -110,9 +139,16 @@ const mainOrder = computed(() =>
     : s.value.sectionOrder,
 )
 function sectionVisible(key: keyof PublicSections): boolean {
+  if (!pub.canShow(key))
+    return false
+  if (viewMode.value === 'custom')
+    return customSet.value.has(key)
   const allowed = MODE_SECTIONS[viewMode.value]
-  return (!allowed || allowed.includes(key)) && pub.canShow(key)
+  return !allowed || allowed.includes(key)
 }
+
+/** رابط خريطة تفاعلية للموقع */
+const mapsUrl = computed(() => `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(s.value.location)}`)
 
 // —— شريط التنقّل الداخلي (العرض الكلاسيكي) ——
 const ANCHOR_LABELS: Partial<Record<keyof PublicSections, string>> = {
@@ -323,7 +359,8 @@ function postComment() {
           <div class="brand-gradient pp-hero pa-6 pa-md-8" theme="darkTheme">
             <div class="d-flex align-center ga-4 flex-wrap">
               <VAvatar color="rgba(255,255,255,0.15)" size="84" :rounded="avatarRounded" :class="{ 'pp-ring': s.appearance.avatarRing }">
-                <span class="text-h4 font-weight-bold text-white">{{ pub.displayName.trim().charAt(0) }}</span>
+                <VImg v-if="s.avatarImage" :src="s.avatarImage" cover />
+                <span v-else class="text-h4 font-weight-bold text-white">{{ pub.displayName.trim().charAt(0) }}</span>
               </VAvatar>
               <div class="flex-grow-1">
                 <div class="d-flex align-center ga-2 flex-wrap">
@@ -339,13 +376,17 @@ function postComment() {
                   <span v-if="s.availability.message" class="text-caption text-white opacity-75">{{ s.availability.message }}</span>
                 </div>
                 <div class="text-caption text-white opacity-75 d-flex align-center ga-2 flex-wrap mt-1">
-                  <span><VIcon icon="mdi-map-marker-outline" size="14" />{{ s.location }}</span>
+                  <a :href="mapsUrl" target="_blank" rel="noopener" class="text-white text-decoration-none">
+                    <VIcon icon="mdi-map-marker-outline" size="14" />{{ s.location }}
+                    <VTooltip activator="parent" location="bottom">عرض على الخريطة</VTooltip>
+                  </a>
+                  <span v-if="s.timezone"><VIcon icon="mdi-clock-time-four-outline" size="14" /> {{ s.timezone }}</span>
                   <span v-if="pub.canShow('followers')"><VIcon icon="mdi-account-group-outline" size="14" /> {{ s.followersCount }} متابعًا</span>
                   <span v-if="pub.canShow('ratings') && s.ratingCount">
                     <VIcon icon="mdi-star" size="14" color="amber" /> {{ pub.avgRating }} ({{ s.ratingCount }} تقييمًا)
                   </span>
                 </div>
-                <div v-if="externalLinks.length" class="d-flex ga-1 mt-2">
+                <div v-if="externalLinks.length || s.customLinks.length" class="d-flex ga-1 mt-2 flex-wrap align-center">
                   <VBtn
                     v-for="l in externalLinks"
                     :key="l.key"
@@ -357,6 +398,19 @@ function postComment() {
                     target="_blank"
                     rel="noopener"
                   />
+                  <VBtn
+                    v-for="cl in s.customLinks"
+                    :key="`c${cl.id}`"
+                    size="small"
+                    variant="text"
+                    color="white"
+                    prepend-icon="mdi-link-variant"
+                    :href="cl.url"
+                    target="_blank"
+                    rel="noopener"
+                  >
+                    {{ cl.label }}
+                  </VBtn>
                 </div>
               </div>
               <div class="d-flex flex-column ga-2 no-print">
@@ -416,6 +470,7 @@ function postComment() {
             <VBtn value="visual" size="small" prepend-icon="mdi-image-multiple-outline">مرئي</VBtn>
             <VBtn value="academic" size="small" prepend-icon="mdi-school-outline">أكاديمي</VBtn>
             <VBtn value="resume" size="small" prepend-icon="mdi-file-account-outline">سيرة ذاتية</VBtn>
+            <VBtn value="custom" size="small" prepend-icon="mdi-tune-variant">مخصص</VBtn>
           </VBtnToggle>
           <VSpacer />
           <template v-if="viewMode === 'classic'">
@@ -428,6 +483,20 @@ function postComment() {
               @click="scrollTo(a.key)"
             >
               {{ a.label }}
+            </VChip>
+          </template>
+          <template v-else-if="viewMode === 'custom'">
+            <VChip
+              v-for="(label, k) in CUSTOM_LABELS"
+              v-show="pub.canShow(k)"
+              :key="k"
+              size="small"
+              :color="customSet.has(k) ? 'primary' : 'surface-variant'"
+              :variant="customSet.has(k) ? 'flat' : 'outlined'"
+              label
+              @click="toggleCustomSection(k)"
+            >
+              <VIcon :icon="customSet.has(k) ? 'mdi-eye-outline' : 'mdi-eye-off-outline'" start size="12" />{{ label }}
             </VChip>
           </template>
           <VBtn v-if="viewMode === 'resume'" size="small" variant="tonal" color="primary" prepend-icon="mdi-printer-outline" @click="printPage">
@@ -539,9 +608,14 @@ function postComment() {
                 <VRow dense>
                   <VCol v-for="p in filteredPortfolio" :key="p.id" cols="12" sm="6">
                     <VCard variant="outlined" class="h-100 overflow-hidden cursor-pointer work-card" @click="openWork(p)">
-                      <!-- هوية بصرية مشتقة من الوسم -->
-                      <div class="work-banner d-flex align-center justify-center" :style="{ background: tagGradient(p.tag) }">
-                        <VIcon icon="mdi-folder-image-outline" color="white" size="28" class="opacity-75" />
+                      <!-- صورة العمل إن وُجدت، وإلا هوية بصرية مشتقة من الوسم -->
+                      <div
+                        class="work-banner d-flex align-center justify-center"
+                        :style="p.image
+                          ? { backgroundImage: `url(${p.image})`, backgroundSize: 'cover', backgroundPosition: 'center' }
+                          : { background: tagGradient(p.tag) }"
+                      >
+                        <VIcon v-if="!p.image" icon="mdi-folder-image-outline" color="white" size="28" class="opacity-75" />
                       </div>
                       <div class="pa-3">
                         <VChip size="x-small" color="accent" variant="tonal" label class="mb-2">{{ p.tag }}</VChip>
@@ -650,7 +724,7 @@ function postComment() {
         </VRow>
 
         <!-- تقييم الزوار -->
-        <VCard v-if="viewMode === 'classic' && pub.canShow('ratings')" class="pa-5 mt-4 no-print">
+        <VCard v-if="sectionVisible('ratings')" class="pa-5 mt-4 no-print">
           <div class="d-flex align-center ga-3 flex-wrap">
             <div class="flex-grow-1">
               <h2 class="text-subtitle-1 font-weight-bold mb-1">
@@ -674,7 +748,7 @@ function postComment() {
         </VCard>
 
         <!-- تعليقات الزوار -->
-        <VCard v-if="viewMode === 'classic' && pub.canShow('comments')" class="pa-5 mt-4 no-print">
+        <VCard v-if="sectionVisible('comments')" class="pa-5 mt-4 no-print">
           <h2 class="text-subtitle-1 font-weight-bold mb-3">
             <VIcon icon="mdi-comment-multiple-outline" color="info" size="20" class="me-1" />التعليقات ({{ pub.visibleComments.length }})
           </h2>
@@ -776,7 +850,12 @@ function postComment() {
       <!-- تفاصيل عمل من المعرض -->
       <VDialog v-model="workDialog" max-width="520">
         <VCard v-if="activeWork" class="overflow-hidden">
-          <div class="work-banner-lg d-flex align-end pa-4" :style="{ background: tagGradient(activeWork.tag) }">
+          <div
+            class="work-banner-lg d-flex align-end pa-4"
+            :style="activeWork.image
+              ? { backgroundImage: `linear-gradient(rgba(0,0,0,0.15), rgba(0,0,0,0.55)), url(${activeWork.image})`, backgroundSize: 'cover', backgroundPosition: 'center' }
+              : { background: tagGradient(activeWork.tag) }"
+          >
             <div>
               <VChip size="x-small" color="white" variant="outlined" label class="mb-1">{{ activeWork.tag }}</VChip>
               <h2 class="text-h6 font-weight-bold text-white mb-0">{{ activeWork.title }}</h2>

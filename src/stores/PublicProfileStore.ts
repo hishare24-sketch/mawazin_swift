@@ -30,6 +30,15 @@ export interface PortfolioItem {
   desc: string
   link?: string
   tag: string
+  /** صورة العمل (dataURL مصغّرة) — تحل محل التدرّج اللوني المشتق */
+  image?: string
+}
+
+/** رابط مخصص لأي منصة خارج القائمة الجاهزة */
+export interface CustomLink {
+  id: number
+  label: string
+  url: string
 }
 
 /** توصية واردة — لا تظهر علنًا إلا بتفعيل صاحب الملف لها */
@@ -226,6 +235,10 @@ interface PublicProfileState {
   displayName: string
   publicHeadline: string
   location: string
+  /** منطقة زمنية للعمل عن بُعد (اختياري) */
+  timezone: string
+  /** الصورة الشخصية الحقيقية (dataURL مصغّرة) — null = الحرف الأول */
+  avatarImage: string | null
   /** السرد الممتد — قصة المستخدم بلغة النتائج لا لغة البيانات */
   story: string
   /** النبذة المختصرة — جملتان تظهران قبل «اقرأ المزيد» */
@@ -243,6 +256,8 @@ interface PublicProfileState {
   /** المهارات الرئيسية «نقاط القوة» — حتى 5 مهارات تُبرز في أعلى المهارات */
   featuredSkillIds: number[]
   contactEnabled: boolean
+  /** روابط مخصصة لمنصات خارج القائمة الجاهزة */
+  customLinks: CustomLink[]
   /** زر «جدولة مقابلة» على الصفحة العامة */
   schedulingEnabled: boolean
   /** عدّاد طلبات المواعيد الواردة من الصفحة */
@@ -274,6 +289,8 @@ const seed: PublicProfileState = {
   displayName: 'أحمد المنصور',
   publicHeadline: 'مطوّر واجهات أمامية أول — Vue.js / TypeScript',
   location: 'الرياض، السعودية',
+  timezone: 'GMT+3',
+  avatarImage: null,
   story: 'أبني واجهات ويب سريعة وقابلة للتوسّع منذ خمس سنوات. أؤمن أن أفضل واجهة هي التي لا يلاحظها المستخدم — تعمل فحسب. عملت على منتجات وصلت لآلاف المستخدمين، وأبحث اليوم عن فريق يصنع منتجًا رقميًا مؤثرًا أنمو معه وأضيف إليه.',
   bioShort: 'مطوّر واجهات يحوّل الأفكار إلى منتجات يستخدمها الآلاف — خمس سنوات من البناء بلا توقف.',
   keywords: ['تطوير_ويب', 'Vue', 'قيادة_تقنية'],
@@ -284,6 +301,7 @@ const seed: PublicProfileState = {
   sectionOrder: ['story', 'achievements', 'experience', 'portfolio'],
   featuredSkillIds: [1, 2],
   contactEnabled: true,
+  customLinks: [{ id: 1, label: 'مدونتي التقنية', url: 'https://dev.to/ahmed-almansour' }],
   schedulingEnabled: true,
   meetings: 1,
   links: {
@@ -484,6 +502,31 @@ export const usePublicProfileStore = defineStore('publicProfile', () => {
     if (i < 0 || j < 0 || j >= order.length)
       return
     ;[order[i], order[j]] = [order[j], order[i]]
+  }
+
+  /** نقل قسم من موضع إلى موضع (السحب والإفلات) */
+  function reorderSection(fromIdx: number, toIdx: number) {
+    const order = state.value.sectionOrder
+    if (fromIdx === toIdx || fromIdx < 0 || toIdx < 0 || fromIdx >= order.length || toIdx >= order.length)
+      return
+    const [item] = order.splice(fromIdx, 1)
+    order.splice(toIdx, 0, item)
+  }
+
+  /** الصورة الشخصية الحقيقية — dataURL مصغّرة أو null للعودة للحرف الأول */
+  function setAvatarImage(dataUrl: string | null) {
+    state.value.avatarImage = dataUrl
+  }
+
+  // —— روابط مخصصة لأي منصة ——
+  function addCustomLink(label: string, url: string): boolean {
+    if (!label.trim() || !url.trim())
+      return false
+    state.value.customLinks.push({ id: nextId++, label: label.trim(), url: url.trim() })
+    return true
+  }
+  function removeCustomLink(id: number) {
+    state.value.customLinks = state.value.customLinks.filter(l => l.id !== id)
   }
 
   /**
@@ -733,7 +776,8 @@ export const usePublicProfileStore = defineStore('publicProfile', () => {
     verifiedFacts, publicSkills, visibleTestimonials, roleBadges,
     availabilityMeta, themeStyles, setTheme, fontFamily,
     saveThemeTemplate, applyThemeTemplate, removeThemeTemplate,
-    featuredSkills, toggleFeaturedSkill, moveSection,
+    featuredSkills, toggleFeaturedSkill, moveSection, reorderSection,
+    setAvatarImage, addCustomLink, removeCustomLink,
     toggleTestimonialLike, submitTestimonial,
     recordView, recordShare,
     addAchievement, removeAchievement,

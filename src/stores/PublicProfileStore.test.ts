@@ -258,6 +258,28 @@ describe('publicProfileStore', () => {
     expect(JSON.parse(localStorage.getItem('publicProfile')!).sectionOrder[1]).toBe('story')
   })
 
+  it('supports drag-reorder, real avatar image, and custom links', () => {
+    const p = usePublicProfileStore()
+    // نقل بالسحب من موضع لموضع (لا مجرد تبديل جيران)
+    expect(p.state.sectionOrder.join(',')).toBe('story,achievements,experience,portfolio')
+    p.reorderSection(0, 2)
+    expect(p.state.sectionOrder.join(',')).toBe('achievements,experience,story,portfolio')
+    p.reorderSection(9, 0) // خارج الحدود — لا تغيير
+    expect(p.state.sectionOrder).toHaveLength(4)
+
+    p.setAvatarImage('data:image/jpeg;base64,abc')
+    expect(p.state.avatarImage).toContain('data:image')
+    p.setAvatarImage(null) // العودة للحرف الأول
+    expect(p.state.avatarImage).toBeNull()
+
+    const n = p.state.customLinks.length
+    expect(p.addCustomLink('مدونة', 'https://blog.example')).toBe(true)
+    expect(p.addCustomLink('', 'https://x.example')).toBe(false) // تسمية فارغة تُرفض
+    expect(p.state.customLinks).toHaveLength(n + 1)
+    p.removeCustomLink(p.state.customLinks[p.state.customLinks.length - 1].id)
+    expect(p.state.customLinks).toHaveLength(n)
+  })
+
   it('exposes public url and skill selection subset', () => {
     const p = usePublicProfileStore()
     expect(p.publicPath).toBe(`u/${p.state.slug}`)
