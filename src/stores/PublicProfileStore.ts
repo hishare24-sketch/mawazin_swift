@@ -79,7 +79,7 @@ export interface PageComment {
 // ===== المظهر: ثيمات الصفحة والحالة المهنية =====
 // «جمالية تأسر العين، وسهولة تأسر القلب» — الثيم هوية بصرية كاملة لا مجرد لون.
 
-export type ProfileThemeKey = 'platform' | 'professional' | 'tech' | 'creative' | 'innovator' | 'serene' | 'dark' | 'light' | 'custom'
+export type ProfileThemeKey = 'platform' | 'smart' | 'professional' | 'tech' | 'creative' | 'innovator' | 'serene' | 'dark' | 'light' | 'custom'
 export type AvatarShape = 'circle' | 'rounded' | 'square'
 export type AvailabilityStatus = 'available' | 'busy' | 'unavailable'
 
@@ -97,7 +97,7 @@ export interface ProfileThemePalette {
 }
 
 /** الثيمات الجاهزة — كل ثيم شخصية مهنية (platform = يتبع ثيم المنصة، custom = من لون المستخدم) */
-export const PROFILE_THEMES: Record<Exclude<ProfileThemeKey, 'platform' | 'custom'>, ProfileThemePalette> = {
+export const PROFILE_THEMES: Record<Exclude<ProfileThemeKey, 'platform' | 'smart' | 'custom'>, ProfileThemePalette> = {
   professional: { label: 'الاحترافي', hint: 'أزرق داكن هادئ — مستشارون ومدراء', bg: '#F4F7FB', surface: '#FFFFFF', text: '#1A2433', muted: '#5A6B7F', accent: '#1A365D', onAccent: '#FFFFFF', heroFrom: '#1A365D', heroTo: '#2C5282' },
   tech: { label: 'التقني', hint: 'أزرق كهربائي على داكن — مطورون ومهندسون', bg: '#0D1B2A', surface: '#152638', text: '#E3F2FA', muted: '#8FA9BC', accent: '#00B4D8', onAccent: '#04222D', heroFrom: '#0D1B2A', heroTo: '#0A3552' },
   creative: { label: 'الإبداعي', hint: 'أرجواني ووردي — مصممون وفنانون', bg: '#FBF7FF', surface: '#FFFFFF', text: '#2A1B3D', muted: '#7B6B8F', accent: '#7B2FBE', onAccent: '#FFFFFF', heroFrom: '#7B2FBE', heroTo: '#FF6B6B' },
@@ -105,6 +105,44 @@ export const PROFILE_THEMES: Record<Exclude<ProfileThemeKey, 'platform' | 'custo
   serene: { label: 'الهادئ', hint: 'أخضر زيتي وبيج — مدربون ومستشارون', bg: '#F5F5DC', surface: '#FFFFFF', text: '#2B3A2C', muted: '#6E7B67', accent: '#2E7D32', onAccent: '#FFFFFF', heroFrom: '#2E7D32', heroTo: '#557C46' },
   dark: { label: 'الداكن', hint: 'أسود متدرج — عشاق الوضع الليلي', bg: '#121212', surface: '#1E1E1E', text: '#EDEDED', muted: '#9A9A9A', accent: '#90CAF9', onAccent: '#0B1620', heroFrom: '#161616', heroTo: '#2A2A2A' },
   light: { label: 'الفاتح', hint: 'أبيض وأزرق خفيف — الخيار الكلاسيكي', bg: '#F7FAFC', surface: '#FFFFFF', text: '#2D3748', muted: '#718096', accent: '#3182CE', onAccent: '#FFFFFF', heroFrom: '#2B6CB0', heroTo: '#4299E1' },
+}
+
+/** نص داكن أم فاتح فوق لون معيّن؟ (استدلال إضاءة بسيط) */
+function readableOn(hex: string): string {
+  const n = hex.replace('#', '')
+  if (n.length !== 6)
+    return '#FFFFFF'
+  const lum = 0.299 * parseInt(n.slice(0, 2), 16) + 0.587 * parseInt(n.slice(2, 4), 16) + 0.114 * parseInt(n.slice(4, 6), 16)
+  return lum > 150 ? '#101418' : '#FFFFFF'
+}
+
+function customPalette(accent: string): ProfileThemePalette {
+  return {
+    label: 'المخصص',
+    hint: 'لونك أنت',
+    bg: '#101418',
+    surface: '#1A2027',
+    text: '#ECEFF3',
+    muted: '#9AA6B2',
+    accent,
+    onAccent: readableOn(accent),
+    heroFrom: '#12161C',
+    heroTo: `${accent}59`,
+  }
+}
+
+/**
+ * الثيم الذكي (6.3): القاعدة (فاتح/داكن) تتبع جهاز الزائر،
+ * واللكنة تتبع وقت اليوم — دافئة مساءً وباردة نهارًا.
+ */
+export function smartPalette(dark: boolean, hour: number): ProfileThemePalette {
+  const evening = hour >= 17 || hour < 6
+  const accent = evening ? '#F59E0B' : '#38BDF8'
+  const heroDeep = evening ? '#B45309' : '#0369A1'
+  const base = dark
+    ? { bg: '#12161C', surface: '#1B222B', text: '#ECEFF3', muted: '#9AA6B2', heroFrom: '#141A22', heroTo: heroDeep }
+    : { bg: '#F6F8FA', surface: '#FFFFFF', text: '#22303C', muted: '#64748B', heroFrom: heroDeep, heroTo: accent }
+  return { label: 'الذكي', hint: 'يتبع جهاز الزائر ووقت اليوم', accent, onAccent: readableOn(accent), ...base }
 }
 
 export const AVAILABILITY_META: Record<AvailabilityStatus, { label: string, color: string }> = {
@@ -167,6 +205,10 @@ interface PublicProfileState {
   /** المهارات الرئيسية «نقاط القوة» — حتى 5 مهارات تُبرز في أعلى المهارات */
   featuredSkillIds: number[]
   contactEnabled: boolean
+  /** زر «جدولة مقابلة» على الصفحة العامة */
+  schedulingEnabled: boolean
+  /** عدّاد طلبات المواعيد الواردة من الصفحة */
+  meetings: number
   links: ContactLinks
   sections: PublicSections
   /** المهارات المختارة للعرض العام (قد تكون مجموعة جزئية من مهارات الملف الخاص) */
@@ -201,6 +243,8 @@ const seed: PublicProfileState = {
   sectionOrder: ['story', 'achievements', 'experience', 'portfolio'],
   featuredSkillIds: [1, 2],
   contactEnabled: true,
+  schedulingEnabled: true,
+  meetings: 1,
   links: {
     linkedin: 'https://linkedin.com/in/ahmed-almansour',
     github: 'https://github.com/ahmed-almansour',
@@ -296,29 +340,15 @@ export const usePublicProfileStore = defineStore('publicProfile', () => {
   // ===== المظهر والحالة =====
   const availabilityMeta = computed(() => AVAILABILITY_META[state.value.availability.status])
 
-  /** نص داكن أم فاتح فوق اللون المخصص؟ (استدلال إضاءة بسيط) */
-  function readableOn(hex: string): string {
-    const n = hex.replace('#', '')
-    if (n.length !== 6)
-      return '#FFFFFF'
-    const lum = 0.299 * parseInt(n.slice(0, 2), 16) + 0.587 * parseInt(n.slice(2, 4), 16) + 0.114 * parseInt(n.slice(4, 6), 16)
-    return lum > 150 ? '#101418' : '#FFFFFF'
+  // —— مدخلات الثيم الذكي: وضع جهاز الزائر ووقت اليوم ——
+  const systemDark = ref(true)
+  const hourOfDay = ref(new Date().getHours())
+  try {
+    const mq = window.matchMedia('(prefers-color-scheme: dark)')
+    systemDark.value = mq.matches
+    mq.addEventListener('change', e => (systemDark.value = e.matches))
   }
-
-  function customPalette(accent: string): ProfileThemePalette {
-    return {
-      label: 'المخصص',
-      hint: 'لونك أنت',
-      bg: '#101418',
-      surface: '#1A2027',
-      text: '#ECEFF3',
-      muted: '#9AA6B2',
-      accent,
-      onAccent: readableOn(accent),
-      heroFrom: '#12161C',
-      heroTo: `${accent}59`,
-    }
-  }
+  catch { /* بيئات بلا matchMedia (اختبارات) — يبقى الافتراضي داكنًا */ }
 
   /**
    * متغيرات CSS للثيم المختار — null يعني «اتبع ثيم المنصة» (السلوك الافتراضي القديم).
@@ -328,7 +358,11 @@ export const usePublicProfileStore = defineStore('publicProfile', () => {
     const a = state.value.appearance
     if (a.theme === 'platform')
       return null
-    const p = a.theme === 'custom' ? customPalette(a.customColor) : PROFILE_THEMES[a.theme]
+    const p = a.theme === 'custom'
+      ? customPalette(a.customColor)
+      : a.theme === 'smart'
+        ? smartPalette(systemDark.value, hourOfDay.value)
+        : PROFILE_THEMES[a.theme]
     return {
       '--pp-bg': p.bg,
       '--pp-surface': p.surface,
@@ -528,6 +562,43 @@ export const usePublicProfileStore = defineStore('publicProfile', () => {
     return true
   }
 
+  /** زائر يطلب إثبات مهارة — يصبّ في طلبات الإثبات المعلّقة بملف صاحب الصفحة */
+  function requestSkillProof(skillName: string, visitorName: string, relation: string): boolean {
+    profile.addProofRequest(visitorName, relation, skillName)
+    useNotificationsStore().push({
+      icon: 'mdi-check-decagram-outline',
+      color: 'warning',
+      title: 'طلب إثبات مهارة من صفحتك',
+      body: `${visitorName} (${relation}) يطلب إثبات مهارة «${skillName}»`,
+      category: 'endorsement',
+      actionTo: '/profile',
+      actionLabel: 'مراجعة الطلب',
+    })
+    return true
+  }
+
+  /** «جدولة مقابلة»: اقتراح موعد من زائر يدخل رسائل صاحب الصفحة وإشعاراته */
+  function scheduleMeeting(visitorName: string, day: string, slot: string, topic: string): boolean {
+    if (!state.value.schedulingEnabled)
+      return false
+    useMessagesStore().startConversation(
+      visitorName,
+      'طلب جدولة مقابلة عبر صفحتك التعريفية',
+      `أقترح مقابلة ${day} الساعة ${slot}${topic ? ` — ${topic}` : ''}`,
+    )
+    state.value.meetings++
+    useNotificationsStore().push({
+      icon: 'mdi-calendar-clock-outline',
+      color: 'secondary',
+      title: 'طلب جدولة مقابلة',
+      body: `${visitorName} يقترح موعدًا: ${day} · ${slot}`,
+      category: 'interview',
+      actionTo: '/messages',
+      actionLabel: 'مراجعة الطلب',
+    })
+    return true
+  }
+
   /** قوة الصفحة العامة (0-100) + نصيحة التحسين التالية — يحوّل التحسين لعبة مستمرة */
   const strength = computed(() => {
     const checks: { ok: boolean, tip: string, pts: number }[] = [
@@ -561,6 +632,7 @@ export const usePublicProfileStore = defineStore('publicProfile', () => {
     addPortfolio, removePortfolio,
     toggleTestimonial, toggleSkill,
     contact, strength,
+    requestSkillProof, scheduleMeeting,
     tierAllows, canShow,
     toggleFollow, avgRating, rate,
     visibleComments, addComment, setCommentHidden, removeComment,

@@ -4,9 +4,10 @@ import { useRoute } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import type { UserRole } from '@/interfaces/Auth'
 import type { PublicSections } from '@/stores/PublicProfileStore'
+import type { ProofType, Skill } from '@/stores/ProfileStore'
 import { ROLE_META } from '@/services/roles'
 import { useAccountPlanStore } from '@/stores/AccountPlanStore'
-import { useProfileStore } from '@/stores/ProfileStore'
+import { PROOF_META, useProfileStore } from '@/stores/ProfileStore'
 import { usePublicProfileStore } from '@/stores/PublicProfileStore'
 
 // ===== الصفحة التعريفية العامة — بطاقة المستخدم أمام العالم (كل الأدوار) =====
@@ -68,10 +69,74 @@ const avatarRounded = computed(() => {
   return shape === 'square' ? '0' : shape === 'rounded' ? 'lg' : undefined
 })
 
-/** المهارات غير المميزة (تُعرض بعد نقاط القوة) */
-const regularSkills = computed(() =>
-  pub.publicSkills.filter(sk => !s.value.featuredSkillIds.includes(sk.id)),
-)
+// —— المهارات: مستويات + مصادر إثبات مصنّفة ——
+/** خريطة selfLevel (1-5) → تسمية الوثيقة (مبتدئ/متوسط/متقدم/خبير) */
+const LEVEL_LABELS = ['', 'مبتدئ', 'مبتدئ', 'متوسط', 'متقدم', 'خبير']
+const levelLabel = (n: number) => LEVEL_LABELS[n] ?? 'متوسط'
+
+/** تجميع إثباتات المهارة حسب النوع (📝 اختبار / 💬 توصية / 🚀 مشروع / 🎓 شهادة) */
+function proofSummary(sk: Skill) {
+  const counts = new Map<ProofType, number>()
+  sk.proofs.forEach(p => counts.set(p.type, (counts.get(p.type) ?? 0) + 1))
+  return [...counts].map(([type, count]) => ({ type, count, ...PROOF_META[type] }))
+}
+
+// نافذة تفاصيل إثباتات مهارة
+const proofsDialog = ref(false)
+const proofsSkill = ref<Skill | null>(null)
+function openProofs(sk: Skill) {
+  proofsSkill.value = sk
+  proofsDialog.value = true
+}
+
+// —— طلب إثبات مهارة (من الزوار، خاصة الزملاء) ——
+const proofReqDialog = ref(false)
+const proofReqSkill = ref('')
+const proofReqName = ref('')
+const proofReqRelation = ref('')
+const proofReqSent = ref(false)
+function sendProofRequest() {
+  if (!proofReqSkill.value || !proofReqName.value.trim())
+    return
+  pub.requestSkillProof(proofReqSkill.value, proofReqName.value.trim(), proofReqRelation.value.trim() || 'زائر')
+  proofReqSent.value = true
+  setTimeout(() => {
+    proofReqDialog.value = false
+    proofReqSent.value = false
+    proofReqSkill.value = ''
+    proofReqName.value = ''
+    proofReqRelation.value = ''
+  }, 1600)
+}
+
+// —— جدولة مقابلة (تكامل مع نظام المقابلات — وفق أوقات متاحة مقترحة) ——
+const scheduleDialog = ref(false)
+const SLOTS = ['10:00', '12:00', '16:00', '20:00']
+const scheduleDays = computed(() => Array.from({ length: 5 }, (_, i) => {
+  const d = new Date()
+  d.setDate(d.getDate() + i + 1)
+  return { key: d.toISOString().slice(0, 10), label: d.toLocaleDateString('ar', { weekday: 'long', day: 'numeric', month: 'long' }) }
+}))
+/** محاكاة انشغال صاحب الصفحة — نمط ثابت كي تبدو بعض الفترات محجوزة */
+const slotBusy = (dayIdx: number, slotIdx: number) => (dayIdx + slotIdx) % 4 === 0
+const meetDay = ref(0)
+const meetSlot = ref('')
+const meetName = ref('')
+const meetTopic = ref('')
+const meetSent = ref(false)
+function sendSchedule() {
+  if (!meetSlot.value || !meetName.value.trim())
+    return
+  pub.scheduleMeeting(meetName.value.trim(), scheduleDays.value[meetDay.value].label, meetSlot.value, meetTopic.value.trim())
+  meetSent.value = true
+  setTimeout(() => {
+    scheduleDialog.value = false
+    meetSent.value = false
+    meetSlot.value = ''
+    meetName.value = ''
+    meetTopic.value = ''
+  }, 1600)
+}
 
 // —— مشاركة ——
 const copied = ref(false)
@@ -218,6 +283,9 @@ function postComment() {
                     تواصل معي
                   </VBtn>
                 </div>
+                <VBtn v-if="s.schedulingEnabled" size="small" variant="tonal" color="white" prepend-icon="mdi-calendar-clock-outline" @click="scheduleDialog = true">
+                  جدولة مقابلة
+                </VBtn>
                 <div class="d-flex ga-1">
                   <VBtn size="small" variant="outlined" color="white" :prepend-icon="copied ? 'mdi-check' : 'mdi-link-variant'" @click="share">
                     {{ copied ? 'نُسخ' : 'مشاركة' }}
@@ -373,19 +441,38 @@ function postComment() {
                 <div class="d-flex flex-wrap ga-2 mb-3">
                   <VChip v-for="sk in pub.featuredSkills" :key="sk.id" color="accent" variant="flat" label prepend-icon="mdi-star">
                     {{ sk.name }}
-                    <VTooltip v-if="sk.proofs.length" activator="parent" location="top">{{ sk.proofs.length }} إثباتات موثّقة</VTooltip>
                   </VChip>
                 </div>
-                <VDivider v-if="regularSkills.length" class="mb-3" />
+                <VDivider class="mb-2" />
               </template>
-              <div class="d-flex flex-wrap ga-2">
-                <VChip v-for="sk in regularSkills" :key="sk.id" color="primary" variant="tonal" label>
-                  {{ sk.name }}
-                  <VTooltip v-if="sk.proofs.length" activator="parent" location="top">{{ sk.proofs.length }} إثباتات موثّقة</VTooltip>
-                  <VBadge v-if="sk.proofs.length" color="success" :content="sk.proofs.length" inline class="ms-1" />
-                </VChip>
+              <!-- مستوى + مصادر الإثبات لكل مهارة (انقر رقاقة إثبات للتفاصيل) -->
+              <div v-for="sk in pub.publicSkills" :key="sk.id" class="py-2 skill-row">
+                <div class="d-flex align-center ga-2 mb-1">
+                  <VIcon v-if="s.featuredSkillIds.includes(sk.id)" icon="mdi-star" color="accent" size="14" />
+                  <span class="text-body-2 font-weight-bold flex-grow-1">{{ sk.name }}</span>
+                  <VChip size="x-small" color="primary" variant="tonal" label>{{ levelLabel(sk.selfLevel) }}</VChip>
+                </div>
+                <VProgressLinear :model-value="sk.selfLevel * 20" color="primary" height="5" rounded class="mb-2" />
+                <div class="d-flex align-center ga-1 flex-wrap">
+                  <VChip
+                    v-for="pt in proofSummary(sk)"
+                    :key="pt.type"
+                    size="x-small"
+                    variant="tonal"
+                    :color="pt.color"
+                    label
+                    class="cursor-pointer"
+                    @click="openProofs(sk)"
+                  >
+                    <VIcon :icon="pt.icon" start size="12" />{{ pt.label }}<template v-if="pt.count > 1"> ×{{ pt.count }}</template>
+                  </VChip>
+                  <span v-if="!sk.proofs.length" class="text-caption text-medium-emphasis">بلا إثباتات بعد</span>
+                </div>
               </div>
-              <p class="text-caption text-medium-emphasis mt-3 mb-0">الأرقام الخضراء = إثباتات موثّقة من المنصة (شهادات، تقييمات، تزكيات).</p>
+              <p class="text-caption text-medium-emphasis mt-2 mb-2">انقر أي إثبات لعرض تفاصيله الموثّقة من المنصة.</p>
+              <VBtn size="small" variant="tonal" color="warning" prepend-icon="mdi-check-decagram-outline" class="no-print" @click="proofReqDialog = true">
+                طلب إثبات مهارة
+              </VBtn>
             </VCard>
           </VCol>
         </VRow>
@@ -474,6 +561,101 @@ function postComment() {
           </VCardActions>
         </VCard>
       </VDialog>
+      <!-- تفاصيل إثباتات مهارة -->
+      <VDialog v-model="proofsDialog" max-width="440">
+        <VCard v-if="proofsSkill" class="pa-2">
+          <VCardTitle class="d-flex align-center ga-2">
+            إثباتات «{{ proofsSkill.name }}»
+            <VChip size="x-small" color="primary" variant="tonal" label>{{ levelLabel(proofsSkill.selfLevel) }}</VChip>
+          </VCardTitle>
+          <VCardText>
+            <div v-for="p in proofsSkill.proofs" :key="p.id" class="d-flex align-center ga-2 py-2">
+              <VIcon :icon="PROOF_META[p.type].icon" :color="PROOF_META[p.type].color" size="20" />
+              <div class="flex-grow-1">
+                <div class="text-body-2">{{ p.label }}</div>
+                <div class="text-caption text-medium-emphasis">{{ PROOF_META[p.type].label }} · {{ p.date }}</div>
+              </div>
+              <VChip v-if="p.type !== 'self'" size="x-small" color="success" variant="tonal" label prepend-icon="mdi-check-decagram">موثّق</VChip>
+            </div>
+            <p v-if="!proofsSkill.proofs.length" class="text-caption text-medium-emphasis mb-0">لا إثباتات لهذه المهارة بعد.</p>
+          </VCardText>
+          <VCardActions>
+            <VSpacer />
+            <VBtn variant="text" @click="proofsDialog = false">إغلاق</VBtn>
+          </VCardActions>
+        </VCard>
+      </VDialog>
+
+      <!-- طلب إثبات مهارة -->
+      <VDialog v-model="proofReqDialog" max-width="440">
+        <VCard class="pa-2">
+          <VCardTitle>طلب إثبات مهارة</VCardTitle>
+          <VCardText>
+            <template v-if="!proofReqSent">
+              <p class="text-caption text-medium-emphasis mb-3">هل تعرف قدرات {{ pub.displayName }}؟ اطلب منه إثبات مهارة — يصل طلبك إليه ليقرر.</p>
+              <VSelect v-model="proofReqSkill" :items="pub.publicSkills.map(k => k.name)" label="المهارة" class="mb-3" />
+              <VTextField v-model="proofReqName" label="اسمك" class="mb-3" />
+              <VTextField v-model="proofReqRelation" label="علاقتك به (زميل سابق، مدير...)" />
+            </template>
+            <VAlert v-else color="success" variant="tonal" border="start" density="compact">
+              وصل طلبك! سيراجعه صاحب الصفحة.
+            </VAlert>
+          </VCardText>
+          <VCardActions v-if="!proofReqSent">
+            <VSpacer />
+            <VBtn variant="text" @click="proofReqDialog = false">إلغاء</VBtn>
+            <VBtn color="warning" variant="flat" :disabled="!proofReqSkill || !proofReqName.trim()" prepend-icon="mdi-send" @click="sendProofRequest">إرسال الطلب</VBtn>
+          </VCardActions>
+        </VCard>
+      </VDialog>
+
+      <!-- جدولة مقابلة -->
+      <VDialog v-model="scheduleDialog" max-width="520">
+        <VCard class="pa-2">
+          <VCardTitle>جدولة مقابلة مع {{ pub.displayName }}</VCardTitle>
+          <VCardText>
+            <template v-if="!meetSent">
+              <p class="text-caption text-medium-emphasis mb-2">اختر يومًا وفترة متاحة — يصل الاقتراح لصاحب الصفحة ليؤكده عبر المنصة.</p>
+              <div class="d-flex flex-wrap ga-2 mb-3">
+                <VChip
+                  v-for="(d, i) in scheduleDays"
+                  :key="d.key"
+                  :color="meetDay === i ? 'secondary' : 'surface-variant'"
+                  :variant="meetDay === i ? 'flat' : 'outlined'"
+                  label
+                  @click="meetDay = i; meetSlot = ''"
+                >
+                  {{ d.label }}
+                </VChip>
+              </div>
+              <div class="d-flex flex-wrap ga-2 mb-4">
+                <VChip
+                  v-for="(slot, si) in SLOTS"
+                  :key="slot"
+                  :color="slotBusy(meetDay, si) ? 'surface-variant' : 'secondary'"
+                  :variant="meetSlot === slot ? 'flat' : slotBusy(meetDay, si) ? 'text' : 'outlined'"
+                  :disabled="slotBusy(meetDay, si)"
+                  label
+                  @click="meetSlot = slot"
+                >
+                  <VIcon :icon="slotBusy(meetDay, si) ? 'mdi-lock-outline' : 'mdi-clock-outline'" start size="14" />
+                  {{ slot }}{{ slotBusy(meetDay, si) ? ' — محجوزة' : '' }}
+                </VChip>
+              </div>
+              <VTextField v-model="meetName" label="اسمك / جهتك" class="mb-3" />
+              <VTextField v-model="meetTopic" label="موضوع المقابلة (اختياري)" placeholder="مقابلة تعارف، مناقشة فرصة..." />
+            </template>
+            <VAlert v-else color="success" variant="tonal" border="start" density="compact">
+              وصل اقتراحك! سيؤكد الموعد أو يقترح بديلًا عبر المنصة.
+            </VAlert>
+          </VCardText>
+          <VCardActions v-if="!meetSent">
+            <VSpacer />
+            <VBtn variant="text" @click="scheduleDialog = false">إلغاء</VBtn>
+            <VBtn color="secondary" variant="flat" :disabled="!meetSlot || !meetName.trim()" prepend-icon="mdi-calendar-check-outline" @click="sendSchedule">اقتراح الموعد</VBtn>
+          </VCardActions>
+        </VCard>
+      </VDialog>
     </VContainer>
   </div>
 </template>
@@ -486,6 +668,10 @@ function postComment() {
 .quote-tile {
   background: rgba(var(--v-theme-primary), 0.05);
   border-inline-start: 3px solid rgb(var(--v-theme-primary));
+}
+
+.skill-row + .skill-row {
+  border-top: 1px solid rgba(128, 128, 128, 0.15);
 }
 
 /* شريط التنقّل اللاصق */

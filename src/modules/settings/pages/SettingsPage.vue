@@ -39,6 +39,7 @@ const SETTINGS_INDEX: SettingEntry[] = [
   { label: 'ثيم صفحتي وألوانها وشكل صورتي', tab: 'publicProfile', icon: 'mdi-palette-swatch-outline' },
   { label: 'حالتي المهنية (متاح للعمل) وعبارتي المؤثرة', tab: 'publicProfile', icon: 'mdi-account-badge-outline' },
   { label: 'نقاط القوة وترتيب أقسام صفحتي', tab: 'publicProfile', icon: 'mdi-sort' },
+  { label: 'زر جدولة مقابلة على صفحتي', tab: 'publicProfile', icon: 'mdi-calendar-clock-outline' },
   { label: 'الإنجازات ومعرض الأعمال والمهارات الظاهرة', tab: 'publicProfile', icon: 'mdi-rocket-launch-outline' },
   { label: 'إظهار وإخفاء أقسام صفحتي العامة', tab: 'publicProfile', icon: 'mdi-eye-settings-outline' },
   { label: 'إشراف تعليقات الزوار', tab: 'publicProfile', icon: 'mdi-comment-check-outline' },

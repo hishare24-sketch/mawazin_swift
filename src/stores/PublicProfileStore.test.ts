@@ -3,7 +3,8 @@ import { createPinia, setActivePinia } from 'pinia'
 import { useAccountPlanStore } from './AccountPlanStore'
 import { useMessagesStore } from './MessagesStore'
 import { useNotificationsStore } from './NotificationsStore'
-import { PROFILE_THEMES, usePublicProfileStore } from './PublicProfileStore'
+import { useProfileStore } from './ProfileStore'
+import { PROFILE_THEMES, smartPalette, usePublicProfileStore } from './PublicProfileStore'
 
 beforeEach(() => {
   localStorage.clear()
@@ -128,6 +129,47 @@ describe('publicProfileStore', () => {
     expect(p.themeStyles!['--pp-accent']).toBe(p.state.appearance.customColor)
     p.setTheme('platform')
     expect(p.themeStyles).toBeNull()
+  })
+
+  it('smart theme adapts to device mode and time of day', () => {
+    // اللكنة تتبع الوقت: باردة نهارًا ودافئة مساءً
+    expect(smartPalette(true, 11).accent).toBe('#38BDF8')
+    expect(smartPalette(true, 20).accent).toBe('#F59E0B')
+    expect(smartPalette(true, 3).accent).toBe('#F59E0B') // ما قبل الفجر مساءٌ حكمًا
+    // القاعدة تتبع جهاز الزائر: خلفية داكنة أو فاتحة
+    expect(smartPalette(true, 11).bg).not.toBe(smartPalette(false, 11).bg)
+    const p = usePublicProfileStore()
+    expect(p.setTheme('smart')).toBe(true) // متاح للجميع كالثيمات الجاهزة
+    expect(p.themeStyles).not.toBeNull()
+    expect(p.themeStyles!['--pp-accent']).toMatch(/^#(38BDF8|F59E0B)$/)
+  })
+
+  it('routes a visitor skill-proof request into the owner pending requests', () => {
+    const p = usePublicProfileStore()
+    const profile = useProfileStore()
+    const notifications = useNotificationsStore()
+    const before = profile.pendingProofRequests.length
+    expect(p.requestSkillProof('Vue.js', 'ليلى الحربي', 'زميلة سابقة')).toBe(true)
+    expect(profile.pendingProofRequests.length).toBe(before + 1)
+    expect(profile.pendingProofRequests[0].skill).toBe('Vue.js')
+    expect(profile.pendingProofRequests[0].from).toBe('ليلى الحربي')
+    expect(notifications.notifications[0].actionTo).toBe('/profile')
+  })
+
+  it('schedules a meeting into messages and respects the owner toggle', () => {
+    const p = usePublicProfileStore()
+    const messages = useMessagesStore()
+    const convCount = messages.conversations.length
+    const meetings = p.state.meetings
+    expect(p.scheduleMeeting('جهة مهتمة', 'الأحد 5 يوليو', '16:00', 'مناقشة تعاون')).toBe(true)
+    expect(messages.conversations.length).toBe(convCount + 1)
+    expect(messages.conversations[0].messages[0].text).toContain('16:00')
+    expect(p.state.meetings).toBe(meetings + 1)
+    expect(useNotificationsStore().notifications[0].category).toBe('interview')
+
+    p.state.schedulingEnabled = false // مفتاح صاحب الصفحة يوقف الجدولة
+    expect(p.scheduleMeeting('زائر آخر', 'الاثنين', '10:00', '')).toBe(false)
+    expect(messages.conversations.length).toBe(convCount + 1)
   })
 
   it('exposes the professional availability status with its meta', () => {

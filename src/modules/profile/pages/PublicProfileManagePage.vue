@@ -23,11 +23,13 @@ const subTab = ref<'identity' | 'appearance' | 'content' | 'visibility'>('identi
 
 // —— المظهر: الثيمات والحالة المهنية ونقاط القوة وترتيب الأقسام ——
 const THEME_CHOICES = computed(() => [
-  { key: 'platform' as ProfileThemeKey, label: 'ثيم المنصة', hint: 'يتبع مظهر المنصة تلقائيًا', dots: [] as string[] },
+  { key: 'platform' as ProfileThemeKey, label: 'ثيم المنصة', hint: 'يتبع مظهر المنصة تلقائيًا', icon: 'mdi-theme-light-dark', dots: [] as string[] },
+  { key: 'smart' as ProfileThemeKey, label: 'الذكي', hint: 'يتبع جهاز الزائر ووقت اليوم — دافئ مساءً وبارد نهارًا', icon: 'mdi-brightness-auto', dots: [] as string[] },
   ...Object.entries(PROFILE_THEMES).map(([key, p]) => ({
     key: key as ProfileThemeKey,
     label: p.label,
     hint: p.hint,
+    icon: '',
     dots: [p.bg, p.surface, p.accent],
   })),
 ])
@@ -270,7 +272,7 @@ function saved() {
                       <template v-if="th.dots.length">
                         <span v-for="(d, i) in th.dots" :key="i" class="theme-dot" :style="{ background: d }" />
                       </template>
-                      <VIcon v-else icon="mdi-theme-light-dark" size="16" color="primary" />
+                      <VIcon v-else :icon="th.icon" size="16" color="primary" />
                       <VIcon v-if="s.appearance.theme === th.key" icon="mdi-check-circle" size="16" color="primary" class="ms-auto" />
                     </div>
                     <div class="text-body-2 font-weight-bold">{{ th.label }}</div>
@@ -411,6 +413,7 @@ function saved() {
               </div>
               <VDivider class="my-3" />
               <VSwitch v-model="s.contactEnabled" label="زر «تواصل معي»" color="accent" hide-details density="compact" @update:model-value="saved" />
+              <VSwitch v-model="s.schedulingEnabled" label="زر «جدولة مقابلة»" color="secondary" hide-details density="compact" @update:model-value="saved" />
               <VSwitch
                 :model-value="roleProfiles.linkRolesPublicly"
                 label="ربط أدواري علنًا (شارات الأدوار)"

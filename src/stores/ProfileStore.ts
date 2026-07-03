@@ -124,6 +124,11 @@ export const useProfileStore = defineStore('profile', () => {
     { id: 1, from: 'أحمد المنصور', relation: 'مدير سابق', skill: 'القيادة', date: 'قبل يومين' },
     { id: 2, from: 'شركة تقنية المستقبل', relation: 'جهة توظيف', skill: 'Vue.js', date: 'قبل 4 أيام' },
   ])
+  let nextRequestId = 100
+  /** طلب إثبات وارد (من زائر الصفحة العامة أو زميل) ينتظر قرار صاحب الملف */
+  function addProofRequest(from: string, relation: string, skill: string) {
+    pendingProofRequests.value.unshift({ id: nextRequestId++, from, relation, skill, date: 'الآن' })
+  }
   function resolveProofRequest(id: number, accept: boolean) {
     const req = pendingProofRequests.value.find(r => r.id === id)
     if (req && accept) {
@@ -188,7 +193,7 @@ export const useProfileStore = defineStore('profile', () => {
 
   return {
     headline, summary, skills, experiences, certificates, prefs,
-    pendingProofRequests, unverifiedSkills, resolveProofRequest,
+    pendingProofRequests, unverifiedSkills, addProofRequest, resolveProofRequest,
     addSkill, removeSkill, addProof, addExperience, removeExperience, addCertificate, removeCertificate,
   }
 })
