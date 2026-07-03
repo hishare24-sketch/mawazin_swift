@@ -3,7 +3,7 @@ import { createPinia, setActivePinia } from 'pinia'
 import { useAccountPlanStore } from './AccountPlanStore'
 import { useMessagesStore } from './MessagesStore'
 import { useNotificationsStore } from './NotificationsStore'
-import { usePublicProfileStore } from './PublicProfileStore'
+import { PROFILE_THEMES, usePublicProfileStore } from './PublicProfileStore'
 
 beforeEach(() => {
   localStorage.clear()
@@ -112,6 +112,54 @@ describe('publicProfileStore', () => {
     expect(p.visibleComments.some(x => x.id === c.id)).toBe(false)
     p.removeComment(c.id)
     expect(p.state.comments.some(x => x.id === c.id)).toBe(false)
+  })
+
+  it('applies preset themes for everyone and gates the custom theme by plan', () => {
+    const p = usePublicProfileStore()
+    const plan = useAccountPlanStore()
+    plan.tier = 'free'
+    expect(p.themeStyles).toBeNull() // «ثيم المنصة» = لا حقن CSS
+    expect(p.setTheme('tech')).toBe(true) // الثيمات الجاهزة متاحة للجميع
+    expect(p.themeStyles!['--pp-accent']).toBe(PROFILE_THEMES.tech.accent)
+    expect(p.setTheme('custom')).toBe(false) // المخصص يتطلب الاحترافية
+    expect(p.state.appearance.theme).toBe('tech')
+    plan.tier = 'pro'
+    expect(p.setTheme('custom')).toBe(true)
+    expect(p.themeStyles!['--pp-accent']).toBe(p.state.appearance.customColor)
+    p.setTheme('platform')
+    expect(p.themeStyles).toBeNull()
+  })
+
+  it('exposes the professional availability status with its meta', () => {
+    const p = usePublicProfileStore()
+    expect(p.availabilityMeta.color).toBe('success') // seed: متاح للعمل
+    p.state.availability = { status: 'busy', message: 'أُنهي مشروعًا حتى نهاية الشهر' }
+    expect(p.availabilityMeta.label).toContain('مشغول')
+    expect(p.availabilityMeta.color).toBe('warning')
+  })
+
+  it('caps featured skills at five and keeps them within public skills', () => {
+    const p = usePublicProfileStore()
+    p.state.selectedSkillIds = [1, 2, 3, 4, 5, 6]
+    p.state.featuredSkillIds = []
+    expect(p.toggleFeaturedSkill(99)).toBe(false) // ليست ضمن المعروض علنًا
+    ;[1, 2, 3, 4, 5].forEach(id => expect(p.toggleFeaturedSkill(id)).toBe(true))
+    expect(p.toggleFeaturedSkill(6)).toBe(false) // السقف 5 نقاط قوة
+    expect(p.state.featuredSkillIds).toHaveLength(5)
+    expect(p.toggleFeaturedSkill(1)).toBe(true) // إلغاء التمييز متاح دائمًا
+    expect(p.state.featuredSkillIds).not.toContain(1)
+  })
+
+  it('reorders main sections within bounds and persists the order', async () => {
+    const p = usePublicProfileStore()
+    expect(p.state.sectionOrder[0]).toBe('story')
+    p.moveSection('story', -1) // عند الحد الأعلى لا يتحرك
+    expect(p.state.sectionOrder[0]).toBe('story')
+    p.moveSection('story', 1)
+    expect(p.state.sectionOrder.indexOf('story')).toBe(1)
+    await Promise.resolve()
+    await Promise.resolve()
+    expect(JSON.parse(localStorage.getItem('publicProfile')!).sectionOrder[1]).toBe('story')
   })
 
   it('exposes public url and skill selection subset', () => {

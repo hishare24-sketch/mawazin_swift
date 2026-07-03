@@ -4,7 +4,8 @@ import PageHeader from '@/components/shared/PageHeader.vue'
 import { ACCOUNT_TIER_META, useAccountPlanStore } from '@/stores/AccountPlanStore'
 import { useNotificationsStore } from '@/stores/NotificationsStore'
 import { useProfileStore } from '@/stores/ProfileStore'
-import { SECTION_TIER, usePublicProfileStore } from '@/stores/PublicProfileStore'
+import type { AvailabilityStatus, ProfileThemeKey } from '@/stores/PublicProfileStore'
+import { AVAILABILITY_META, PROFILE_THEMES, SECTION_TIER, usePublicProfileStore } from '@/stores/PublicProfileStore'
 import { useRoleProfilesStore } from '@/stores/RoleProfilesStore'
 
 // ===== إدارة الصفحة التعريفية — مقسومة لثلاث مهام واضحة: هويتي / محتواي / ظهوري =====
@@ -18,7 +19,36 @@ const notifications = useNotificationsStore()
 const plan = useAccountPlanStore()
 const s = computed(() => pub.state)
 
-const subTab = ref<'identity' | 'content' | 'visibility'>('identity')
+const subTab = ref<'identity' | 'appearance' | 'content' | 'visibility'>('identity')
+
+// —— المظهر: الثيمات والحالة المهنية ونقاط القوة وترتيب الأقسام ——
+const THEME_CHOICES = computed(() => [
+  { key: 'platform' as ProfileThemeKey, label: 'ثيم المنصة', hint: 'يتبع مظهر المنصة تلقائيًا', dots: [] as string[] },
+  ...Object.entries(PROFILE_THEMES).map(([key, p]) => ({
+    key: key as ProfileThemeKey,
+    label: p.label,
+    hint: p.hint,
+    dots: [p.bg, p.surface, p.accent],
+  })),
+])
+
+const AVAILABILITY_CHOICES = Object.entries(AVAILABILITY_META) as [AvailabilityStatus, typeof AVAILABILITY_META[AvailabilityStatus]][]
+
+const AVATAR_SHAPES = [
+  { value: 'circle', label: 'دائري', icon: 'mdi-circle-outline' },
+  { value: 'rounded', label: 'زوايا دائرية', icon: 'mdi-square-rounded-outline' },
+  { value: 'square', label: 'مربع', icon: 'mdi-square-outline' },
+] as const
+
+function pickTheme(key: ProfileThemeKey) {
+  if (pub.setTheme(key))
+    saved()
+}
+
+const canCustomTheme = computed(() => plan.atLeast('pro'))
+
+/** المهارات المرشّحة كنقاط قوة — من المهارات المعروضة علنًا فقط */
+const featuredCandidates = computed(() => profile.skills.filter(sk => s.value.selectedSkillIds.includes(sk.id)))
 
 const linkCopied = ref(false)
 function copyLink() {
@@ -124,6 +154,7 @@ function saved() {
     <!-- ثلاث مهام واضحة -->
     <VTabs v-model="subTab" color="primary" class="mb-4" grow>
       <VTab value="identity" prepend-icon="mdi-account-edit-outline">هويتي وقصتي</VTab>
+      <VTab value="appearance" prepend-icon="mdi-palette-swatch-outline">المظهر والحالة</VTab>
       <VTab value="content" prepend-icon="mdi-rocket-launch-outline">محتواي</VTab>
       <VTab value="visibility" prepend-icon="mdi-eye-settings-outline">
         الظهور والإشراف
@@ -141,6 +172,9 @@ function saved() {
             <VCol cols="12" sm="6"><VTextField v-model="s.location" label="الموقع" density="compact" @blur="saved" /></VCol>
             <VCol cols="12"><VTextField v-model="s.publicHeadline" label="المسمى التسويقي (يظهر تحت اسمك)" density="compact" @blur="saved" /></VCol>
             <VCol cols="12">
+              <VTextField v-model="s.tagline" label="عبارتك المؤثرة — جملة واحدة تلخّص رسالتك («أبني حلولًا تترك أثرًا»)" density="compact" prepend-inner-icon="mdi-format-quote-close" @blur="saved" />
+            </VCol>
+            <VCol cols="12">
               <VTextarea v-model="s.story" label="قصتك المهنية — اكتبها بلغة النتائج لا الصفات" rows="4" auto-grow counter="600" @blur="saved" />
             </VCol>
           </VRow>
@@ -154,6 +188,135 @@ function saved() {
             </VCol>
           </VRow>
         </VCard>
+      </VWindowItem>
+
+      <!-- ===== المظهر والحالة ===== -->
+      <VWindowItem value="appearance">
+        <VRow>
+          <VCol cols="12" md="6">
+            <!-- الحالة المهنية -->
+            <VCard class="pa-5 mb-4">
+              <h2 class="text-subtitle-1 font-weight-bold mb-1"><VIcon icon="mdi-account-badge-outline" size="20" color="success" class="me-1" />حالتي المهنية</h2>
+              <p class="text-caption text-medium-emphasis mb-3">تظهر في أعلى صفحتك — أخبر الزوار بجاهزيتك فورًا.</p>
+              <div class="d-flex flex-wrap ga-2 mb-3">
+                <VChip
+                  v-for="[status, meta] in AVAILABILITY_CHOICES"
+                  :key="status"
+                  :color="meta.color"
+                  :variant="s.availability.status === status ? 'flat' : 'outlined'"
+                  label
+                  @click="s.availability.status = status; saved()"
+                >
+                  <VIcon :icon="s.availability.status === status ? 'mdi-check-circle' : 'mdi-circle-outline'" start size="14" />{{ meta.label }}
+                </VChip>
+              </div>
+              <VTextField v-model="s.availability.message" label="رسالة مخصصة بجانب الحالة (اختياري)" density="compact" clearable @blur="saved" />
+            </VCard>
+
+            <!-- شكل الصورة والحركة -->
+            <VCard class="pa-5 mb-4">
+              <h2 class="text-subtitle-1 font-weight-bold mb-3"><VIcon icon="mdi-image-frame" size="20" color="secondary" class="me-1" />الصورة والحركة</h2>
+              <p class="text-caption text-medium-emphasis mb-2">شكل صورتك الشخصية:</p>
+              <VBtnToggle :model-value="s.appearance.avatarShape" density="compact" mandatory variant="outlined" divided class="mb-4" @update:model-value="s.appearance.avatarShape = $event; saved()">
+                <VBtn v-for="sh in AVATAR_SHAPES" :key="sh.value" :value="sh.value" size="small" :prepend-icon="sh.icon">{{ sh.label }}</VBtn>
+              </VBtnToggle>
+              <VSwitch
+                v-model="s.appearance.motion"
+                label="تأثيرات الحركة (تلاشي البطاقات ونبض الحالة)"
+                color="secondary"
+                hide-details
+                density="compact"
+                @update:model-value="saved"
+              />
+            </VCard>
+
+            <!-- نقاط القوة -->
+            <VCard class="pa-5">
+              <h2 class="text-subtitle-1 font-weight-bold mb-1">
+                <VIcon icon="mdi-star" size="20" color="accent" class="me-1" />نقاط القوة
+                <VChip size="x-small" variant="tonal" :color="s.featuredSkillIds.length >= 5 ? 'warning' : 'accent'" label class="ms-1">{{ s.featuredSkillIds.length }}/5</VChip>
+              </h2>
+              <p class="text-caption text-medium-emphasis mb-2">اختر حتى 5 مهارات رئيسية تُبرَز في أعلى قسم المهارات.</p>
+              <div class="d-flex flex-wrap ga-2">
+                <VChip
+                  v-for="sk in featuredCandidates"
+                  :key="sk.id"
+                  :color="s.featuredSkillIds.includes(sk.id) ? 'accent' : 'surface-variant'"
+                  :variant="s.featuredSkillIds.includes(sk.id) ? 'flat' : 'outlined'"
+                  label
+                  @click="pub.toggleFeaturedSkill(sk.id) && saved()"
+                >
+                  <VIcon :icon="s.featuredSkillIds.includes(sk.id) ? 'mdi-star' : 'mdi-star-outline'" start size="14" />{{ sk.name }}
+                </VChip>
+              </div>
+              <p v-if="!featuredCandidates.length" class="text-caption text-medium-emphasis mb-0 mt-2">أظهر مهارات أولًا من تبويب «محتواي».</p>
+            </VCard>
+          </VCol>
+
+          <VCol cols="12" md="6">
+            <!-- الثيمات الجاهزة -->
+            <VCard class="pa-5 mb-4">
+              <h2 class="text-subtitle-1 font-weight-bold mb-1"><VIcon icon="mdi-palette-swatch-outline" size="20" color="primary" class="me-1" />ثيم صفحتك</h2>
+              <p class="text-caption text-medium-emphasis mb-3">هوية بصرية كاملة لا مجرد لون — اختر ما يعكس شخصيتك المهنية.</p>
+              <VRow dense>
+                <VCol v-for="th in THEME_CHOICES" :key="th.key" cols="6">
+                  <VCard
+                    variant="outlined"
+                    class="pa-3 h-100 cursor-pointer"
+                    :class="{ 'border-primary border-opacity-100': s.appearance.theme === th.key }"
+                    @click="pickTheme(th.key)"
+                  >
+                    <div class="d-flex align-center ga-1 mb-1">
+                      <template v-if="th.dots.length">
+                        <span v-for="(d, i) in th.dots" :key="i" class="theme-dot" :style="{ background: d }" />
+                      </template>
+                      <VIcon v-else icon="mdi-theme-light-dark" size="16" color="primary" />
+                      <VIcon v-if="s.appearance.theme === th.key" icon="mdi-check-circle" size="16" color="primary" class="ms-auto" />
+                    </div>
+                    <div class="text-body-2 font-weight-bold">{{ th.label }}</div>
+                    <div class="text-caption text-medium-emphasis">{{ th.hint }}</div>
+                  </VCard>
+                </VCol>
+              </VRow>
+              <VDivider class="my-3" />
+              <!-- الثيم المخصص — ميزة الاحترافية -->
+              <div class="d-flex align-center ga-2 flex-wrap">
+                <VChip
+                  :color="s.appearance.theme === 'custom' ? 'primary' : 'surface-variant'"
+                  :variant="s.appearance.theme === 'custom' ? 'flat' : 'outlined'"
+                  label
+                  :disabled="!canCustomTheme"
+                  @click="pickTheme('custom')"
+                >
+                  <VIcon icon="mdi-eyedropper-variant" start size="14" />ثيم مخصص بلوني
+                </VChip>
+                <input
+                  v-if="canCustomTheme"
+                  v-model="s.appearance.customColor"
+                  type="color"
+                  class="color-input"
+                  :disabled="s.appearance.theme !== 'custom'"
+                  @change="saved"
+                >
+                <VChip v-if="!canCustomTheme" size="x-small" :color="ACCOUNT_TIER_META.pro.color" variant="tonal" label prepend-icon="mdi-lock-outline">
+                  {{ ACCOUNT_TIER_META.pro.label }}
+                </VChip>
+              </div>
+            </VCard>
+
+            <!-- ترتيب الأقسام -->
+            <VCard class="pa-5">
+              <h2 class="text-subtitle-1 font-weight-bold mb-1"><VIcon icon="mdi-sort" size="20" color="info" class="me-1" />ترتيب أقسام صفحتك</h2>
+              <p class="text-caption text-medium-emphasis mb-2">حرّك الأقسام لتقرر ما يقرؤه الزائر أولًا.</p>
+              <div v-for="(key, i) in s.sectionOrder" :key="key" class="d-flex align-center ga-2 py-1">
+                <VChip size="small" variant="tonal" color="info" label>{{ i + 1 }}</VChip>
+                <span class="text-body-2 flex-grow-1">{{ SECTION_LABELS[key] }}</span>
+                <VBtn icon="mdi-arrow-up" size="x-small" variant="text" :disabled="i === 0" @click="pub.moveSection(key, -1); saved()" />
+                <VBtn icon="mdi-arrow-down" size="x-small" variant="text" :disabled="i === s.sectionOrder.length - 1" @click="pub.moveSection(key, 1); saved()" />
+              </div>
+            </VCard>
+          </VCol>
+        </VRow>
       </VWindowItem>
 
       <!-- ===== محتواي ===== -->
@@ -318,3 +481,23 @@ function saved() {
     </VDialog>
   </div>
 </template>
+
+<style scoped>
+.theme-dot {
+  display: inline-block;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 1px solid rgba(128, 128, 128, 0.4);
+}
+
+.color-input {
+  width: 42px;
+  height: 30px;
+  padding: 0;
+  border: 1px solid rgba(128, 128, 128, 0.4);
+  border-radius: 6px;
+  background: transparent;
+  cursor: pointer;
+}
+</style>

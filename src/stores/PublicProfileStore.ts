@@ -76,6 +76,62 @@ export interface PageComment {
   hidden: boolean
 }
 
+// ===== المظهر: ثيمات الصفحة والحالة المهنية =====
+// «جمالية تأسر العين، وسهولة تأسر القلب» — الثيم هوية بصرية كاملة لا مجرد لون.
+
+export type ProfileThemeKey = 'platform' | 'professional' | 'tech' | 'creative' | 'innovator' | 'serene' | 'dark' | 'light' | 'custom'
+export type AvatarShape = 'circle' | 'rounded' | 'square'
+export type AvailabilityStatus = 'available' | 'busy' | 'unavailable'
+
+export interface ProfileThemePalette {
+  label: string
+  hint: string
+  bg: string
+  surface: string
+  text: string
+  muted: string
+  accent: string
+  onAccent: string
+  heroFrom: string
+  heroTo: string
+}
+
+/** الثيمات الجاهزة — كل ثيم شخصية مهنية (platform = يتبع ثيم المنصة، custom = من لون المستخدم) */
+export const PROFILE_THEMES: Record<Exclude<ProfileThemeKey, 'platform' | 'custom'>, ProfileThemePalette> = {
+  professional: { label: 'الاحترافي', hint: 'أزرق داكن هادئ — مستشارون ومدراء', bg: '#F4F7FB', surface: '#FFFFFF', text: '#1A2433', muted: '#5A6B7F', accent: '#1A365D', onAccent: '#FFFFFF', heroFrom: '#1A365D', heroTo: '#2C5282' },
+  tech: { label: 'التقني', hint: 'أزرق كهربائي على داكن — مطورون ومهندسون', bg: '#0D1B2A', surface: '#152638', text: '#E3F2FA', muted: '#8FA9BC', accent: '#00B4D8', onAccent: '#04222D', heroFrom: '#0D1B2A', heroTo: '#0A3552' },
+  creative: { label: 'الإبداعي', hint: 'أرجواني ووردي — مصممون وفنانون', bg: '#FBF7FF', surface: '#FFFFFF', text: '#2A1B3D', muted: '#7B6B8F', accent: '#7B2FBE', onAccent: '#FFFFFF', heroFrom: '#7B2FBE', heroTo: '#FF6B6B' },
+  innovator: { label: 'المبتكر', hint: 'ذهبي على أسود — روّاد أعمال', bg: '#141414', surface: '#1F1F1F', text: '#F5EFDC', muted: '#A79E85', accent: '#FFD700', onAccent: '#1A1A1A', heroFrom: '#1A1A1A', heroTo: '#4A3B00' },
+  serene: { label: 'الهادئ', hint: 'أخضر زيتي وبيج — مدربون ومستشارون', bg: '#F5F5DC', surface: '#FFFFFF', text: '#2B3A2C', muted: '#6E7B67', accent: '#2E7D32', onAccent: '#FFFFFF', heroFrom: '#2E7D32', heroTo: '#557C46' },
+  dark: { label: 'الداكن', hint: 'أسود متدرج — عشاق الوضع الليلي', bg: '#121212', surface: '#1E1E1E', text: '#EDEDED', muted: '#9A9A9A', accent: '#90CAF9', onAccent: '#0B1620', heroFrom: '#161616', heroTo: '#2A2A2A' },
+  light: { label: 'الفاتح', hint: 'أبيض وأزرق خفيف — الخيار الكلاسيكي', bg: '#F7FAFC', surface: '#FFFFFF', text: '#2D3748', muted: '#718096', accent: '#3182CE', onAccent: '#FFFFFF', heroFrom: '#2B6CB0', heroTo: '#4299E1' },
+}
+
+export const AVAILABILITY_META: Record<AvailabilityStatus, { label: string, color: string }> = {
+  available: { label: 'متاح للعمل', color: 'success' },
+  busy: { label: 'مشغول بمشروع', color: 'warning' },
+  unavailable: { label: 'غير متاح حاليًا', color: 'error' },
+}
+
+export interface ProfileAppearance {
+  theme: ProfileThemeKey
+  /** لون الثيم المخصص (hex) */
+  customColor: string
+  avatarShape: AvatarShape
+  /** تأثيرات الحركة (تلاشي/نبض) — قابلة للإيقاف */
+  motion: boolean
+}
+
+export interface Availability {
+  status: AvailabilityStatus
+  /** رسالة مخصصة تظهر بجانب الحالة */
+  message: string
+}
+
+/** أقسام العمود الرئيسي القابلة لإعادة الترتيب من الإعدادات */
+export const ORDERABLE_SECTIONS = ['story', 'achievements', 'experience', 'portfolio'] as const
+export type OrderableSection = typeof ORDERABLE_SECTIONS[number]
+
 // ===== التمكين حسب باقة الحساب الموحّدة (AccountPlanStore) =====
 // «لا فرق بين الحسابات ولا الأدوار — الباقة وحدها تحدد التمكين»
 export type ProfileTier = AccountTier
@@ -102,6 +158,14 @@ interface PublicProfileState {
   location: string
   /** السرد الممتد — قصة المستخدم بلغة النتائج لا لغة البيانات */
   story: string
+  /** العبارة المؤثرة — جملة قصيرة تلخّص الرسالة («أبني حلولًا تترك أثرًا») */
+  tagline: string
+  availability: Availability
+  appearance: ProfileAppearance
+  /** ترتيب أقسام العمود الرئيسي كما يظهر للزوار */
+  sectionOrder: OrderableSection[]
+  /** المهارات الرئيسية «نقاط القوة» — حتى 5 مهارات تُبرز في أعلى المهارات */
+  featuredSkillIds: number[]
   contactEnabled: boolean
   links: ContactLinks
   sections: PublicSections
@@ -131,6 +195,11 @@ const seed: PublicProfileState = {
   publicHeadline: 'مطوّر واجهات أمامية أول — Vue.js / TypeScript',
   location: 'الرياض، السعودية',
   story: 'أبني واجهات ويب سريعة وقابلة للتوسّع منذ خمس سنوات. أؤمن أن أفضل واجهة هي التي لا يلاحظها المستخدم — تعمل فحسب. عملت على منتجات وصلت لآلاف المستخدمين، وأبحث اليوم عن فريق يصنع منتجًا رقميًا مؤثرًا أنمو معه وأضيف إليه.',
+  tagline: 'أبني حلولًا تقنية تترك أثرًا',
+  availability: { status: 'available', message: 'منفتح على فرص Vue/TypeScript — عن بُعد أو في الرياض' },
+  appearance: { theme: 'platform', customColor: '#7B2FBE', avatarShape: 'circle', motion: true },
+  sectionOrder: ['story', 'achievements', 'experience', 'portfolio'],
+  featuredSkillIds: [1, 2],
   contactEnabled: true,
   links: {
     linkedin: 'https://linkedin.com/in/ahmed-almansour',
@@ -171,11 +240,20 @@ function load(): PublicProfileState {
     const stored = JSON.parse(localStorage.getItem(STORAGE_KEY) ?? '{}')
     const base = structuredClone(seed)
     // دمج عميق للكائنات المتداخلة كي تكتسب الجلسات القديمة المفاتيح الجديدة
+    // ترتيب الأقسام: نحافظ على ترتيب المستخدم ونُلحق أي أقسام جديدة لم يعرفها تخزينه القديم
+    const storedOrder: string[] = Array.isArray(stored.sectionOrder) ? stored.sectionOrder : []
+    const sectionOrder = [
+      ...storedOrder.filter((k): k is OrderableSection => (ORDERABLE_SECTIONS as readonly string[]).includes(k)),
+      ...ORDERABLE_SECTIONS.filter(k => !storedOrder.includes(k)),
+    ]
     return {
       ...base,
       ...stored,
       links: { ...base.links, ...(stored.links ?? {}) },
       sections: { ...base.sections, ...(stored.sections ?? {}) },
+      availability: { ...base.availability, ...(stored.availability ?? {}) },
+      appearance: { ...base.appearance, ...(stored.appearance ?? {}) },
+      sectionOrder,
     }
   }
   catch {
@@ -214,6 +292,91 @@ export const usePublicProfileStore = defineStore('publicProfile', () => {
   )
 
   const visibleTestimonials = computed(() => state.value.testimonials.filter(t => t.visible))
+
+  // ===== المظهر والحالة =====
+  const availabilityMeta = computed(() => AVAILABILITY_META[state.value.availability.status])
+
+  /** نص داكن أم فاتح فوق اللون المخصص؟ (استدلال إضاءة بسيط) */
+  function readableOn(hex: string): string {
+    const n = hex.replace('#', '')
+    if (n.length !== 6)
+      return '#FFFFFF'
+    const lum = 0.299 * parseInt(n.slice(0, 2), 16) + 0.587 * parseInt(n.slice(2, 4), 16) + 0.114 * parseInt(n.slice(4, 6), 16)
+    return lum > 150 ? '#101418' : '#FFFFFF'
+  }
+
+  function customPalette(accent: string): ProfileThemePalette {
+    return {
+      label: 'المخصص',
+      hint: 'لونك أنت',
+      bg: '#101418',
+      surface: '#1A2027',
+      text: '#ECEFF3',
+      muted: '#9AA6B2',
+      accent,
+      onAccent: readableOn(accent),
+      heroFrom: '#12161C',
+      heroTo: `${accent}59`,
+    }
+  }
+
+  /**
+   * متغيرات CSS للثيم المختار — null يعني «اتبع ثيم المنصة» (السلوك الافتراضي القديم).
+   * تُحقن في جذر الصفحة العامة فتصبغ الخلفية والبطاقات والألوان دون المساس بثيم التطبيق.
+   */
+  const themeStyles = computed<Record<string, string> | null>(() => {
+    const a = state.value.appearance
+    if (a.theme === 'platform')
+      return null
+    const p = a.theme === 'custom' ? customPalette(a.customColor) : PROFILE_THEMES[a.theme]
+    return {
+      '--pp-bg': p.bg,
+      '--pp-surface': p.surface,
+      '--pp-text': p.text,
+      '--pp-muted': p.muted,
+      '--pp-accent': p.accent,
+      '--pp-on-accent': p.onAccent,
+      '--pp-hero-from': p.heroFrom,
+      '--pp-hero-to': p.heroTo,
+    }
+  })
+
+  /** الثيمات الجاهزة للجميع؛ الثيم المخصص ميزة «الاحترافية» فأعلى */
+  function setTheme(key: ProfileThemeKey): boolean {
+    if (key === 'custom' && !useAccountPlanStore().atLeast('pro'))
+      return false
+    state.value.appearance.theme = key
+    return true
+  }
+
+  /** نقاط القوة: المهارات الرئيسية المميّزة من بين المهارات المعروضة علنًا */
+  const featuredSkills = computed(() =>
+    publicSkills.value.filter(s => state.value.featuredSkillIds.includes(s.id)),
+  )
+
+  const FEATURED_CAP = 5
+  function toggleFeaturedSkill(skillId: number): boolean {
+    const list = state.value.featuredSkillIds
+    if (list.includes(skillId)) {
+      state.value.featuredSkillIds = list.filter(x => x !== skillId)
+      return true
+    }
+    // لا تمييز لمهارة غير معروضة علنًا، ولا أكثر من 5 نقاط قوة
+    if (!state.value.selectedSkillIds.includes(skillId) || list.length >= FEATURED_CAP)
+      return false
+    state.value.featuredSkillIds = [...list, skillId]
+    return true
+  }
+
+  /** تحريك قسم في العمود الرئيسي خطوة أعلى/أسفل */
+  function moveSection(key: OrderableSection, dir: -1 | 1) {
+    const order = state.value.sectionOrder
+    const i = order.indexOf(key)
+    const j = i + dir
+    if (i < 0 || j < 0 || j >= order.length)
+      return
+    ;[order[i], order[j]] = [order[j], order[i]]
+  }
 
   /**
    * فسيفساء الأدوار: شارة لكل دور نشط بحقائق عامة آمنة —
@@ -391,6 +554,8 @@ export const usePublicProfileStore = defineStore('publicProfile', () => {
   return {
     state, displayName,
     verifiedFacts, publicSkills, visibleTestimonials, roleBadges,
+    availabilityMeta, themeStyles, setTheme,
+    featuredSkills, toggleFeaturedSkill, moveSection,
     recordView, recordShare,
     addAchievement, removeAchievement,
     addPortfolio, removePortfolio,

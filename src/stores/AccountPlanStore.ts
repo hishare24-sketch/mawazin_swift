@@ -32,6 +32,7 @@ export const TIER_FEATURES: TierFeature[] = [
   { label: 'الصفحة التعريفية: القصة والمهارات والمصداقية', icon: 'mdi-card-account-details-outline', tier: 'free' },
   { label: '3 استبيانات نشطة', icon: 'mdi-poll', tier: 'free' },
   { label: 'الصفحة التعريفية: إنجازات وخبرات ومعرض أعمال وتوصيات وشارات أدوار', icon: 'mdi-rocket-launch-outline', tier: 'pro' },
+  { label: 'ثيم مخصص بلونك الخاص لصفحتك التعريفية', icon: 'mdi-palette-outline', tier: 'pro' },
   { label: '10 استبيانات نشطة + الإدارة الاحترافية الكاملة', icon: 'mdi-cog-transfer-outline', tier: 'pro' },
   { label: 'إدارة الحسابات المفوَّضة (شركات وفرق)', icon: 'mdi-account-switch-outline', tier: 'pro' },
   { label: 'التفاعل الاجتماعي الكامل: متابعون وتقييم وتعليقات على صفحتك', icon: 'mdi-account-heart-outline', tier: 'elite' },
