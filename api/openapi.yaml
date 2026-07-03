@@ -1,0 +1,918 @@
+openapi: 3.1.0
+# ===== عقد الربط الخلفي — منظومة التوظيف الذكية =====
+# هذا العقد هو مصدر الحقيقة بين الواجهة (Vue/Pinia) والباك-إند القادم (Laravel).
+# كل مسار هنا يقابل وظيفة في مخزن Pinia — راجع DOC/BACKEND_INTEGRATION.md لخريطة المخازن.
+info:
+  title: Smart Recruitment System API
+  version: 1.0.0
+  description: |
+    REST API لمنظومة التوظيف الذكية. المصادقة عبر Bearer JWT.
+    الواجهة الحالية تحاكي كل هذه المسارات محليًا (Pinia + localStorage)؛
+    التبديل للحقيقي عبر VITE_USE_REAL_API=true دون تغيير واجهات المخازن.
+servers:
+  - url: http://localhost:8000/api/v1
+    description: بيئة التطوير المحلية (Laravel)
+security:
+  - bearerAuth: []
+
+paths:
+  # ===== المصادقة =====
+  /auth/register:
+    post:
+      tags: [Auth]
+      security: []
+      summary: تسجيل حساب جديد (كل الأدوار متاحة فورًا — فلسفة الحساب الموحد)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, email, password]
+              properties:
+                name: { type: string }
+                email: { type: string, format: email }
+                password: { type: string, format: password }
+      responses:
+        '201': { $ref: '#/components/responses/AuthSession' }
+        '422': { $ref: '#/components/responses/ValidationError' }
+  /auth/login:
+    post:
+      tags: [Auth]
+      security: []
+      summary: تسجيل الدخول
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [email, password]
+              properties:
+                email: { type: string, format: email }
+                password: { type: string, format: password }
+      responses:
+        '200': { $ref: '#/components/responses/AuthSession' }
+        '401': { $ref: '#/components/responses/Error' }
+  /auth/me:
+    get:
+      tags: [Auth]
+      summary: المستخدم الحالي بأدواره وباقته
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/AuthUser' }
+  /auth/logout:
+    post:
+      tags: [Auth]
+      summary: إنهاء الجلسة
+      responses:
+        '204': { description: تم }
+
+  # ===== الملف الخاص (لوحة القياس) =====
+  /profile:
+    get:
+      tags: [Profile]
+      summary: الملف الخاص كاملًا (مهارات/خبرات/شهادات/تفضيلات)
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PrivateProfile' }
+    patch:
+      tags: [Profile]
+      summary: تحديث حقول الملف (headline/summary/prefs)
+      requestBody:
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/PrivateProfile' }
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PrivateProfile' }
+  /profile/skills:
+    post:
+      tags: [Profile]
+      summary: إضافة مهارة (تبدأ بإثبات ذاتي)
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [name, selfLevel]
+              properties:
+                name: { type: string }
+                selfLevel: { type: integer, minimum: 1, maximum: 5 }
+                category: { type: string }
+      responses:
+        '201':
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Skill' }
+  /profile/skills/{skillId}:
+    delete:
+      tags: [Profile]
+      summary: حذف مهارة
+      parameters: [{ $ref: '#/components/parameters/skillId' }]
+      responses:
+        '204': { description: حُذفت }
+  /profile/skills/{skillId}/proofs:
+    post:
+      tags: [Profile]
+      summary: إضافة إثبات لمهارة (اختبار/توصية/مشروع/شهادة)
+      parameters: [{ $ref: '#/components/parameters/skillId' }]
+      requestBody:
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/SkillProof' }
+      responses:
+        '201':
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Skill' }
+  /profile/proof-requests:
+    get:
+      tags: [Profile]
+      summary: طلبات الإثبات المعلقة الواردة إليّ
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/ProofRequest' }
+  /profile/proof-requests/{id}/resolve:
+    post:
+      tags: [Profile]
+      summary: قبول أو رفض طلب إثبات (القبول يضيف توصية للمهارة)
+      parameters: [{ $ref: '#/components/parameters/id' }]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [accept]
+              properties:
+                accept: { type: boolean }
+      responses:
+        '204': { description: تمت المعالجة }
+
+  # ===== الصفحة التعريفية العامة =====
+  /public-profiles/{slug}:
+    get:
+      tags: [PublicProfile]
+      security: []
+      summary: الصفحة العامة لمستخدم (للزوار — بلا مصادقة)
+      parameters: [{ $ref: '#/components/parameters/slug' }]
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PublicProfile' }
+        '404': { $ref: '#/components/responses/Error' }
+  /public-profiles/me:
+    patch:
+      tags: [PublicProfile]
+      summary: تحديث صفحتي (الهوية/المظهر/الأقسام/المحتوى — نفس شكل الحالة المحلية)
+      requestBody:
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/PublicProfile' }
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PublicProfile' }
+  /public-profiles/{slug}/view:
+    post:
+      tags: [PublicProfile]
+      security: []
+      summary: تسجيل مشاهدة
+      parameters: [{ $ref: '#/components/parameters/slug' }]
+      responses:
+        '204': { description: سُجّلت }
+  /public-profiles/{slug}/follow:
+    post:
+      tags: [PublicProfile]
+      security: []
+      summary: متابعة/إلغاء متابعة (تبديل)
+      parameters: [{ $ref: '#/components/parameters/slug' }]
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  following: { type: boolean }
+                  followersCount: { type: integer }
+  /public-profiles/{slug}/rate:
+    post:
+      tags: [PublicProfile]
+      security: []
+      summary: تقييم الصفحة (تعديل التقييم لا يضاعف العداد)
+      parameters: [{ $ref: '#/components/parameters/slug' }]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [stars]
+              properties:
+                stars: { type: integer, minimum: 1, maximum: 5 }
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  avgRating: { type: number }
+                  ratingCount: { type: integer }
+  /public-profiles/{slug}/comments:
+    post:
+      tags: [PublicProfile]
+      security: []
+      summary: تعليق زائر (يخضع لإشراف صاحب الصفحة)
+      parameters: [{ $ref: '#/components/parameters/slug' }]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [author, text]
+              properties:
+                author: { type: string }
+                text: { type: string }
+      responses:
+        '201':
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/PageComment' }
+  /public-profiles/{slug}/contact:
+    post:
+      tags: [PublicProfile]
+      security: []
+      summary: «تواصل معي» — تصل رسائل صاحب الصفحة داخل المنصة
+      parameters: [{ $ref: '#/components/parameters/slug' }]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [visitorName, text]
+              properties:
+                visitorName: { type: string }
+                text: { type: string }
+      responses:
+        '204': { description: وصلت }
+  /public-profiles/{slug}/schedule:
+    post:
+      tags: [PublicProfile]
+      security: []
+      summary: اقتراح موعد مقابلة من زائر
+      parameters: [{ $ref: '#/components/parameters/slug' }]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [visitorName, day, slot]
+              properties:
+                visitorName: { type: string }
+                day: { type: string }
+                slot: { type: string }
+                topic: { type: string }
+      responses:
+        '204': { description: وصل الاقتراح }
+  /public-profiles/{slug}/testimonials:
+    post:
+      tags: [PublicProfile]
+      security: []
+      summary: توصية من زائر (تدخل مخفية حتى موافقة صاحب الصفحة)
+      parameters: [{ $ref: '#/components/parameters/slug' }]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [author, excerpt]
+              properties:
+                author: { type: string }
+                authorRole: { type: string }
+                excerpt: { type: string }
+      responses:
+        '201':
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Testimonial' }
+  /public-profiles/{slug}/proof-requests:
+    post:
+      tags: [PublicProfile]
+      security: []
+      summary: زائر يطلب إثبات مهارة من صاحب الصفحة
+      parameters: [{ $ref: '#/components/parameters/slug' }]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [skill, from]
+              properties:
+                skill: { type: string }
+                from: { type: string }
+                relation: { type: string }
+      responses:
+        '204': { description: وصل الطلب }
+
+  # ===== الفرص وسوق الطلبات =====
+  /opportunities:
+    get:
+      tags: [Marketplace]
+      summary: الفرص المنشورة (فلترة بالتصنيف/البحث)
+      parameters:
+        - { name: q, in: query, schema: { type: string } }
+        - { name: category, in: query, schema: { type: string } }
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Opportunity' }
+    post:
+      tags: [Marketplace]
+      summary: نشر فرصة (دور جهة التوظيف)
+      requestBody:
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/Opportunity' }
+      responses:
+        '201':
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Opportunity' }
+  /opportunities/{id}/apply:
+    post:
+      tags: [Marketplace]
+      summary: التقديم على فرصة
+      parameters: [{ $ref: '#/components/parameters/id' }]
+      responses:
+        '201': { description: قُدّم الطلب }
+  /requests:
+    get:
+      tags: [Marketplace]
+      summary: سوق الطلبات (وظيفة/مشروع/استشارة/مهمة)
+      parameters:
+        - { name: type, in: query, schema: { type: string, enum: [job, project, consultation, task] } }
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/MarketRequest' }
+  /requests/mine:
+    get:
+      tags: [Marketplace]
+      summary: طلباتي وحالاتها
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/MarketRequest' }
+
+  # ===== المقيّمون والحجوزات =====
+  /interviewers:
+    get:
+      tags: [Interviewers]
+      summary: سوق المقيّمين المعتمدين
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Interviewer' }
+  /interviewers/{id}/bookings:
+    post:
+      tags: [Interviewers]
+      summary: حجز جلسة تقييم (يوم/فترة/نوع/عناصر مخصصة)
+      parameters: [{ $ref: '#/components/parameters/id' }]
+      requestBody:
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/Booking' }
+      responses:
+        '201':
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Booking' }
+  /bookings/{id}:
+    patch:
+      tags: [Interviewers]
+      summary: تحديث حجز (قبول/رفض/إكمال مع تقرير)
+      parameters: [{ $ref: '#/components/parameters/id' }]
+      requestBody:
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/Booking' }
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Booking' }
+
+  # ===== المقابلات التكيفية (AI) =====
+  /interviews:
+    get:
+      tags: [Interviews]
+      summary: مقابلاتي (مجدولة/منجزة بنتائجها)
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Interview' }
+    post:
+      tags: [Interviews]
+      summary: بدء مقابلة تكيفية (مسار + إعدادات)
+      requestBody:
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/Interview' }
+      responses:
+        '201':
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Interview' }
+
+  # ===== الاستبيانات =====
+  /surveys:
+    get:
+      tags: [Surveys]
+      summary: استبياناتي (الدورة الإدارية بحالاتها الست)
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Survey' }
+    post:
+      tags: [Surveys]
+      summary: إنشاء استبيان (يخضع لحد الباقة)
+      requestBody:
+        content:
+          application/json:
+            schema: { $ref: '#/components/schemas/Survey' }
+      responses:
+        '201':
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Survey' }
+        '403': { $ref: '#/components/responses/Error' }
+  /surveys/{id}/responses:
+    post:
+      tags: [Surveys]
+      summary: إجابة مستبين (تصرف نقاطًا من مجمع الاستبيان)
+      parameters: [{ $ref: '#/components/parameters/id' }]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        '201': { description: سُجّلت الإجابة }
+
+  # ===== الإشعارات والرسائل =====
+  /notifications:
+    get:
+      tags: [Messaging]
+      summary: إشعاراتي
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Notification' }
+  /notifications/read-all:
+    post:
+      tags: [Messaging]
+      summary: تعليم الكل مقروءًا
+      responses:
+        '204': { description: تم }
+  /conversations:
+    get:
+      tags: [Messaging]
+      summary: محادثاتي
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/Conversation' }
+  /conversations/{id}/messages:
+    post:
+      tags: [Messaging]
+      summary: إرسال رسالة في محادثة
+      parameters: [{ $ref: '#/components/parameters/id' }]
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [text]
+              properties:
+                text: { type: string }
+      responses:
+        '201': { description: أُرسلت }
+
+  # ===== المحفظة وباقة الحساب =====
+  /wallet:
+    get:
+      tags: [Account]
+      summary: رصيدي وحركاتي
+      responses:
+        '200':
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/Wallet' }
+  /account/plan:
+    get:
+      tags: [Account]
+      summary: باقة الحساب الموحدة الحالية
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  tier: { type: string, enum: [free, pro, elite] }
+    put:
+      tags: [Account]
+      summary: ترقية/تخفيض الباقة (الترقية تُدفع من المحفظة)
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [tier]
+              properties:
+                tier: { type: string, enum: [free, pro, elite] }
+      responses:
+        '200': { description: تم التبديل }
+        '402': { $ref: '#/components/responses/Error' }
+
+  # ===== وسيط الذكاء الاصطناعي =====
+  /ai/{contract}:
+    post:
+      tags: [AI]
+      summary: |
+        وسيط Claude API — الواجهة لا تحمل مفتاح API أبدًا.
+        contract = اسم العقد في src/services/ai/types.ts (25+ عقدًا: assistantReply,
+        skillInsight, interviewHint, autoClassify, resumeReview, ...).
+        الخادم ينفّذ prompt العقد ويعيد JSON بنفس شكل mockAi.
+      parameters:
+        - name: contract
+          in: path
+          required: true
+          schema: { type: string }
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              additionalProperties: true
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: object
+                additionalProperties: true
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  parameters:
+    id:
+      name: id
+      in: path
+      required: true
+      schema: { type: integer }
+    skillId:
+      name: skillId
+      in: path
+      required: true
+      schema: { type: integer }
+    slug:
+      name: slug
+      in: path
+      required: true
+      schema: { type: string }
+  responses:
+    AuthSession:
+      description: جلسة مصادقة
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              token: { type: string }
+              user: { $ref: '#/components/schemas/AuthUser' }
+    Error:
+      description: خطأ
+      content:
+        application/json:
+          schema: { $ref: '#/components/schemas/ApiError' }
+    ValidationError:
+      description: خطأ تحقق (422 بأسلوب Laravel)
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message: { type: string }
+              errors:
+                type: object
+                additionalProperties:
+                  type: array
+                  items: { type: string }
+  schemas:
+    ApiError:
+      type: object
+      properties:
+        message: { type: string }
+        code: { type: string }
+    AuthUser:
+      type: object
+      properties:
+        id: { type: integer }
+        name: { type: string }
+        email: { type: string }
+        roles:
+          type: array
+          items: { type: string, enum: [seeker, company, endorser, admin, interviewer, coach, trainer, consultant] }
+        tier: { type: string, enum: [free, pro, elite] }
+    Skill:
+      type: object
+      properties:
+        id: { type: integer }
+        name: { type: string }
+        selfLevel: { type: integer, minimum: 1, maximum: 5 }
+        category: { type: string }
+        proofs:
+          type: array
+          items: { $ref: '#/components/schemas/SkillProof' }
+    SkillProof:
+      type: object
+      properties:
+        id: { type: integer }
+        type: { type: string, enum: [assessment, endorsement, project, certificate, self] }
+        label: { type: string }
+        date: { type: string }
+    ProofRequest:
+      type: object
+      properties:
+        id: { type: integer }
+        from: { type: string }
+        relation: { type: string }
+        skill: { type: string }
+        date: { type: string }
+    PrivateProfile:
+      type: object
+      properties:
+        headline: { type: string }
+        summary: { type: string }
+        skills:
+          type: array
+          items: { $ref: '#/components/schemas/Skill' }
+        experiences:
+          type: array
+          items:
+            type: object
+            properties:
+              id: { type: integer }
+              title: { type: string }
+              company: { type: string }
+              period: { type: string }
+              desc: { type: string }
+        certificates:
+          type: array
+          items:
+            type: object
+            properties:
+              id: { type: integer }
+              name: { type: string }
+              issuer: { type: string }
+              date: { type: string }
+    PublicProfile:
+      type: object
+      description: نفس شكل PublicProfileState في PublicProfileStore.ts (المصدر المرجعي)
+      properties:
+        slug: { type: string }
+        displayName: { type: string }
+        publicHeadline: { type: string }
+        tagline: { type: string }
+        bioShort: { type: string }
+        story: { type: string }
+        keywords:
+          type: array
+          items: { type: string }
+        location: { type: string }
+        timezone: { type: string }
+        avatarImage: { type: [string, 'null'], description: رابط صورة (الخادم يستضيفها بدل dataURL) }
+        availability:
+          type: object
+          properties:
+            status: { type: string, enum: [available, busy, unavailable] }
+            message: { type: string }
+        appearance:
+          type: object
+          description: الثيم والخط وشكل الصورة والحركة — كما في ProfileAppearance
+          additionalProperties: true
+        sectionOrder:
+          type: array
+          items: { type: string }
+        sections:
+          type: object
+          additionalProperties: { type: boolean }
+        links:
+          type: object
+          additionalProperties: { type: string }
+        customLinks:
+          type: array
+          items:
+            type: object
+            properties:
+              id: { type: integer }
+              label: { type: string }
+              url: { type: string }
+        achievements:
+          type: array
+          items:
+            type: object
+            properties:
+              id: { type: integer }
+              text: { type: string }
+              kind: { type: string, enum: [self, verified] }
+        portfolio:
+          type: array
+          items: { $ref: '#/components/schemas/PortfolioItem' }
+        testimonials:
+          type: array
+          items: { $ref: '#/components/schemas/Testimonial' }
+        stats:
+          type: object
+          description: عدادات الجذب (قراءة فقط للمالك)
+          properties:
+            views: { type: integer }
+            shares: { type: integer }
+            contacts: { type: integer }
+            meetings: { type: integer }
+            followersCount: { type: integer }
+            avgRating: { type: number }
+            ratingCount: { type: integer }
+    PortfolioItem:
+      type: object
+      properties:
+        id: { type: integer }
+        title: { type: string }
+        desc: { type: string }
+        tag: { type: string }
+        link: { type: string }
+        image: { type: string, description: رابط صورة مستضافة }
+    Testimonial:
+      type: object
+      properties:
+        id: { type: integer }
+        author: { type: string }
+        authorRole: { type: string }
+        excerpt: { type: string }
+        visible: { type: boolean }
+        likes: { type: integer }
+    PageComment:
+      type: object
+      properties:
+        id: { type: integer }
+        author: { type: string }
+        text: { type: string }
+        date: { type: string, format: date }
+        hidden: { type: boolean }
+    Opportunity:
+      type: object
+      properties:
+        id: { type: integer }
+        title: { type: string }
+        company: { type: string }
+        location: { type: string }
+        salary: { type: string }
+        category: { type: string }
+        skills:
+          type: array
+          items: { type: string }
+    MarketRequest:
+      type: object
+      properties:
+        id: { type: integer }
+        type: { type: string, enum: [job, project, consultation, task] }
+        title: { type: string }
+        org: { type: string }
+        state: { type: string, enum: [new, reviewing, accepted, closed] }
+        compensation: { type: string }
+        remote: { type: boolean }
+    Interviewer:
+      type: object
+      properties:
+        id: { type: integer }
+        name: { type: string }
+        specialty: { type: string }
+        rating: { type: number }
+        priceFrom: { type: number }
+        availability:
+          type: array
+          items: { type: string }
+    Booking:
+      type: object
+      properties:
+        id: { type: integer }
+        interviewerId: { type: integer }
+        day: { type: string }
+        slot: { type: string }
+        type: { type: string }
+        status: { type: string, enum: [pending, accepted, rejected, completed] }
+        elements:
+          type: array
+          items: { type: string }
+        report:
+          type: object
+          additionalProperties: true
+    Interview:
+      type: object
+      properties:
+        id: { type: integer }
+        track: { type: string, enum: [tech, management, design, data, support] }
+        status: { type: string }
+        score: { type: number }
+        integrity: { type: object, additionalProperties: true }
+    Survey:
+      type: object
+      properties:
+        id: { type: integer }
+        title: { type: string }
+        state: { type: string, enum: [draft, pending, active, paused, closed, archived] }
+        pointsPool: { type: integer }
+        targeting: { type: object, additionalProperties: true }
+        questions:
+          type: array
+          items: { type: object, additionalProperties: true }
+    Notification:
+      type: object
+      properties:
+        id: { type: integer }
+        icon: { type: string }
+        title: { type: string }
+        body: { type: string }
+        category: { type: string, enum: [opportunity, wish, endorsement, message, system, interview] }
+        read: { type: boolean }
+        actionTo: { type: string }
+    Conversation:
+      type: object
+      properties:
+        id: { type: integer }
+        withName: { type: string }
+        subject: { type: string }
+        messages:
+          type: array
+          items:
+            type: object
+            properties:
+              from: { type: string, enum: [me, them] }
+              text: { type: string }
+              at: { type: string, format: date-time }
+    Wallet:
+      type: object
+      properties:
+        balance: { type: number }
+        transactions:
+          type: array
+          items:
+            type: object
+            properties:
+              id: { type: integer }
+              amount: { type: number }
+              label: { type: string }
+              at: { type: string, format: date-time }
