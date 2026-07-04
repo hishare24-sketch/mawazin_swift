@@ -3,9 +3,8 @@ import { ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { landingFor } from '@/services/roles'
-import { supabaseEnabled } from '@/services/supabase'
 import { useAuthStore } from '@/stores/AuthStore'
-import { authService } from '../services/AuthService'
+import { authService, realAuthEnabled } from '../services/AuthService'
 
 const { t } = useI18n()
 const router = useRouter()
@@ -107,7 +106,7 @@ async function submit() {
     </div>
 
     <VAlert type="info" variant="tonal" density="compact" class="mt-6 text-caption">
-      <template v-if="supabaseEnabled">
+      <template v-if="realAuthEnabled">
         الحسابات حقيقية الآن (Supabase) — أنشئ حسابًا جديدًا أو ادخل بحساب سجّلته سابقًا.
       </template>
       <template v-else>

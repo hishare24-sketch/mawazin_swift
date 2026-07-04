@@ -1,0 +1,17 @@
+# يولَّد عند bootstrap (composer) — لا يُتتبَّع
+/vendor/
+/node_modules/
+/public/build/
+/public/hot
+/storage/*.key
+/storage/framework/
+/storage/logs/
+/bootstrap/cache/
+.env
+.env.backup
+.phpunit.result.cache
+_skeleton/
+Homestead.json
+Homestead.yaml
+npm-debug.log
+yarn-error.log

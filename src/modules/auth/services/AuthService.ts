@@ -1,7 +1,10 @@
 import type { User as SupabaseAuthUser } from '@supabase/supabase-js'
 import type { LoginPayload, RegisterPayload, User, UserRole } from '@/interfaces/Auth'
 import { ROLE_PERMISSIONS, defaultRoleEntries } from '@/services/roles'
-import { getSupabase } from '@/services/supabase'
+import { getSupabase, supabaseEnabled } from '@/services/supabase'
+
+/** هل المصادقة على باك-إند حقيقي؟ — يستهلكه العرض دون معرفة المزوّد */
+export const realAuthEnabled = supabaseEnabled
 
 function buildMockUser(partial: Partial<User> & Pick<User, 'email' | 'role' | 'name'>): User {
   return {
