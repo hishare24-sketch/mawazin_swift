@@ -3,35 +3,36 @@
 باك-إند منظومة التوظيف الذكية، يُنفّذ عقد [`../api/openapi.yaml`](../api/openapi.yaml).
 جزء من monorepo (الواجهة في الجذر، الباك-إند هنا).
 
-## المتطلبات
+الملفات هنا **دلتا التطبيق** (متحكّمات، مسارات، هجرات، إعدادات) فوق هيكل Laravel القياسي — نفس الكود في المسارين، تختلف القاعدة/الخادم عبر `.env` فقط.
 
-**Docker وحده** — لا حاجة لـ PHP/Composer محليًّا؛ كل شيء داخل الحاويات.
+## المسار (أ) — الأسهل للتطوير المحلي: Laravel Herd + SQLite (بلا Docker)
 
-## التشغيل الأول (bootstrap)
+1. ثبّت **[Laravel Herd](https://herd.laravel.com)** لويندوز (مثبّت واحد يتضمّن PHP + Composer + خادم — مجاني).
+2. من **Git Bash** في مجلّد `backend`:
+   ```bash
+   # توليد هيكل Laravel ودمج دلتانا (Composer يأتي مع Herd)
+   composer create-project laravel/laravel:^10.0 _skeleton && cp -rn _skeleton/. . && rm -rf _skeleton && composer require laravel/sanctum
+   cp .env.example .env
+   touch database/database.sqlite      # قاعدة SQLite (ملف واحد)
+   php artisan key:generate
+   php artisan migrate
+   php artisan serve                   # الـAPI على http://localhost:8000
+   ```
+3. اختبار: `curl -X POST http://localhost:8000/api/v1/auth/register -H "Content-Type: application/json" -d '{"name":"تجربة","email":"t@t.com","password":"secret12"}'`
 
-الملفات هنا هي **دلتا التطبيق** (متحكّمات، مسارات، هجرات، إعدادات) فوق هيكل Laravel القياسي. الخطوة الأولى تولّد الهيكل ثم تُبقي دلتانا:
+## المسار (ب) — للفريق/الإنتاج: Docker + Nginx + Postgres
 
 ```bash
 cd backend
-
-# 1) توليد هيكل Laravel 10 في مجلّد مؤقّت ثم دمجه (يحافظ على ملفاتنا)
 docker run --rm -v "$PWD":/app -w /app composer:2 \
-  bash -c "composer create-project laravel/laravel:^10.0 _skeleton && \
-           cp -rn _skeleton/. . && rm -rf _skeleton && \
-           composer require laravel/sanctum"
-
-# 2) الإعداد
+  bash -c "composer create-project laravel/laravel:^10.0 _skeleton && cp -rn _skeleton/. . && rm -rf _skeleton && composer require laravel/sanctum"
 cp .env.example .env
-
-# 3) رفع الحاويات (php-fpm + nginx + postgres)
 docker compose up -d
-
-# 4) المفتاح + الهجرات
 docker compose exec app php artisan key:generate
-docker compose exec app php artisan migrate
+docker compose exec app php artisan migrate   # compose يفرض Postgres تلقائيًا
 ```
 
-الـAPI على `http://localhost:8000/api/v1`. حدّث الواجهة: `VITE_USE_REAL_API=true` و`VITE_BASE_API_URL=http://localhost:8000/api/v1`.
+> ربط الواجهة (المسارين): `VITE_USE_REAL_API=true` و`VITE_BASE_API_URL=http://localhost:8000/api/v1`.
 
 ## البنية (دلتا التطبيق)
 
