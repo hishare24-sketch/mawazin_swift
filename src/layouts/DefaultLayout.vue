@@ -3,6 +3,7 @@ import { computed, onBeforeUnmount, onMounted, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { useDisplay } from 'vuetify'
+import { authService } from '@/modules/auth/services/AuthService'
 import { useAuthStore } from '@/stores/AuthStore'
 import { useNotificationsStore } from '@/stores/NotificationsStore'
 import { useMessagesStore } from '@/stores/MessagesStore'
@@ -123,6 +124,7 @@ function toggleLocale() {
 }
 
 function logout() {
+  authService.logout() // ينهي جلسة Supabase أيضًا إن كانت مفعّلة
   authStore.clearAuthUser()
   router.push({ name: 'login' })
 }

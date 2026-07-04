@@ -72,8 +72,8 @@ async function submit() {
     else
       router.push({ name: 'dashboard' })
   }
-  catch {
-    error.value = 'تعذّر إنشاء الحساب. حاول مرة أخرى.'
+  catch (e) {
+    error.value = (e as Error).message || 'تعذّر إنشاء الحساب. حاول مرة أخرى.'
   }
   finally {
     isLoading.value = false

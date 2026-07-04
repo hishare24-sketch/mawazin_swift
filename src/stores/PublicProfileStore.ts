@@ -396,17 +396,40 @@ export const usePublicProfileStore = defineStore('publicProfile', () => {
   const syncStatus = ref<'off' | 'synced' | 'saving' | 'error'>(remote ? 'saving' : 'off')
   if (remote) {
     let applyingRemote = false
-    remote.from('public_profiles').select('data').eq('slug', state.value.slug).maybeSingle()
-      .then(({ data, error }) => {
-        if (!error && data?.data) {
-          applyingRemote = true
-          state.value = mergeStored(data.data as Partial<PublicProfileState>)
+    /** معرّف الجلسة الحقيقية إن وُجدت — أساس الملكية */
+    const sessionUid = async () => (await remote.auth.getSession()).data.session?.user?.id ?? null
+
+    // الإقلاع: صفّ المستخدم المملوك أولًا (إن سجّل دخولًا حقيقيًا)، وإلا الصف بالمعرّف
+    ;(async () => {
+      const uid = await sessionUid()
+      let row: { data: unknown } | null = null
+      if (uid) {
+        const { data } = await remote.from('public_profiles').select('data').eq('owner_id', uid).maybeSingle()
+        row = data
+      }
+      if (!row) {
+        const { data, error } = await remote.from('public_profiles').select('data').eq('slug', state.value.slug).maybeSingle()
+        if (error) {
+          syncStatus.value = 'error'
+          return
         }
-        syncStatus.value = error ? 'error' : 'synced'
-      })
-    const push = debounce((v: PublicProfileState) => {
+        row = data
+      }
+      if (row?.data) {
+        applyingRemote = true
+        state.value = mergeStored(row.data as Partial<PublicProfileState>)
+      }
+      syncStatus.value = 'synced'
+    })()
+
+    const push = debounce(async (v: PublicProfileState) => {
+      // الحفظ بجلسة حقيقية يدّعي الصف لصاحبه (owner_id) — وسياسات RLS تمنع غيره عنه
+      const uid = await sessionUid()
+      const payload: Record<string, unknown> = { slug: v.slug, data: v, updated_at: new Date().toISOString() }
+      if (uid)
+        payload.owner_id = uid
       remote.from('public_profiles')
-        .upsert({ slug: v.slug, data: v, updated_at: new Date().toISOString() })
+        .upsert(payload)
         .then(({ error }) => (syncStatus.value = error ? 'error' : 'synced'))
     }, 1200)
     watch(state, (v) => {

@@ -3,6 +3,7 @@ import { ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import { landingFor } from '@/services/roles'
+import { supabaseEnabled } from '@/services/supabase'
 import { useAuthStore } from '@/stores/AuthStore'
 import { authService } from '../services/AuthService'
 
@@ -37,8 +38,8 @@ async function submit() {
     else
       router.push({ name: landingFor(authStore.role, authStore.activeRoles.length) })
   }
-  catch {
-    error.value = 'فشل تسجيل الدخول. تحقق من بياناتك.'
+  catch (e) {
+    error.value = (e as Error).message || 'فشل تسجيل الدخول. تحقق من بياناتك.'
   }
   finally {
     isLoading.value = false
@@ -106,7 +107,12 @@ async function submit() {
     </div>
 
     <VAlert type="info" variant="tonal" density="compact" class="mt-6 text-caption">
-      تجربة: أدخل أي بريد وكلمة مرور. لتجربة دور آخر اكتب كلمة company أو admin داخل البريد.
+      <template v-if="supabaseEnabled">
+        الحسابات حقيقية الآن (Supabase) — أنشئ حسابًا جديدًا أو ادخل بحساب سجّلته سابقًا.
+      </template>
+      <template v-else>
+        تجربة: أدخل أي بريد وكلمة مرور. لتجربة دور آخر اكتب كلمة company أو admin داخل البريد.
+      </template>
     </VAlert>
   </div>
 </template>

@@ -19,7 +19,8 @@ export function getSupabase(): SupabaseClient | null {
   if (!supabaseEnabled)
     return null
   client ??= createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-    auth: { persistSession: false },
+    // جلسة حقيقية محفوظة ومتجددة — أساس الملكية (auth.uid) في سياسات RLS
+    auth: { persistSession: true, autoRefreshToken: true },
   })
   return client
 }
