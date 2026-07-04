@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import { computed, ref, watch } from 'vue'
+import { syncPrivateDoc } from '@/services/cloudSync'
 
 const STORAGE_KEY = 'savedOpportunities'
 
@@ -20,6 +21,17 @@ export const useSavedStore = defineStore('saved', () => {
 
   watch(savedIds, val => localStorage.setItem(STORAGE_KEY, JSON.stringify(val)), { deep: true })
 
+  // مزامنة سحابية خاصة — بجلسة حقيقية فقط (DOC/CLOUD_SYNC.md)
+  const { status: syncStatus } = syncPrivateDoc({
+    store: 'saved',
+    snapshot: () => savedIds.value,
+    apply: (incoming) => {
+      if (Array.isArray(incoming))
+        savedIds.value = incoming as number[]
+    },
+    source: savedIds,
+  })
+
   const count = computed(() => savedIds.value.length)
 
   function isSaved(id: number): boolean {
@@ -33,5 +45,5 @@ export const useSavedStore = defineStore('saved', () => {
       savedIds.value.push(id)
   }
 
-  return { savedIds, count, isSaved, toggle }
+  return { savedIds, syncStatus, count, isSaved, toggle }
 })

@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import { computed, ref, watch } from 'vue'
+import { syncPrivateDoc } from '@/services/cloudSync'
 import { useNotificationsStore } from '@/stores/NotificationsStore'
 
 export type WishStatus = 'new' | 'pending' | 'accepted' | 'rejected'
@@ -128,6 +129,22 @@ export const useWishesStore = defineStore('wishes', () => {
   watch(sent, v => localStorage.setItem(SENT_KEY, JSON.stringify(v)), { deep: true })
   watch(received, v => localStorage.setItem(RECEIVED_KEY, JSON.stringify(v)), { deep: true })
 
+  // مزامنة سحابية خاصة — بجلسة حقيقية فقط (DOC/CLOUD_SYNC.md)
+  const { status: syncStatus } = syncPrivateDoc({
+    store: 'wishes',
+    snapshot: () => ({ wishes: wishes.value, sent: sent.value, received: received.value }),
+    apply: (incoming) => {
+      const d = incoming as { wishes?: Wish[], sent?: SentWish[], received?: ReceivedOffer[] }
+      if (Array.isArray(d.wishes))
+        wishes.value = d.wishes
+      if (Array.isArray(d.sent))
+        sent.value = d.sent
+      if (Array.isArray(d.received))
+        received.value = d.received
+    },
+    source: [wishes, sent, received],
+  })
+
   let nextSentId = Math.max(0, ...sentSeed.map(s => s.id)) + 100
   const sentActive = computed(() => sent.value.filter(s => s.status !== 'withdrawn'))
   const sentAccepted = computed(() => sent.value.filter(s => s.status === 'accepted').length)
@@ -231,7 +248,7 @@ export const useWishesStore = defineStore('wishes', () => {
   }
 
   return {
-    wishes, total, pendingCount, acceptedCount, rejectedCount, setStatus,
+    wishes, syncStatus, total, pendingCount, acceptedCount, rejectedCount, setStatus,
     sent, received, sentActive, sentAccepted, sentPending, acceptanceRate, newOffersCount,
     sendWish, updateWish, withdrawWish, resendWish, respondOffer, negotiateOffer,
   }

@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import { computed, ref, watch } from 'vue'
+import { syncPrivateDoc } from '@/services/cloudSync'
 
 // Public dual-rating system: candidate ⇄ interviewer.
 // A review targets a "subject" — an interviewer (id as string) or the current
@@ -65,6 +66,17 @@ export const useReviewsStore = defineStore('reviews', () => {
 
   watch(reviews, val => localStorage.setItem(STORAGE_KEY, JSON.stringify(val)), { deep: true })
 
+  // مزامنة سحابية خاصة — بجلسة حقيقية فقط (DOC/CLOUD_SYNC.md)
+  const { status: syncStatus } = syncPrivateDoc({
+    store: 'reviews',
+    snapshot: () => reviews.value,
+    apply: (incoming) => {
+      if (Array.isArray(incoming))
+        reviews.value = incoming as Review[]
+    },
+    source: reviews,
+  })
+
   function forSubject(direction: ReviewDirection, subjectId: string) {
     return reviews.value
       .filter(r => r.direction === direction && r.subjectId === subjectId)
@@ -89,5 +101,5 @@ export const useReviewsStore = defineStore('reviews', () => {
       r.reply = { text: text.trim(), date: today() }
   }
 
-  return { reviews, forSubject, averageFor, countFor, addReview, addReply }
+  return { reviews, syncStatus, forSubject, averageFor, countFor, addReview, addReply }
 })

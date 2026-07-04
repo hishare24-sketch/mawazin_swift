@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { computed, ref, watch } from 'vue'
 import { ai } from '@/services/ai'
+import { syncPrivateDoc } from '@/services/cloudSync'
 import { useWalletStore } from '@/stores/WalletStore'
 
 export type InterviewerType = 'technical' | 'leadership' | 'behavioral' | 'specialist'
@@ -301,6 +302,24 @@ export const useInterviewersStore = defineStore('interviewers', () => {
   watch(pricing, val => localStorage.setItem(PRICING_STORAGE, JSON.stringify(val)), { deep: true })
   watch(myEvalElements, val => localStorage.setItem(MY_ELEMENTS_STORAGE, JSON.stringify(val)), { deep: true })
 
+  // مزامنة سحابية خاصة — بجلسة حقيقية فقط (DOC/CLOUD_SYNC.md)
+  const { status: syncStatus } = syncPrivateDoc({
+    store: 'interviewerWorkspace',
+    snapshot: () => ({ bookings: bookings.value, agenda: agenda.value, pricing: pricing.value, myEvalElements: myEvalElements.value }),
+    apply: (incoming) => {
+      const d = incoming as { bookings?: Booking[], agenda?: AgendaItem[], pricing?: Record<MarketInterviewKind, number>, myEvalElements?: CustomEvalElement[] }
+      if (Array.isArray(d.bookings))
+        bookings.value = d.bookings
+      if (Array.isArray(d.agenda))
+        agenda.value = d.agenda
+      if (d.pricing && typeof d.pricing === 'object')
+        pricing.value = d.pricing
+      if (Array.isArray(d.myEvalElements))
+        myEvalElements.value = d.myEvalElements
+    },
+    source: [bookings, agenda, pricing, myEvalElements],
+  })
+
   const fields = computed(() => [...new Set(interviewers.value.map(i => i.field))])
 
   function getById(id: number) {
@@ -423,7 +442,7 @@ export const useInterviewersStore = defineStore('interviewers', () => {
   })
 
   return {
-    interviewers, bookings, agenda, pricing, myEvalElements, fields,
+    interviewers, bookings, agenda, pricing, myEvalElements, syncStatus, fields,
     getById, recommendedFor, matchFor, book, rateBooking, reschedule, addAttachment,
     completedReports, trustValue,
     getAgendaItem, acceptRequest, declineRequest, completeSession, setPrice,

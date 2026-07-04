@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import { computed, ref, watch } from 'vue'
+import { syncPrivateDoc } from '@/services/cloudSync'
 import { useGamificationStore } from '@/stores/GamificationStore'
 import { useInterviewersStore } from '@/stores/InterviewersStore'
 import { useNotificationsStore } from '@/stores/NotificationsStore'
@@ -102,6 +103,17 @@ let nextId = 500
 export const useInterviewerBrandStore = defineStore('interviewerBrand', () => {
   const state = ref<BrandState>(load())
   watch(state, v => localStorage.setItem(STORAGE_KEY, JSON.stringify(v)), { deep: true })
+
+  // مزامنة سحابية خاصة — بجلسة حقيقية فقط (DOC/CLOUD_SYNC.md)
+  const { status: syncStatus } = syncPrivateDoc({
+    store: 'interviewerBrand',
+    snapshot: () => state.value,
+    apply: (incoming) => {
+      if (incoming && typeof incoming === 'object')
+        state.value = { ...state.value, ...(incoming as Partial<BrandState>) }
+    },
+    source: state,
+  })
 
   const interviewersStore = useInterviewersStore()
   const me = computed(() => interviewersStore.getById(MY_INTERVIEWER_ID))
@@ -304,7 +316,7 @@ export const useInterviewerBrandStore = defineStore('interviewerBrand', () => {
   }
 
   return {
-    state, me,
+    state, syncStatus, me,
     marketingStats, recordView, recordShare,
     candidateImprovement, achievements, isAmbassador,
     toggleFeaturedReview,

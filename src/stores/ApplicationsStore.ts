@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { computed, ref, watch } from 'vue'
 import type { Opportunity } from '@/modules/opportunities/interfaces/Opportunity'
+import { syncPrivateDoc } from '@/services/cloudSync'
 
 export type ApplicationStatus = 'submitted' | 'reviewing' | 'interview' | 'rejected' | 'accepted'
 
@@ -41,6 +42,17 @@ export const useApplicationsStore = defineStore('applications', () => {
 
   watch(applications, val => localStorage.setItem(STORAGE_KEY, JSON.stringify(val)), { deep: true })
 
+  // مزامنة سحابية خاصة — بجلسة حقيقية فقط (DOC/CLOUD_SYNC.md)
+  const { status: syncStatus } = syncPrivateDoc({
+    store: 'applications',
+    snapshot: () => applications.value,
+    apply: (incoming) => {
+      if (Array.isArray(incoming))
+        applications.value = incoming as Application[]
+    },
+    source: applications,
+  })
+
   const count = computed(() => applications.value.length)
   const byStatus = (status: ApplicationStatus) => applications.value.filter(a => a.status === status)
 
@@ -67,5 +79,5 @@ export const useApplicationsStore = defineStore('applications', () => {
     applications.value = applications.value.filter(a => a.id !== id)
   }
 
-  return { applications, count, byStatus, hasApplied, apply, withdraw }
+  return { applications, syncStatus, count, byStatus, hasApplied, apply, withdraw }
 })

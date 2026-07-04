@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import { computed, ref, watch } from 'vue'
+import { syncPrivateDoc } from '@/services/cloudSync'
 
 export interface EndorsementRequest {
   id: number
@@ -52,6 +53,20 @@ export const useEndorserStore = defineStore('endorser', () => {
     localStorage.setItem(STORAGE_KEY, JSON.stringify({ requests: requests.value, given: given.value }))
   }, { deep: true })
 
+  // مزامنة سحابية خاصة — بجلسة حقيقية فقط (DOC/CLOUD_SYNC.md)
+  const { status: syncStatus } = syncPrivateDoc({
+    store: 'endorser',
+    snapshot: () => ({ requests: requests.value, given: given.value }),
+    apply: (incoming) => {
+      const d = incoming as { requests?: EndorsementRequest[], given?: GivenEndorsement[] }
+      if (Array.isArray(d.requests))
+        requests.value = d.requests
+      if (Array.isArray(d.given))
+        given.value = d.given
+    },
+    source: [requests, given],
+  })
+
   const pendingCount = computed(() => requests.value.length)
   const givenCount = computed(() => given.value.length)
   const totalViews = computed(() => given.value.reduce((sum, g) => sum + g.views, 0))
@@ -69,5 +84,5 @@ export const useEndorserStore = defineStore('endorser', () => {
       requests.value = requests.value.filter(r => r.id !== req.id)
   }
 
-  return { requests, given, pendingCount, givenCount, totalViews, getRequest, submit }
+  return { requests, given, syncStatus, pendingCount, givenCount, totalViews, getRequest, submit }
 })

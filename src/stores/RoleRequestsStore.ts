@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { computed, ref, watch } from 'vue'
 import type { UserRole } from '@/interfaces/Auth'
+import { syncPrivateDoc } from '@/services/cloudSync'
 import { useAuthStore } from '@/stores/AuthStore'
 import { useNotificationsStore } from '@/stores/NotificationsStore'
 
@@ -40,6 +41,17 @@ let nextId = 900
 export const useRoleRequestsStore = defineStore('roleRequests', () => {
   const requests = ref<RoleRequest[]>(load())
   watch(requests, v => localStorage.setItem(STORAGE_KEY, JSON.stringify(v)), { deep: true })
+
+  // مزامنة سحابية خاصة — بجلسة حقيقية فقط (DOC/CLOUD_SYNC.md)
+  const { status: syncStatus } = syncPrivateDoc({
+    store: 'roleRequests',
+    snapshot: () => requests.value,
+    apply: (incoming) => {
+      if (Array.isArray(incoming))
+        requests.value = incoming as RoleRequest[]
+    },
+    source: requests,
+  })
 
   const pending = computed(() => requests.value.filter(r => r.status === 'pending'))
 
@@ -99,5 +111,5 @@ export const useRoleRequestsStore = defineStore('roleRequests', () => {
     }, delayMs)
   }
 
-  return { requests, pending, add, decide, simulatePlatformReview }
+  return { requests, syncStatus, pending, add, decide, simulatePlatformReview }
 })

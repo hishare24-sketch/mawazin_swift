@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import { computed, ref, watch } from 'vue'
+import { syncPrivateDoc } from '@/services/cloudSync'
 
 export interface Resume {
   id: number
@@ -37,6 +38,17 @@ export const useResumesStore = defineStore('resumes', () => {
 
   watch(resumes, val => localStorage.setItem(STORAGE_KEY, JSON.stringify(val)), { deep: true })
 
+  // مزامنة سحابية خاصة — بجلسة حقيقية فقط (DOC/CLOUD_SYNC.md)
+  const { status: syncStatus } = syncPrivateDoc({
+    store: 'resumes',
+    snapshot: () => resumes.value,
+    apply: (incoming) => {
+      if (Array.isArray(incoming))
+        resumes.value = incoming as Resume[]
+    },
+    source: resumes,
+  })
+
   const count = computed(() => resumes.value.length)
   const active = computed(() => resumes.value.find(r => r.active) ?? resumes.value[0])
 
@@ -64,5 +76,5 @@ export const useResumesStore = defineStore('resumes', () => {
       resumes.value[0].active = true
   }
 
-  return { resumes, count, active, add, setActive, remove }
+  return { resumes, syncStatus, count, active, add, setActive, remove }
 })

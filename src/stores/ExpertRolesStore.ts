@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import { computed, ref, watch } from 'vue'
+import { syncPrivateDoc } from '@/services/cloudSync'
 import { useNotificationsStore } from '@/stores/NotificationsStore'
 import { useWalletStore } from '@/stores/WalletStore'
 
@@ -136,6 +137,17 @@ export const useExpertRolesStore = defineStore('expertRoles', () => {
   const state = ref<ExpertState>(load())
   watch(state, v => localStorage.setItem(STORAGE_KEY, JSON.stringify(v)), { deep: true })
 
+  // مزامنة سحابية خاصة — بجلسة حقيقية فقط (DOC/CLOUD_SYNC.md)
+  const { status: syncStatus } = syncPrivateDoc({
+    store: 'expertRoles',
+    snapshot: () => state.value,
+    apply: (incoming) => {
+      if (incoming && typeof incoming === 'object')
+        state.value = { ...state.value, ...(incoming as Partial<ExpertState>) }
+    },
+    source: state,
+  })
+
   const notifications = useNotificationsStore()
 
   // —— المرشد ——
@@ -206,7 +218,7 @@ export const useExpertRolesStore = defineStore('expertRoles', () => {
   }
 
   return {
-    state,
+    state, syncStatus,
     coachStats, addProgram, bumpClientProgress,
     trainerStats, addCourse, enrollTrainee,
     consultantStats, respondConsulting, completeConsulting,

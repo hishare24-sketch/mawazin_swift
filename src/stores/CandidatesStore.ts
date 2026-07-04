@@ -2,6 +2,7 @@ import { defineStore } from 'pinia'
 import { computed, ref, watch } from 'vue'
 import type { CandidateStatus } from '@/modules/candidates/interfaces/Candidate'
 import { mockCandidates } from '@/modules/candidates/services/mockCandidates'
+import { syncPrivateDoc } from '@/services/cloudSync'
 
 const STORAGE_KEY = 'candidateStatuses'
 
@@ -23,6 +24,17 @@ export const useCandidatesStore = defineStore('candidates', () => {
 
   watch(overrides, val => localStorage.setItem(STORAGE_KEY, JSON.stringify(val)), { deep: true })
 
+  // مزامنة سحابية خاصة — بجلسة حقيقية فقط (DOC/CLOUD_SYNC.md)
+  const { status: syncStatus } = syncPrivateDoc({
+    store: 'candidates',
+    snapshot: () => overrides.value,
+    apply: (incoming) => {
+      if (incoming && typeof incoming === 'object')
+        overrides.value = incoming as Record<number, CandidateStatus>
+    },
+    source: overrides,
+  })
+
   const candidates = computed(() =>
     mockCandidates.map(c => ({ ...c, status: overrides.value[c.id] ?? c.status })),
   )
@@ -39,5 +51,5 @@ export const useCandidatesStore = defineStore('candidates', () => {
     return candidates.value.find(c => c.id === id)
   }
 
-  return { candidates, newCount, interviewCount, countByStatus, setStatus, getById }
+  return { candidates, syncStatus, newCount, interviewCount, countByStatus, setStatus, getById }
 })

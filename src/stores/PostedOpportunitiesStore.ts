@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import { computed, ref, watch } from 'vue'
+import { syncPrivateDoc } from '@/services/cloudSync'
 
 export interface PostedOpportunity {
   id: number
@@ -40,6 +41,17 @@ export const usePostedOpportunitiesStore = defineStore('postedOpportunities', ()
 
   watch(opportunities, val => localStorage.setItem(STORAGE_KEY, JSON.stringify(val)), { deep: true })
 
+  // مزامنة سحابية خاصة — بجلسة حقيقية فقط (DOC/CLOUD_SYNC.md)
+  const { status: syncStatus } = syncPrivateDoc({
+    store: 'postedOpportunities',
+    snapshot: () => opportunities.value,
+    apply: (incoming) => {
+      if (Array.isArray(incoming))
+        opportunities.value = incoming as PostedOpportunity[]
+    },
+    source: opportunities,
+  })
+
   const publishedCount = computed(() => opportunities.value.filter(o => o.status === 'published').length)
   const draftCount = computed(() => opportunities.value.filter(o => o.status === 'draft').length)
   const totalApplicants = computed(() => opportunities.value.reduce((s, o) => s + o.applicants, 0))
@@ -65,5 +77,5 @@ export const usePostedOpportunitiesStore = defineStore('postedOpportunities', ()
     }
   }
 
-  return { opportunities, publishedCount, draftCount, totalApplicants, add, remove, publish }
+  return { opportunities, syncStatus, publishedCount, draftCount, totalApplicants, add, remove, publish }
 })

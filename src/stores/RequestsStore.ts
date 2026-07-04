@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import { computed, ref, watch } from 'vue'
+import { syncPrivateDoc } from '@/services/cloudSync'
 
 export type RequestKind = 'job' | 'project' | 'consultation' | 'task'
 export type RequestStatus = 'reviewing' | 'accepted' | 'rejected' | 'done' | 'cancelled'
@@ -146,6 +147,17 @@ export const useRequestsStore = defineStore('requests', () => {
 
   watch(mine, val => localStorage.setItem(MINE_STORAGE, JSON.stringify(val)), { deep: true })
 
+  // مزامنة سحابية خاصة — بجلسة حقيقية فقط (DOC/CLOUD_SYNC.md)
+  const { status: syncStatus } = syncPrivateDoc({
+    store: 'requests',
+    snapshot: () => mine.value,
+    apply: (incoming) => {
+      if (Array.isArray(incoming))
+        mine.value = incoming as MyRequest[]
+    },
+    source: mine,
+  })
+
   const fields = computed(() => [...new Set(requests.value.map(r => r.field))])
 
   function getById(id: number) {
@@ -194,5 +206,5 @@ export const useRequestsStore = defineStore('requests', () => {
     rejected: mine.value.filter(m => m.status === 'rejected').length,
   }))
 
-  return { requests, mine, fields, getById, similar, hasApplied, apply, rateOrg, perfStats, counts }
+  return { requests, mine, syncStatus, fields, getById, similar, hasApplied, apply, rateOrg, perfStats, counts }
 })

@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { ref, watch } from 'vue'
 import type { SearchScope } from '@/services/ai/types'
+import { syncPrivateDoc } from '@/services/cloudSync'
 
 // Adaptive search: remembers recent queries (so results/suggestions adapt to
 // the user's behaviour) and lets the user save favourite searches/filter sets.
@@ -42,6 +43,20 @@ export const useSearchPrefsStore = defineStore('searchPrefs', () => {
   watch(recent, v => localStorage.setItem(RECENT_STORAGE, JSON.stringify(v)), { deep: true })
   watch(saved, v => localStorage.setItem(SAVED_STORAGE, JSON.stringify(v)), { deep: true })
 
+  // مزامنة سحابية خاصة — بجلسة حقيقية فقط (DOC/CLOUD_SYNC.md)
+  const { status: syncStatus } = syncPrivateDoc({
+    store: 'searchPrefs',
+    snapshot: () => ({ recent: recent.value, saved: saved.value }),
+    apply: (incoming) => {
+      const d = incoming as { recent?: string[], saved?: SavedSearch[] }
+      if (Array.isArray(d.recent))
+        recent.value = d.recent
+      if (Array.isArray(d.saved))
+        saved.value = d.saved
+    },
+    source: [recent, saved],
+  })
+
   function recordSearch(q: string) {
     const query = q.trim()
     if (!query)
@@ -65,5 +80,5 @@ export const useSearchPrefsStore = defineStore('searchPrefs', () => {
     saved.value = saved.value.filter(s => s.id !== id)
   }
 
-  return { recent, saved, recordSearch, clearRecent, isSaved, saveSearch, removeSaved }
+  return { recent, saved, syncStatus, recordSearch, clearRecent, isSaved, saveSearch, removeSaved }
 })

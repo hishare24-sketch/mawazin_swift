@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import { computed, ref, watch } from 'vue'
+import { syncPrivateDoc } from '@/services/cloudSync'
 import { useGamificationStore } from '@/stores/GamificationStore'
 import { useNotificationsStore } from '@/stores/NotificationsStore'
 
@@ -90,6 +91,20 @@ export const usePeerRequestsStore = defineStore('peerRequests', () => {
   watch(incoming, v => localStorage.setItem(INCOMING_STORAGE, JSON.stringify(v)), { deep: true })
   watch(outgoing, v => localStorage.setItem(OUTGOING_STORAGE, JSON.stringify(v)), { deep: true })
 
+  // مزامنة سحابية خاصة — بجلسة حقيقية فقط (DOC/CLOUD_SYNC.md)
+  const { status: syncStatus } = syncPrivateDoc({
+    store: 'peerRequests',
+    snapshot: () => ({ incoming: incoming.value, outgoing: outgoing.value }),
+    apply: (incomingDoc) => {
+      const d = incomingDoc as { incoming?: PeerRequest[], outgoing?: PeerRequest[] }
+      if (Array.isArray(d.incoming))
+        incoming.value = d.incoming
+      if (Array.isArray(d.outgoing))
+        outgoing.value = d.outgoing
+    },
+    source: [incoming, outgoing],
+  })
+
   const pendingIncoming = computed(() => incoming.value.filter(r => r.status === 'pending').length)
 
   function create(req: Omit<PeerRequest, 'id' | 'status' | 'date'>) {
@@ -137,7 +152,7 @@ export const usePeerRequestsStore = defineStore('peerRequests', () => {
   }
 
   return {
-    incoming, outgoing, pendingIncoming,
+    incoming, outgoing, syncStatus, pendingIncoming,
     create, accept, reject, startWork, complete, cancelOutgoing,
   }
 })

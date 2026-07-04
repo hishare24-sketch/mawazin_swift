@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { computed, ref, watch } from 'vue'
 import type { InterviewLevel, InterviewTrack, InterviewType } from '@/services/ai'
+import { syncPrivateDoc } from '@/services/cloudSync'
 import { useGamificationStore } from '@/stores/GamificationStore'
 
 export interface CompetencyScore { name: string, score: number }
@@ -85,6 +86,17 @@ export const useInterviewsStore = defineStore('interviews', () => {
 
   watch(interviews, val => localStorage.setItem(STORAGE_KEY, JSON.stringify(val)), { deep: true })
 
+  // مزامنة سحابية خاصة — بجلسة حقيقية فقط (DOC/CLOUD_SYNC.md)
+  const { status: syncStatus } = syncPrivateDoc({
+    store: 'interviews',
+    snapshot: () => interviews.value,
+    apply: (incoming) => {
+      if (Array.isArray(incoming))
+        interviews.value = incoming as Interview[]
+    },
+    source: interviews,
+  })
+
   const completed = computed(() => interviews.value.filter(i => i.status === 'completed'))
   const count = computed(() => interviews.value.length)
 
@@ -131,5 +143,5 @@ export const useInterviewsStore = defineStore('interviews', () => {
     return interviews.value.find(i => i.id === id)
   }
 
-  return { interviews, completed, count, trustValue, highestLevel, start, complete, getById }
+  return { interviews, syncStatus, completed, count, trustValue, highestLevel, start, complete, getById }
 })

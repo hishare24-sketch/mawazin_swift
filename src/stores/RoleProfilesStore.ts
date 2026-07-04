@@ -1,6 +1,7 @@
 import { defineStore } from 'pinia'
 import { computed, ref, watch } from 'vue'
 import type { EmployerProfile, InterviewerProfile } from '@/interfaces/RoleProfiles'
+import { syncPrivateDoc } from '@/services/cloudSync'
 
 const INTERVIEWER_KEY = 'interviewerProfile'
 const EMPLOYER_KEY = 'employerProfile'
@@ -62,6 +63,22 @@ export const useRoleProfilesStore = defineStore('roleProfiles', () => {
   watch(employer, v => localStorage.setItem(EMPLOYER_KEY, JSON.stringify(v)), { deep: true })
   watch(linkRolesPublicly, v => localStorage.setItem(LINK_KEY, String(v)))
 
+  // مزامنة سحابية خاصة — بجلسة حقيقية فقط (DOC/CLOUD_SYNC.md)
+  const { status: syncStatus } = syncPrivateDoc({
+    store: 'roleProfiles',
+    snapshot: () => ({ interviewer: interviewer.value, employer: employer.value, linkRolesPublicly: linkRolesPublicly.value }),
+    apply: (incoming) => {
+      const d = incoming as { interviewer?: InterviewerProfile, employer?: EmployerProfile, linkRolesPublicly?: boolean }
+      if (d.interviewer && typeof d.interviewer === 'object')
+        interviewer.value = { ...interviewer.value, ...d.interviewer }
+      if (d.employer && typeof d.employer === 'object')
+        employer.value = { ...employer.value, ...d.employer }
+      if (typeof d.linkRolesPublicly === 'boolean')
+        linkRolesPublicly.value = d.linkRolesPublicly
+    },
+    source: [interviewer, employer, linkRolesPublicly],
+  })
+
   const interviewerCompletion = computed(() => {
     let score = 0
     if (interviewer.value.specializations.length)
@@ -102,6 +119,7 @@ export const useRoleProfilesStore = defineStore('roleProfiles', () => {
     interviewer,
     employer,
     linkRolesPublicly,
+    syncStatus,
     interviewerCompletion,
     employerCompletion,
     updateInterviewer,
