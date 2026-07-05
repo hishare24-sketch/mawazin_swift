@@ -1,7 +1,7 @@
 # خطة المعمارية والتحويل — منظومة التوظيف الذكية
 
 > وثيقة معتمدة (2026-07-05). تحكم تحويل المشروع إلى مكدّس الفريق القياسي وتسليمه.
-> اقرأ معها: [`BACKEND_INTEGRATION.md`](./BACKEND_INTEGRATION.md) · [`CLOUD_SYNC.md`](./CLOUD_SYNC.md) · [`../api/openapi.yaml`](../api/openapi.yaml)
+> تتبّع التقدّم: [`MIGRATION_CHECKLIST.md`](./MIGRATION_CHECKLIST.md) · اقرأ معها: [`BACKEND_INTEGRATION.md`](./BACKEND_INTEGRATION.md) · [`CLOUD_SYNC.md`](./CLOUD_SYNC.md) · [`../api/openapi.yaml`](../api/openapi.yaml)
 
 ## 1. القرار المعتمد
 
