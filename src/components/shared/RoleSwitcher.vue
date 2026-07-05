@@ -3,6 +3,7 @@ import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
 import type { UserRole } from '@/interfaces/Auth'
+import { COMPANY_SIZES } from '@/interfaces/RoleProfiles'
 import { ROLE_META, SWITCHABLE_ROLES, roleHome } from '@/services/roles'
 import { useAuthStore } from '@/stores/AuthStore'
 import { useGamificationStore } from '@/stores/GamificationStore'
@@ -31,7 +32,6 @@ const companyDialog = ref(false)
 const companyName = ref('')
 const industry = ref('')
 const companySize = ref<string | null>(null)
-const COMPANY_SIZES = ['1-10', '11-50', '51-200', '201-500', '500+']
 
 function switchTo(r: UserRole) {
   if (!authStore.switchRole(r))

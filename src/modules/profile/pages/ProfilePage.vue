@@ -17,6 +17,8 @@ import { LEVEL_META, TYPE_META, useInterviewsStore } from '@/stores/InterviewsSt
 import { KIND_META, useInterviewersStore } from '@/stores/InterviewersStore'
 import type { Booking } from '@/stores/InterviewersStore'
 import { SWITCHABLE_ROLES } from '@/services/roles'
+import { COMPANY_SIZES } from '@/interfaces/RoleProfiles'
+import { OPPORTUNITY_TYPES } from '@/services/sectors'
 import { useRoleProfilesStore } from '@/stores/RoleProfilesStore'
 import type { UserRole } from '@/interfaces/Auth'
 
@@ -64,14 +66,8 @@ const AVAILABILITY_OPTIONS = [
   { value: 'within_three_months', title: 'خلال 3 أشهر' },
   { value: 'not_available', title: 'غير متاح حاليًا' },
 ]
-const EMPLOYMENT_TYPES = [
-  { value: 'full_time', title: 'دوام كامل' },
-  { value: 'part_time', title: 'دوام جزئي' },
-  { value: 'remote', title: 'عن بُعد' },
-  { value: 'freelance', title: 'عمل حر' },
-  { value: 'contract', title: 'عقد مؤقت' },
-]
-const COMPANY_SIZES = ['1-10', '11-50', '51-200', '201-500', '500+']
+// أنواع العمل المفضّلة من المصدر المعتمد الموحّد (services/sectors.ts)
+const EMPLOYMENT_TYPES = OPPORTUNITY_TYPES.map(o => ({ value: o.id, title: o.label }))
 const VISIBILITY_OPTIONS = [
   { value: 'public', title: 'عام' },
   { value: 'private', title: 'خاص' },

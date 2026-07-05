@@ -54,11 +54,14 @@
 
 ## المسار ب — تنظيف سريع (تافه · script-level · آمن أي وقت)
 
-### B4 — مركزة القوائم الثانوية المكرّرة
-- `COMPANY_SIZES` مكرّرة في **3 ملفات** (`RoleSwitcher.vue` · `interfaces/RoleProfiles.ts` · `ProfilePage.vue`)
-  → مصدر واحد `services/common.ts`.
-- `EMPLOYMENT_TYPES` المحلية في `ProfilePage.vue:67` → تستهلك `OPPORTUNITY_TYPES`.
-- **بلا تداخل:** تغييرات ثوابت في `<script>` تنجو من ترحيل Tailwind اللاحق.
+### ✅ B4 — مركزة القوائم الثانوية المكرّرة — مُنجز
+- [x] `COMPANY_SIZES` صُدِّرت من `interfaces/RoleProfiles.ts` (بجوار نوع `CompanySize`)، ونُزعت النسختان
+      المحليّتان في `RoleSwitcher.vue` و`ProfilePage.vue` (تستهلكان المصدر). *(بقيت `string[]` تفاديًا
+      لتشديد v-model على صفحات Vuetify ستُرحَّل لاحقًا؛ النوع `CompanySize` مرجع القيم.)*
+- [x] `EMPLOYMENT_TYPES` المحلية في `ProfilePage` (كانت **متباينة**: `contract` بدل `temp_contract` +
+      ناقصة 4 أنواع) → `OPPORTUNITY_TYPES.map(...)` — إصلاح توحيد لا مجرّد dedup.
+- **مُتحقَّق حيًّا:** «أنواع العمل المفضّلة» صارت **8 معتمدة** (بعد أن كانت 5 متباينة)، وأحجام المنشآت 5 من
+      المصدر الموحّد. 0 أخطاء console. typecheck + **232 اختبار** + build خضراء.
 
 ---
 

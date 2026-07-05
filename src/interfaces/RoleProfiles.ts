@@ -34,6 +34,8 @@ export interface InterviewerProfile {
 }
 
 export type CompanySize = '1-10' | '11-50' | '51-200' | '201-500' | '500+'
+/** المصدر الموحّد لأحجام المنشآت (يُستهلَك في المنتقيات بدل التكرار؛ النوع CompanySize هو مرجع القيم) */
+export const COMPANY_SIZES: string[] = ['1-10', '11-50', '51-200', '201-500', '500+']
 
 export interface EmployerProfile {
   company_name: string
