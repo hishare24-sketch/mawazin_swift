@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { API_PATHS, USE_REAL_API, normalizeApiError, whenReal } from './index'
+import { API_PATHS, USE_REAL_API, normalizeApiError, unwrapEnvelope, whenReal } from './index'
 
 describe('api client layer', () => {
   it('defaults to local simulation (flag off)', () => {
@@ -40,6 +40,17 @@ describe('api client layer', () => {
     // خادم بلا رسالة → رسالة افتراضية عربية
     const bare = normalizeApiError({ response: { status: 500, data: {} } })
     expect(bare.message).toContain('خطأ')
+  })
+
+  it('unwraps the NestJS { data } envelope once, and passes raw bodies through', () => {
+    // الغلاف المعتاد من الباك-إند
+    expect(unwrapEnvelope<{ token: string }>({ data: { token: 'jwt' } })).toEqual({ token: 'jwt' })
+    // مصفوفة ملفوفة
+    expect(unwrapEnvelope<number[]>({ data: [1, 2, 3] })).toEqual([1, 2, 3])
+    // جسم بلا غلاف يمرّ كما هو
+    expect(unwrapEnvelope<{ x: number }>({ x: 1 })).toEqual({ x: 1 })
+    // 204 بلا جسم
+    expect(unwrapEnvelope<undefined>(undefined)).toBeUndefined()
   })
 
   it('builds versioned paths matching the OpenAPI contract', () => {

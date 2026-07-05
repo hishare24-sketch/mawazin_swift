@@ -3,7 +3,7 @@
 > تتبّع تقدّم التحويل مرحلةً بمرحلة. الخطة الكاملة والقرارات في [`ARCHITECTURE.md`](./ARCHITECTURE.md).
 > الهدف: **Vue SPA + NestJS + JWT (`api/`) + Docker/Nginx/staging + Tailwind**، عقد `api/openapi.yaml` مصدر الحقيقة، Supabase محوّل يُنزع.
 
-**📍 الموضع الحالي:** انتهت المرحلتان 1 و2 (مُتحقَّقتان حيًّا) — التالي المرحلة 3 (ربط الواجهة بالعقد).
+**📍 الموضع الحالي:** انتهت المرحلتان 1 و2 (مُتحقَّقتان حيًّا)؛ **المرحلة 3 جارية** — المصادقة محوّلة ومُتحقَّقة حيًّا، والتالي بقية المخازن مخزنًا بمخزن.
 
 ---
 
@@ -27,10 +27,11 @@
 - **التحقّق:** `test/phase2.e2e-spec.ts` — 12 اختبار تكامل e2e يمرّ على كل مورد عبر HTTP الكامل (`npm test`)، + جولة curl حيّة مقابل `dev.sqlite` (رقّي المخطط تلقائيًا: عمود tier + الجداول الجديدة).
 - المرجع الحيّ: [`../supabase/migrations/`](../supabase/migrations/) + [`CLOUD_SYNC.md`](./CLOUD_SYNC.md)
 
-## ⬜ المرحلة 3 — ربط الواجهة بالعقد (بلا لمس الشكل)
-- [ ] `.env`: `VITE_USE_REAL_API=true` + `VITE_BASE_API_URL=http://localhost:8000/api/v1`
-- [ ] تحويل `AuthStore` أولًا عبر `api.auth.*` — دخول حقيقي مقابل NestJS
-- [ ] بقية المخازن عبر `whenReal(() => api.x(), () => mock)` — مخزنًا بمخزن
+## 🟡 المرحلة 3 — ربط الواجهة بالعقد (بلا لمس الشكل) — جارية
+- [x] `.env.development`: `VITE_USE_REAL_API=true` + `VITE_BASE_API_URL=http://localhost:8000/api` (المسارات تحمل `/v1/...`؛ النسخة الحيّة غير متأثّرة — بناء إنتاج و`.env.production` فارغ)
+- [x] **طبقة العميل تفكّ غلاف `{ data }`** للباك-إند (`unwrapEnvelope` في `src/services/api/index.ts`) + مساعد `put` — لتصل المخازن حمولة صافية بشكل mock
+- [x] تحويل **المصادقة** عبر `api.auth.*` — للـ NestJS الأولوية عند تفعيل المفتاح (`AuthService.login/register/logout`)، ومُطابِق `fromNestUser`، و`realAuthEnabled = USE_REAL_API || supabaseEnabled` — **مُتحقَّق حيًّا:** دخول + تسجيل عبر الواجهة → توكن JWT حقيقي من NestJS في `authUser` (id من القاعدة، لا mock-token)، بلا أخطاء console
+- [ ] بقية المخازن عبر `whenReal(() => api.x(), () => mock)` — مخزنًا بمخزن (الترتيب: Profile → PublicProfile → Marketplace → Interviewers/Interviews → Surveys → Notifications → Wallet/Plan)
 - [ ] تحقّق حيّ بعد كل مخزن
 
 ## ⬜ المرحلة 4 — نزع Supabase + البثّ اللحظي

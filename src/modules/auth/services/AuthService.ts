@@ -2,9 +2,10 @@ import type { User as SupabaseAuthUser } from '@supabase/supabase-js'
 import type { LoginPayload, RegisterPayload, User, UserRole } from '@/interfaces/Auth'
 import { ROLE_PERMISSIONS, defaultRoleEntries } from '@/services/roles'
 import { getSupabase, supabaseEnabled } from '@/services/supabase'
+import { USE_REAL_API, type ApiAuthUser, api } from '@/services/api'
 
-/** هل المصادقة على باك-إند حقيقي؟ — يستهلكه العرض دون معرفة المزوّد */
-export const realAuthEnabled = supabaseEnabled
+/** هل المصادقة على باك-إند حقيقي؟ — يستهلكه العرض دون معرفة المزوّد (NestJS أو Supabase) */
+export const realAuthEnabled = USE_REAL_API || supabaseEnabled
 
 function buildMockUser(partial: Partial<User> & Pick<User, 'email' | 'role' | 'name'>): User {
   return {
@@ -40,6 +41,32 @@ function fromSupabaseUser(u: SupabaseAuthUser, token: string): User {
   }
 }
 
+/** يبني User المنصة من مستخدم الباك-إند (NestJS). الأدوار الفورية تُشتق من الدور المفرد. */
+function fromNestUser(u: ApiAuthUser, token: string): User {
+  const role = (u.role ?? 'seeker') as UserRole
+  return {
+    id: u.id,
+    uuid: u.uuid,
+    name: u.name,
+    email: u.email,
+    phone: u.phone ?? undefined,
+    role,
+    roles: defaultRoleEntries(role),
+    token,
+    permissions: ROLE_PERMISSIONS[role],
+    created_at: u.created_at,
+  }
+}
+
+/** رسالة عربية من خطأ طبقة الـAPI ({ status, message, fieldErrors }) */
+function apiErrorMessage(err: unknown): string {
+  const e = err as { message?: string, fieldErrors?: Record<string, string[]>, status?: number }
+  if (e?.status === 0)
+    return 'تعذّر الاتصال بالخادم — تأكد من تشغيل الباك-إند'
+  const firstField = e?.fieldErrors && Object.values(e.fieldErrors)[0]?.[0]
+  return firstField ?? e?.message ?? 'تعذّرت العملية — حاول مرة أخرى'
+}
+
 /** تعريب أخطاء Supabase Auth الشائعة */
 function arabicAuthError(message: string): string {
   const m = message.toLowerCase()
@@ -62,6 +89,16 @@ class AuthService {
   // المحاكاة تعمل تلقائيًا عند غياب مفاتيح Supabase (اختبارات/تطوير بلا اتصال)
 
   async login(payload: LoginPayload): Promise<User> {
+    // الأولوية لمكدّس الفريق (NestJS) عند تفعيل المفتاح
+    if (USE_REAL_API) {
+      try {
+        const { user, token } = await api.auth.login({ email: payload.email, password: payload.password })
+        return fromNestUser(user, token)
+      }
+      catch (err) {
+        throw new Error(apiErrorMessage(err))
+      }
+    }
     const sb = getSupabase()
     if (sb) {
       const { data, error } = await sb.auth.signInWithPassword({
@@ -83,6 +120,21 @@ class AuthService {
   }
 
   async register(payload: RegisterPayload): Promise<User> {
+    if (USE_REAL_API) {
+      try {
+        const { user, token } = await api.auth.register({
+          name: payload.name,
+          email: payload.email,
+          password: payload.password,
+          phone: payload.phone,
+          role: payload.role,
+        })
+        return fromNestUser(user, token)
+      }
+      catch (err) {
+        throw new Error(apiErrorMessage(err))
+      }
+    }
     const sb = getSupabase()
     if (sb) {
       const { data, error } = await sb.auth.signUp({
@@ -109,6 +161,11 @@ class AuthService {
   }
 
   async logout(): Promise<void> {
+    if (USE_REAL_API) {
+      // التوكن عديم الحالة — الخروج بإسقاطه محليًا؛ ننادي الخادم على سبيل الإكمال
+      await api.auth.logout().catch(() => { /* الخروج المحلي يكفي */ })
+      return
+    }
     const sb = getSupabase()
     if (sb) {
       await sb.auth.signOut().catch(() => { /* الخروج المحلي يكفي */ })

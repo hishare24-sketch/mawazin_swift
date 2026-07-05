@@ -38,6 +38,16 @@ export async function whenReal<T>(call: () => Promise<T>, localFallback: () => T
   return await call()
 }
 
+/**
+ * الباك-إند (NestJS) يلفّ كل استجابة ناجحة في { data } — نفكّ الغلاف مرّة واحدة
+ * ليحصل المستهلك على الحمولة الصافية بنفس شكل mockAi/المخازن المحلية.
+ */
+export function unwrapEnvelope<T>(body: unknown): T {
+  if (body !== null && typeof body === 'object' && 'data' in (body as Record<string, unknown>))
+    return (body as { data: T }).data
+  return body as T
+}
+
 /** خريطة المسارات — نقية وقابلة للاختبار، ومصدر واحد للعناوين */
 export const API_PATHS = {
   auth: {
@@ -99,7 +109,7 @@ export const API_PATHS = {
 // ===== نداءات مجمّعة حسب المورد (رقيقة عمدًا — المنطق في المخازن) =====
 async function get<T>(url: string, params?: Record<string, unknown>): Promise<T> {
   try {
-    return (await http.get<T>(url, { params })).data
+    return unwrapEnvelope<T>((await http.get(url, { params })).data)
   }
   catch (err) {
     throw normalizeApiError(err)
@@ -107,7 +117,7 @@ async function get<T>(url: string, params?: Record<string, unknown>): Promise<T>
 }
 async function post<T>(url: string, body?: unknown): Promise<T> {
   try {
-    return (await http.post<T>(url, body)).data
+    return unwrapEnvelope<T>((await http.post(url, body)).data)
   }
   catch (err) {
     throw normalizeApiError(err)
@@ -115,7 +125,15 @@ async function post<T>(url: string, body?: unknown): Promise<T> {
 }
 async function patch<T>(url: string, body?: unknown): Promise<T> {
   try {
-    return (await http.patch<T>(url, body)).data
+    return unwrapEnvelope<T>((await http.patch(url, body)).data)
+  }
+  catch (err) {
+    throw normalizeApiError(err)
+  }
+}
+async function put<T>(url: string, body?: unknown): Promise<T> {
+  try {
+    return unwrapEnvelope<T>((await http.put(url, body)).data)
   }
   catch (err) {
     throw normalizeApiError(err)
@@ -130,11 +148,25 @@ async function del(url: string): Promise<void> {
   }
 }
 
+/** المستخدم كما يعيده الباك-إند (NestJS) — قبل التحويل لـ User المنصة */
+export interface ApiAuthUser {
+  id: number
+  uuid: string
+  name: string
+  email: string
+  role: string
+  tier: 'free' | 'pro' | 'elite'
+  phone: string | null
+  created_at?: string
+}
+export interface ApiAuthSession { user: ApiAuthUser, token: string }
+
 export const api = {
   auth: {
-    register: (body: { name: string, email: string, password: string }) => post(API_PATHS.auth.register, body),
-    login: (body: { email: string, password: string }) => post(API_PATHS.auth.login, body),
-    me: () => get(API_PATHS.auth.me),
+    register: (body: { name: string, email: string, password: string, phone?: string, role?: string }) =>
+      post<ApiAuthSession>(API_PATHS.auth.register, body),
+    login: (body: { email: string, password: string }) => post<ApiAuthSession>(API_PATHS.auth.login, body),
+    me: () => get<ApiAuthUser>(API_PATHS.auth.me),
     logout: () => post(API_PATHS.auth.logout),
   },
   profile: {
@@ -188,7 +220,7 @@ export const api = {
   account: {
     wallet: () => get(API_PATHS.account.wallet),
     plan: () => get<{ tier: 'free' | 'pro' | 'elite' }>(API_PATHS.account.plan),
-    setPlan: (tier: 'free' | 'pro' | 'elite') => http.put(API_PATHS.account.plan, { tier }).then(r => r.data).catch((err) => { throw normalizeApiError(err) }),
+    setPlan: (tier: 'free' | 'pro' | 'elite') => put<{ tier: 'free' | 'pro' | 'elite', balance: number }>(API_PATHS.account.plan, { tier }),
   },
   /** تنفيذ عقد AI عبر وسيط الخادم — بديل claudeAi المباشر (يحمي المفتاح) */
   ai: <T>(contract: string, payload: Record<string, unknown>) => post<T>(API_PATHS.ai(contract), payload),

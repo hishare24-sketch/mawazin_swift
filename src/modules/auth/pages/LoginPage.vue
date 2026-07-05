@@ -107,7 +107,7 @@ async function submit() {
 
     <VAlert type="info" variant="tonal" density="compact" class="mt-6 text-caption">
       <template v-if="realAuthEnabled">
-        الحسابات حقيقية الآن (Supabase) — أنشئ حسابًا جديدًا أو ادخل بحساب سجّلته سابقًا.
+        الحسابات حقيقية الآن — أنشئ حسابًا جديدًا أو ادخل بحساب سجّلته سابقًا.
       </template>
       <template v-else>
         تجربة: أدخل أي بريد وكلمة مرور. لتجربة دور آخر اكتب كلمة company أو admin داخل البريد.
