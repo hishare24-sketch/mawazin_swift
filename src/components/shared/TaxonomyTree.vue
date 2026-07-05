@@ -1,6 +1,10 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue'
 import { TAXONOMY, categorizeSkill } from '@/services/taxonomy'
+import BaseInput from '@/components/ui/BaseInput.vue'
+import BaseButton from '@/components/ui/BaseButton.vue'
+import BaseChip from '@/components/ui/BaseChip.vue'
+import BaseIcon from '@/components/ui/BaseIcon.vue'
 
 // Each item carries its skills (for category counting) and a text blob (for
 // sub-category keyword counting).
@@ -59,66 +63,63 @@ function clearAll() {
 
 <template>
   <div>
-    <div class="d-flex align-center justify-space-between mb-2">
-      <span class="text-subtitle-2 font-weight-bold"><VIcon icon="mdi-file-tree-outline" size="18" class="me-1" /> التصنيفات</span>
-      <span class="text-caption text-medium-emphasis">{{ total }}</span>
+    <div class="mb-2 flex items-center justify-between">
+      <span class="flex items-center gap-1 text-sm font-bold"><BaseIcon name="mdi-file-tree-outline" :size="18" /> التصنيفات</span>
+      <span class="text-xs text-muted">{{ total }}</span>
     </div>
 
-    <VTextField
-      v-model="catSearch"
-      placeholder="بحث في التصنيفات"
-      prepend-inner-icon="mdi-magnify"
-      density="compact"
-      variant="outlined"
-      hide-details
-      clearable
-      class="mb-2"
-    />
+    <BaseInput v-model="catSearch" prefix-icon="mdi-magnify" placeholder="بحث في التصنيفات" class="mb-2">
+      <template #suffix>
+        <button v-if="catSearch" type="button" class="text-muted" aria-label="مسح" @click="catSearch = ''">
+          <BaseIcon name="mdi-close" :size="18" />
+        </button>
+      </template>
+    </BaseInput>
 
-    <VList density="compact" class="py-0" nav>
+    <div class="space-y-0.5">
       <template v-for="cat in visibleTree" :key="cat.id">
-        <VListItem
-          :active="selection.category === cat.id && !selection.sub"
-          rounded="lg"
+        <button
+          class="flex w-full items-center gap-1 rounded-ui px-2 py-1.5 text-start transition"
+          :class="selection.category === cat.id && !selection.sub ? '' : 'hover:bg-surfalt'"
+          :style="selection.category === cat.id && !selection.sub ? { background: 'rgba(var(--v-theme-primary), 0.16)', color: 'rgb(var(--v-theme-primary))' } : {}"
           @click="selectCategory(cat.id)"
         >
-          <template #prepend>
-            <VIcon
-              :icon="expanded.has(cat.id) ? 'mdi-menu-down' : 'mdi-menu-left'"
-              size="18"
-              class="me-1"
-              @click.stop="toggleExpand(cat.id)"
-            />
-            <VIcon :icon="cat.icon" :color="cat.color" size="18" />
-          </template>
-          <VListItemTitle class="text-body-2 font-weight-medium">{{ cat.label }}</VListItemTitle>
-          <template #append>
-            <VChip size="x-small" label>{{ cat.count }}</VChip>
-          </template>
-        </VListItem>
+          <span class="shrink-0" @click.stop="toggleExpand(cat.id)">
+            <BaseIcon :name="expanded.has(cat.id) ? 'mdi-menu-down' : 'mdi-menu-left'" :size="18" class="text-muted" />
+          </span>
+          <BaseIcon :name="cat.icon" :size="18" :style="{ color: `rgb(var(--v-theme-${cat.color}))` }" />
+          <span class="flex-1 truncate text-sm font-medium">{{ cat.label }}</span>
+          <BaseChip color="neutral">{{ cat.count }}</BaseChip>
+        </button>
 
         <template v-if="expanded.has(cat.id)">
-          <VListItem
+          <button
             v-for="sub in cat.subs"
             :key="`${cat.id}-${sub.name}`"
-            :active="selection.category === cat.id && selection.sub === sub.name"
-            rounded="lg"
-            class="ps-8"
+            class="flex w-full items-center gap-1 rounded-ui py-1.5 pe-2 ps-9 text-start transition"
+            :class="selection.category === cat.id && selection.sub === sub.name ? '' : 'hover:bg-surfalt'"
+            :style="selection.category === cat.id && selection.sub === sub.name ? { background: 'rgba(var(--v-theme-primary), 0.16)', color: 'rgb(var(--v-theme-primary))' } : {}"
             @click="selectSub(cat.id, sub.name)"
           >
-            <VListItemTitle class="text-caption">{{ sub.name }}</VListItemTitle>
-            <template #append>
-              <span class="text-caption text-medium-emphasis">{{ sub.count }}</span>
-            </template>
-          </VListItem>
+            <span class="flex-1 text-xs">{{ sub.name }}</span>
+            <span class="text-xs text-muted">{{ sub.count }}</span>
+          </button>
         </template>
       </template>
-    </VList>
+    </div>
 
-    <div v-if="!visibleTree.length" class="text-caption text-medium-emphasis text-center py-3">لا تصنيفات مطابقة</div>
+    <div v-if="!visibleTree.length" class="py-3 text-center text-xs text-muted">لا تصنيفات مطابقة</div>
 
-    <VBtn v-if="selection.category || catSearch" variant="text" size="small" color="error" prepend-icon="mdi-close" block class="mt-2" @click="clearAll">
-      إزالة الكل
-    </VBtn>
+    <BaseButton
+      v-if="selection.category || catSearch"
+      variant="ghost"
+      size="sm"
+      block
+      class="mt-2"
+      style="color: rgb(var(--v-theme-error))"
+      @click="clearAll"
+    >
+      <BaseIcon name="mdi-close" :size="18" /> إزالة الكل
+    </BaseButton>
   </div>
 </template>
