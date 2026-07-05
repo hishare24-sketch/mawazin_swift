@@ -211,7 +211,10 @@ function createDocSync(config: EngineConfig): { status: Ref<SyncStatus> } {
  * تتوسّع القائمة مخزنًا بمخزن؛ ما ليس فيها يبقى محليًّا (وSupabase مُعطَّل في الوضع الحقيقي).
  * المخازن ذات المورد المخصّص (profile/wallet/…) تُوصَل عبر نداءات موردها لا هنا.
  */
-const NEST_PRIVATE_STORES = new Set(['requests', 'postedOpportunities', 'applications'])
+const NEST_PRIVATE_STORES = new Set([
+  'requests', 'postedOpportunities', 'applications', // السوق
+  'interviews', 'interviewerWorkspace', // المقابلات وورشة المقيّم
+])
 
 /**
  * محرّك مزامنة الكتلة الخاصة عبر NestJS (بديل Supabase عند USE_REAL_API):
