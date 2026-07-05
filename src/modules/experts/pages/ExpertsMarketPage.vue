@@ -3,6 +3,8 @@ import { computed, ref } from 'vue'
 import PageHeader from '@/components/shared/PageHeader.vue'
 import type { MarketExpert, MarketExpertRole } from '@/stores/ExpertRolesStore'
 import { EXPERT_TIER_META, MARKET_EXPERTS, MARKET_ROLE_META, expertTier } from '@/stores/ExpertRolesStore'
+import type { ExpertSpecialty } from '@/services/personas'
+import { EXPERT_SPECIALTY_META, specialtiesForBucket } from '@/services/personas'
 import type { PeerRequestType } from '@/stores/PeerRequestsStore'
 import { usePeerRequestsStore } from '@/stores/PeerRequestsStore'
 import { useNotificationsStore } from '@/stores/NotificationsStore'
@@ -23,15 +25,24 @@ const notifications = useNotificationsStore()
 const authStore = useAuthStore()
 
 const roleFilter = ref<'all' | MarketExpertRole>('all')
+const specialtyFilter = ref<'all' | ExpertSpecialty>('all')
 const search = ref('')
 const snackbar = ref(false)
+
+// عند تبديل الدور تُصفَّر التخصّص، وتظهر تخصّصات الدور كفلتر فرعي
+function setRole(r: 'all' | MarketExpertRole) {
+  roleFilter.value = r
+  specialtyFilter.value = 'all'
+}
+const subSpecialties = computed(() => (roleFilter.value === 'all' ? [] : specialtiesForBucket(roleFilter.value)))
 
 const filtered = computed(() =>
   MARKET_EXPERTS
     .filter(e => roleFilter.value === 'all' || e.role === roleFilter.value)
+    .filter(e => specialtyFilter.value === 'all' || e.specialtyKey === specialtyFilter.value)
     .filter((e) => {
       const q = search.value.trim()
-      return !q || e.name.includes(q) || e.specialty.includes(q) || e.title.includes(q)
+      return !q || e.name.includes(q) || e.specialty.includes(q) || e.title.includes(q) || EXPERT_SPECIALTY_META[e.specialtyKey].label.includes(q)
     }),
 )
 
@@ -103,14 +114,14 @@ const canJoin = computed(() => !!authStore.authUser)
         <button
           class="px-3 py-2 text-sm transition"
           :class="roleFilter === 'all' ? 'bg-brand text-on-brand' : 'text-muted hover:bg-surfalt'"
-          @click="roleFilter = 'all'"
+          @click="setRole('all')"
         >الكل ({{ MARKET_EXPERTS.length }})</button>
         <button
           v-for="(meta, role) in MARKET_ROLE_META"
           :key="role"
           class="flex items-center gap-1 px-3 py-2 text-sm transition"
           :class="roleFilter === role ? 'bg-brand text-on-brand' : 'text-muted hover:bg-surfalt'"
-          @click="roleFilter = role"
+          @click="setRole(role)"
         >
           <BaseIcon :name="meta.icon" :size="16" /> {{ meta.label }}
         </button>
@@ -122,6 +133,25 @@ const canJoin = computed(() => !!authStore.authUser)
           </button>
         </template>
       </BaseInput>
+    </div>
+
+    <!-- فلتر التخصّص الفرعي (يظهر عند اختيار دور) -->
+    <div v-if="subSpecialties.length" class="mb-4 flex flex-wrap items-center gap-2">
+      <span class="text-xs text-muted">التخصّص:</span>
+      <button
+        class="rounded-full px-2.5 py-1 text-xs font-medium transition"
+        :class="specialtyFilter === 'all' ? 'bg-emerald text-on-brand' : 'border-ui text-content hover:bg-surfalt'"
+        @click="specialtyFilter = 'all'"
+      >الكل</button>
+      <button
+        v-for="sp in subSpecialties"
+        :key="sp"
+        class="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium transition"
+        :class="specialtyFilter === sp ? 'bg-emerald text-on-brand' : 'border-ui text-content hover:bg-surfalt'"
+        @click="specialtyFilter = sp"
+      >
+        <BaseIcon :name="EXPERT_SPECIALTY_META[sp].icon" :size="14" /> {{ EXPERT_SPECIALTY_META[sp].label }}
+      </button>
     </div>
 
     <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -138,7 +168,7 @@ const canJoin = computed(() => !!authStore.authUser)
         </div>
 
         <div class="mb-2 flex flex-wrap gap-1">
-          <BaseChip :color="roleColor(e.role)"><BaseIcon :name="MARKET_ROLE_META[e.role].icon" :size="14" /> {{ MARKET_ROLE_META[e.role].label }}</BaseChip>
+          <BaseChip :color="roleColor(e.role)"><BaseIcon :name="EXPERT_SPECIALTY_META[e.specialtyKey].icon" :size="14" /> {{ EXPERT_SPECIALTY_META[e.specialtyKey].label }}</BaseChip>
           <BaseChip :color="tierColor(tierOf(e).color)"><BaseIcon :name="tierOf(e).icon" :size="14" /> {{ tierOf(e).label }}</BaseChip>
         </div>
 

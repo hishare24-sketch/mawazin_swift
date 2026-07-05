@@ -1,5 +1,6 @@
 import { defineStore } from 'pinia'
 import { computed, ref, watch } from 'vue'
+import type { ExpertSpecialty } from '@/services/personas'
 import { syncPrivateDoc } from '@/services/cloudSync'
 import { useNotificationsStore } from '@/stores/NotificationsStore'
 import { useWalletStore } from '@/stores/WalletStore'
@@ -129,6 +130,7 @@ export interface MarketExpert {
   name: string
   initial: string
   role: MarketExpertRole
+  specialtyKey: ExpertSpecialty
   title: string
   specialty: string
   rating: number
@@ -163,6 +165,7 @@ export const MARKET_EXPERTS: MarketExpert[] = [
     name: 'أ. هند الزهراني',
     initial: 'ه',
     role: 'coach',
+    specialtyKey: 'career_coach',
     title: 'مرشدة مسارات تقنية',
     specialty: 'التحول الوظيفي إلى التقنية',
     rating: 4.9,
@@ -201,6 +204,7 @@ export const MARKET_EXPERTS: MarketExpert[] = [
     name: 'م. فهد الدوسري',
     initial: 'ف',
     role: 'coach',
+    specialtyKey: 'mentor',
     title: 'مرشد خريجين ومبتدئين',
     specialty: 'أول وظيفة تقنية',
     rating: 4.7,
@@ -236,6 +240,7 @@ export const MARKET_EXPERTS: MarketExpert[] = [
     name: 'م. نوف الشهري',
     initial: 'ن',
     role: 'trainer',
+    specialtyKey: 'technical_trainer',
     title: 'مدربة TypeScript معتمدة',
     specialty: 'TypeScript وأنماط Vue المتقدمة',
     rating: 4.8,
@@ -274,6 +279,7 @@ export const MARKET_EXPERTS: MarketExpert[] = [
     name: 'م. سلطان العمري',
     initial: 'س',
     role: 'trainer',
+    specialtyKey: 'technical_trainer',
     title: 'مدرب اختبارات وجودة',
     specialty: 'Vitest وتغطية الاختبارات',
     rating: 4.6,
@@ -305,6 +311,7 @@ export const MARKET_EXPERTS: MarketExpert[] = [
     name: 'د. ريم القحطاني',
     initial: 'ر',
     role: 'consultant',
+    specialtyKey: 'career_consultant',
     title: 'مستشارة قيادة وموارد بشرية',
     specialty: 'هيكلة الفرق ورواتب السوق',
     rating: 4.8,
@@ -342,6 +349,7 @@ export const MARKET_EXPERTS: MarketExpert[] = [
     name: 'م. عمر باوزير',
     initial: 'ع',
     role: 'consultant',
+    specialtyKey: 'market_analyst',
     title: 'مستشار هندسة بيانات',
     specialty: 'اتجاهات سوق البيانات والرواتب',
     rating: 4.5,

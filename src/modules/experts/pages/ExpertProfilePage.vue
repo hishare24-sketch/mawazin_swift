@@ -3,6 +3,7 @@ import { computed, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { EXPERT_TIER_META, MARKET_ROLE_META, expertTier, getExpertBySlug } from '@/stores/ExpertRolesStore'
 import type { MarketExpertRole } from '@/stores/ExpertRolesStore'
+import { EXPERT_SPECIALTY_META } from '@/services/personas'
 import { usePeerRequestsStore } from '@/stores/PeerRequestsStore'
 import type { PeerRequestType } from '@/stores/PeerRequestsStore'
 import { useNotificationsStore } from '@/stores/NotificationsStore'
@@ -89,7 +90,7 @@ function shareProfile() {
           </div>
           <div class="mt-0.5 text-muted">{{ expert.title }}</div>
           <div class="mt-2 flex flex-wrap items-center gap-2">
-            <BaseChip :color="roleColor(expert.role)"><BaseIcon :name="roleMeta.icon" :size="14" /> {{ roleMeta.label }}</BaseChip>
+            <BaseChip :color="roleColor(expert.role)"><BaseIcon :name="EXPERT_SPECIALTY_META[expert.specialtyKey].icon" :size="14" /> {{ EXPERT_SPECIALTY_META[expert.specialtyKey].label }}</BaseChip>
             <BaseChip color="neutral"><BaseIcon name="mdi-map-marker-outline" :size="14" /> {{ expert.location }}</BaseChip>
             <BaseChip color="neutral"><BaseIcon name="mdi-translate" :size="14" /> {{ expert.languages.join(' · ') }}</BaseChip>
           </div>
