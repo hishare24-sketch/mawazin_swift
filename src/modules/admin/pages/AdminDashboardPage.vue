@@ -6,11 +6,19 @@ import { useRoleRequestsStore } from '@/stores/RoleRequestsStore'
 import { useReviewQueueStore } from '@/stores/ReviewQueueStore'
 import { ROLE_META } from '@/services/roles'
 import { useI18n } from 'vue-i18n'
+import BaseCard from '@/components/ui/BaseCard.vue'
+import BaseButton from '@/components/ui/BaseButton.vue'
+import BaseChip from '@/components/ui/BaseChip.vue'
+import BaseIcon from '@/components/ui/BaseIcon.vue'
+import BaseAvatar from '@/components/ui/BaseAvatar.vue'
+import BaseSnackbar from '@/components/ui/BaseSnackbar.vue'
+import BaseProgressBar from '@/components/ui/BaseProgressBar.vue'
 
 const { t } = useI18n()
 const roleRequests = useRoleRequestsStore()
 const review = useReviewQueueStore()
 const snackbar = ref('')
+
 function decideRequest(id: number, approve: boolean, name: string) {
   roleRequests.decide(id, approve)
   snackbar.value = approve ? `اعتُمد طلب ${name} وفُعّل الدور` : `رُفض طلب ${name}`
@@ -52,89 +60,85 @@ const health = [
       icon="mdi-shield-crown-outline"
     />
 
-    <VRow class="mb-2">
-      <VCol v-for="s in stats" :key="s.title" cols="12" sm="6" lg="3">
-        <StatCard v-bind="s" />
-      </VCol>
-    </VRow>
+    <div class="mb-2 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+      <StatCard v-for="s in stats" :key="s.title" v-bind="s" />
+    </div>
 
     <!-- طابور اعتماد الأدوار — يقفل حلقة الانضمام والاعتماد -->
-    <VCard class="pa-5 mb-4">
-      <div class="d-flex align-center ga-2 mb-1">
-        <VIcon icon="mdi-shield-account-outline" color="warning" />
-        <h2 class="text-subtitle-1 font-weight-bold">طلبات اعتماد الأدوار</h2>
-        <VChip v-if="roleRequests.pending.length" size="x-small" color="warning" label>{{ roleRequests.pending.length }}</VChip>
+    <BaseCard class="mb-4">
+      <div class="mb-1 flex items-center gap-2">
+        <BaseIcon name="mdi-shield-account-outline" :size="22" :style="{ color: 'rgb(var(--v-theme-warning))' }" />
+        <h2 class="text-base font-bold text-content">طلبات اعتماد الأدوار</h2>
+        <BaseChip v-if="roleRequests.pending.length" color="warning">{{ roleRequests.pending.length }}</BaseChip>
       </div>
-      <p class="text-caption text-medium-emphasis mb-3">أدوار الموافقة (مقيّم/مرشد/مدرب/مستشار) تنتظر قرارك — الاعتماد يفعّل الدور فورًا مع إشعار لصاحبه.</p>
+      <p class="mb-3 text-xs text-muted">أدوار الموافقة (مقيّم/مرشد/مدرب/مستشار) تنتظر قرارك — الاعتماد يفعّل الدور فورًا مع إشعار لصاحبه.</p>
       <template v-if="roleRequests.pending.length">
-        <div v-for="r in roleRequests.pending" :key="r.id" class="d-flex align-center ga-3 py-2 flex-wrap">
-          <VAvatar color="warning" variant="tonal" size="38"><VIcon :icon="ROLE_META[r.role].icon" size="20" /></VAvatar>
-          <div class="flex-grow-1">
-            <div class="text-body-2 font-weight-bold">
+        <div v-for="r in roleRequests.pending" :key="r.id" class="flex flex-wrap items-center gap-3 py-2">
+          <BaseAvatar color="warning" tonal :size="38"><BaseIcon :name="ROLE_META[r.role].icon" :size="20" /></BaseAvatar>
+          <div class="flex-1">
+            <div class="flex flex-wrap items-center gap-1 text-sm font-bold text-content">
               {{ r.userName }}
-              <VChip size="x-small" variant="tonal" color="primary" label class="ms-1">{{ t(`roles.${r.role}`) }}</VChip>
-              <VChip v-if="r.mine" size="x-small" variant="tonal" color="info" label class="ms-1">من هذا الحساب</VChip>
+              <BaseChip color="brand">{{ t(`roles.${r.role}`) }}</BaseChip>
+              <BaseChip v-if="r.mine" color="info">من هذا الحساب</BaseChip>
             </div>
-            <div class="text-caption text-medium-emphasis">{{ r.note }} · {{ r.date }}</div>
+            <div class="text-xs text-muted">{{ r.note }} · {{ r.date }}</div>
           </div>
-          <div class="d-flex ga-1">
-            <VBtn size="small" color="success" prepend-icon="mdi-check" @click="decideRequest(r.id, true, r.userName)">اعتماد</VBtn>
-            <VBtn size="small" color="error" variant="outlined" prepend-icon="mdi-close" @click="decideRequest(r.id, false, r.userName)">رفض</VBtn>
+          <div class="flex gap-1">
+            <BaseButton size="sm" variant="emerald" @click="decideRequest(r.id, true, r.userName)"><BaseIcon name="mdi-check" :size="16" />اعتماد</BaseButton>
+            <BaseButton size="sm" variant="outline" @click="decideRequest(r.id, false, r.userName)"><BaseIcon name="mdi-close" :size="16" :style="{ color: 'rgb(var(--v-theme-error))' }" /><span :style="{ color: 'rgb(var(--v-theme-error))' }">رفض</span></BaseButton>
           </div>
         </div>
       </template>
-      <p v-else class="text-caption text-medium-emphasis mb-0">لا طلبات معلقة — كل الأدوار معتمدة.</p>
-    </VCard>
+      <p v-else class="mb-0 text-xs text-muted">لا طلبات معلقة — كل الأدوار معتمدة.</p>
+    </BaseCard>
 
-    <VRow>
-      <VCol cols="12" md="5">
-        <VCard class="pa-5" height="100%">
-          <div class="text-subtitle-1 font-weight-bold mb-4">توزيع المستخدمين حسب الدور</div>
+    <div class="grid grid-cols-1 gap-4 md:grid-cols-12">
+      <div class="md:col-span-5">
+        <BaseCard class="h-full">
+          <div class="mb-4 text-base font-bold text-content">توزيع المستخدمين حسب الدور</div>
           <div v-for="r in usersByRole" :key="r.label" class="mb-4">
-            <div class="d-flex justify-space-between text-body-2 mb-1">
+            <div class="mb-1 flex justify-between text-sm text-content">
               <span>{{ r.label }}</span>
-              <span class="font-weight-bold">{{ r.value }}%</span>
+              <span class="font-bold">{{ r.value }}%</span>
             </div>
-            <VProgressLinear :model-value="r.value" :color="r.color" height="10" rounded />
+            <BaseProgressBar :value="r.value" :color="r.color" :height="10" />
           </div>
-        </VCard>
-      </VCol>
+        </BaseCard>
+      </div>
 
-      <VCol cols="12" md="7">
-        <VCard class="pa-5" height="100%">
-          <div class="text-subtitle-1 font-weight-bold mb-3">نشاطات المنصة</div>
-          <VList lines="two" class="py-0">
-            <VListItem v-for="(a, i) in recentActivity" :key="i" class="px-0">
-              <template #prepend>
-                <VAvatar color="primary" variant="tonal" rounded="lg"><VIcon :icon="a.icon" /></VAvatar>
-              </template>
-              <VListItemTitle>{{ a.text }}</VListItemTitle>
-              <VListItemSubtitle>{{ a.time }}</VListItemSubtitle>
-            </VListItem>
-          </VList>
-        </VCard>
-      </VCol>
-
-      <VCol cols="12">
-        <VCard class="pa-5">
-          <div class="text-subtitle-1 font-weight-bold mb-4">صحة النظام</div>
-          <VRow>
-            <VCol v-for="h in health" :key="h.label" cols="12" sm="4">
-              <div class="d-flex align-center ga-3">
-                <VIcon icon="mdi-circle" :color="h.color" size="14" />
-                <div>
-                  <div class="text-h6 font-weight-bold">{{ h.value }}</div>
-                  <div class="text-caption text-medium-emphasis">{{ h.label }}</div>
-                </div>
+      <div class="md:col-span-7">
+        <BaseCard class="h-full">
+          <div class="mb-3 text-base font-bold text-content">نشاطات المنصة</div>
+          <div class="flex flex-col gap-2">
+            <div v-for="(a, i) in recentActivity" :key="i" class="flex items-center gap-3">
+              <BaseAvatar color="brand" tonal square><BaseIcon :name="a.icon" :size="20" /></BaseAvatar>
+              <div class="flex-1">
+                <div class="text-sm text-content">{{ a.text }}</div>
+                <div class="text-xs text-muted">{{ a.time }}</div>
               </div>
-            </VCol>
-          </VRow>
-        </VCard>
-      </VCol>
-    </VRow>
+            </div>
+          </div>
+        </BaseCard>
+      </div>
 
-    <VSnackbar :model-value="!!snackbar" color="primary" location="top" timeout="2500" @update:model-value="snackbar = ''">
+      <div class="md:col-span-12">
+        <BaseCard>
+          <div class="mb-4 text-base font-bold text-content">صحة النظام</div>
+          <div class="grid grid-cols-1 gap-3 sm:grid-cols-3">
+            <div v-for="h in health" :key="h.label" class="flex items-center gap-3">
+              <BaseIcon name="mdi-circle" :size="14" :style="{ color: `rgb(var(--v-theme-${h.color}))` }" />
+              <div>
+                <div class="text-lg font-bold text-content">{{ h.value }}</div>
+                <div class="text-xs text-muted">{{ h.label }}</div>
+              </div>
+            </div>
+          </div>
+        </BaseCard>
+      </div>
+    </div>
+
+    <BaseSnackbar :model-value="!!snackbar" color="primary" :timeout="2500" @update:model-value="snackbar = ''">
       {{ snackbar }}
-    </VSnackbar>
+    </BaseSnackbar>
   </div>
 </template>
