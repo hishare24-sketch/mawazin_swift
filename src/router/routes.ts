@@ -325,6 +325,12 @@ export const routes: RouteRecordRaw[] = [
     meta: { layout: 'default' },
   },
   {
+    path: '/experts/:slug',
+    name: 'expert-profile',
+    component: () => import('@/modules/experts/pages/ExpertProfilePage.vue'),
+    meta: { layout: 'default' },
+  },
+  {
     path: '/join/:role(coach|trainer|consultant)',
     name: 'role-join',
     component: () => import('@/modules/experts/pages/RoleJoinWizardPage.vue'),

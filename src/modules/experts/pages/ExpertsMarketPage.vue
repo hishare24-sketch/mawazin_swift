@@ -123,9 +123,14 @@ const canJoin = computed(() => !!authStore.authUser)
             <span class="ms-auto font-weight-bold text-primary">من {{ e.priceFrom }} ﷼ {{ e.priceUnit }}</span>
           </div>
 
-          <VBtn :color="MARKET_ROLE_META[e.role].color" variant="flat" block prepend-icon="mdi-send" @click="openRequest(e)">
-            اطلب {{ MARKET_ROLE_META[e.role].service }}
-          </VBtn>
+          <div class="d-flex ga-2">
+            <VBtn variant="outlined" size="small" :to="{ name: 'expert-profile', params: { slug: e.slug } }">
+              الملف
+            </VBtn>
+            <VBtn :color="MARKET_ROLE_META[e.role].color" variant="flat" size="small" class="flex-grow-1" prepend-icon="mdi-send" @click="openRequest(e)">
+              اطلب {{ MARKET_ROLE_META[e.role].service }}
+            </VBtn>
+          </div>
         </VCard>
       </VCol>
     </VRow>

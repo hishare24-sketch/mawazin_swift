@@ -60,18 +60,94 @@ export interface ConsultingRequest {
 // —— جانب الطلب: دليل الخبراء في السوق الموحّد ——
 export type MarketExpertRole = 'coach' | 'trainer' | 'consultant'
 
+// نظام درجات الخبراء (مماثل لدرجات المقيّم المعتمد) — يعكس حجم الأثر والخبرة
+export type ExpertTier = 'rising' | 'established' | 'certified' | 'master'
+export const EXPERT_TIER_META: Record<ExpertTier, { label: string, color: string, icon: string, min: number }> = {
+  rising: { label: 'خبير صاعد', color: 'info', icon: 'mdi-trending-up', min: 0 },
+  established: { label: 'خبير راسخ', color: 'secondary', icon: 'mdi-star-outline', min: 40 },
+  certified: { label: 'خبير معتمد', color: 'primary', icon: 'mdi-shield-star-outline', min: 90 },
+  master: { label: 'خبير ماسي', color: 'accent', icon: 'mdi-diamond-stone', min: 180 },
+}
+/** الدرجة المشتقّة من عدد العملاء/المتدربين */
+export function expertTier(engagements: number): ExpertTier {
+  if (engagements >= EXPERT_TIER_META.master.min)
+    return 'master'
+  if (engagements >= EXPERT_TIER_META.certified.min)
+    return 'certified'
+  if (engagements >= EXPERT_TIER_META.established.min)
+    return 'established'
+  return 'rising'
+}
+
+// —— عناصر ملف الخبير النموذجي (نظير بيانات المقيّم الغنية) ——
+export interface ExpertReview {
+  id: number
+  author: string
+  initial: string
+  rating: number // 1-5
+  date: string
+  service: string // البرنامج/الدورة/الاستشارة التي يخصّها التقييم
+  text: string
+  reply?: string // ردّ الخبير
+}
+export interface ExpertSuccessStory {
+  id: number
+  client: string
+  headline: string
+  outcome: string
+  metric: string // "‎+120% راتب" · "وظيفة خلال 6 أسابيع"
+}
+export interface ExpertServiceElement {
+  id: number
+  label: string
+  desc: string
+  price: number // مقابل إضافي اختياري
+}
+export interface ExpertArticle {
+  id: number
+  title: string
+  excerpt: string
+  readMinutes: number
+  date: string
+}
+export interface ExpertOffer {
+  id: number
+  label: string
+  desc: string
+  active: boolean
+}
+export interface ExpertMarketingStats {
+  views: number
+  shares: number
+  saves: number
+  referrals: number
+}
+
 export interface MarketExpert {
   id: number
+  slug: string
   name: string
   initial: string
   role: MarketExpertRole
   title: string
   specialty: string
   rating: number
-  clients: number
+  reviewsCount: number
+  clients: number // عدد العملاء/المتدربين (يحدّد الدرجة)
+  years: number
   priceFrom: number
   priceUnit: string
   verified: boolean
+  languages: string[]
+  location: string
+  bio: string
+  specialties: string[]
+  serviceElements: ExpertServiceElement[]
+  reviews: ExpertReview[]
+  successStories: ExpertSuccessStory[]
+  articles: ExpertArticle[]
+  offers: ExpertOffer[]
+  stats: ExpertMarketingStats
 }
 
 export const MARKET_ROLE_META: Record<MarketExpertRole, { label: string, icon: string, color: string, service: string }> = {
@@ -81,13 +157,226 @@ export const MARKET_ROLE_META: Record<MarketExpertRole, { label: string, icon: s
 }
 
 export const MARKET_EXPERTS: MarketExpert[] = [
-  { id: 1, name: 'أ. هند الزهراني', initial: 'ه', role: 'coach', title: 'مرشدة مسارات تقنية', specialty: 'التحول الوظيفي إلى التقنية', rating: 4.9, clients: 46, priceFrom: 450, priceUnit: 'شهريًا', verified: true },
-  { id: 2, name: 'م. فهد الدوسري', initial: 'ف', role: 'coach', title: 'مرشد خريجين ومبتدئين', specialty: 'أول وظيفة تقنية', rating: 4.7, clients: 120, priceFrom: 300, priceUnit: 'شهريًا', verified: true },
-  { id: 3, name: 'م. نوف الشهري', initial: 'ن', role: 'trainer', title: 'مدربة TypeScript معتمدة', specialty: 'TypeScript وأنماط Vue المتقدمة', rating: 4.8, clients: 210, priceFrom: 180, priceUnit: 'للورشة', verified: true },
-  { id: 4, name: 'م. سلطان العمري', initial: 'س', role: 'trainer', title: 'مدرب اختبارات وجودة', specialty: 'Vitest وتغطية الاختبارات', rating: 4.6, clients: 95, priceFrom: 220, priceUnit: 'للدورة', verified: false },
-  { id: 5, name: 'د. ريم القحطاني', initial: 'ر', role: 'consultant', title: 'مستشارة قيادة وموارد بشرية', specialty: 'هيكلة الفرق ورواتب السوق', rating: 4.8, clients: 38, priceFrom: 600, priceUnit: 'للساعة', verified: true },
-  { id: 6, name: 'م. عمر باوزير', initial: 'ع', role: 'consultant', title: 'مستشار هندسة بيانات', specialty: 'اتجاهات سوق البيانات والرواتب', rating: 4.5, clients: 22, priceFrom: 500, priceUnit: 'للساعة', verified: true },
+  {
+    id: 1,
+    slug: 'hind-alzahrani',
+    name: 'أ. هند الزهراني',
+    initial: 'ه',
+    role: 'coach',
+    title: 'مرشدة مسارات تقنية',
+    specialty: 'التحول الوظيفي إلى التقنية',
+    rating: 4.9,
+    reviewsCount: 38,
+    clients: 46,
+    years: 12,
+    priceFrom: 450,
+    priceUnit: 'شهريًا',
+    verified: true,
+    languages: ['العربية', 'الإنجليزية'],
+    location: 'الرياض · عن بُعد',
+    bio: 'مرشدة مهنية معتمدة (ICF) بخبرة 12 عامًا في قيادة فرق المنتجات التقنية، رافقت أكثر من 40 محترفًا في انتقالهم من مجالات غير تقنية إلى أدوار في تطوير الويب وتحليل البيانات. أبني مع كل عميل خطة 90 يومًا قابلة للقياس تنتهي بمقابلة حقيقية.',
+    specialties: ['التحول الوظيفي', 'بناء الحضور المهني', 'التحضير للمقابلات', 'خطة 90 يومًا'],
+    serviceElements: [
+      { id: 1, label: 'جلسة مراجعة سيرة مكثّفة', desc: 'مراجعة سطرًا بسطر + إعادة صياغة موجّهة لوظيفة مستهدفة', price: 120 },
+      { id: 2, label: 'محاكاة مقابلة مسجّلة', desc: 'مقابلة كاملة مع تقرير نقاط قوة ومجالات تحسين', price: 150 },
+    ],
+    reviews: [
+      { id: 1, author: 'نورة المطيري', initial: 'ن', rating: 5, date: 'قبل 3 أسابيع', service: 'برنامج التحول الوظيفي الشامل', text: 'برنامج غيّر مساري فعلًا — انتقلت من الدعم الفني إلى محلّلة بيانات براتب أعلى بـ40%. الخطة كانت واضحة وكل جلسة تنتهي بمهمة عملية.', reply: 'فخورة بك يا نورة، الانضباط كان منكِ!' },
+      { id: 2, author: 'عبدالله المالكي', initial: 'ع', rating: 5, date: 'قبل شهرين', service: 'مسار الانطلاق المهني', text: 'كخريج جديد، ساعدتني على ترتيب أولوياتي والحصول على أول عرض عمل خلال 6 أسابيع.' },
+    ],
+    successStories: [
+      { id: 1, client: 'نورة المطيري', headline: 'من الدعم الفني إلى تحليل البيانات', outcome: 'حصلت على وظيفة محلّلة بيانات في شركة تقنية كبرى بعد 5 أشهر من الإرشاد.', metric: '‎+40% راتب' },
+    ],
+    articles: [
+      { id: 1, title: 'خطة 90 يومًا للانتقال إلى التقنية', excerpt: 'إطار عملي مقسّم لثلاث مراحل: الأساس، البناء، ثم الإطلاق نحو المقابلات.', readMinutes: 7, date: 'قبل شهر' },
+    ],
+    offers: [
+      { id: 1, label: 'جلسة تعارف مجانية (20 دقيقة)', desc: 'نحدّد فيها هدفك ومدى ملاءمة البرنامج لك', active: true },
+    ],
+    stats: { views: 412, shares: 24, saves: 31, referrals: 5 },
+  },
+  {
+    id: 2,
+    slug: 'fahad-aldosari-coach',
+    name: 'م. فهد الدوسري',
+    initial: 'ف',
+    role: 'coach',
+    title: 'مرشد خريجين ومبتدئين',
+    specialty: 'أول وظيفة تقنية',
+    rating: 4.7,
+    reviewsCount: 61,
+    clients: 120,
+    years: 8,
+    priceFrom: 300,
+    priceUnit: 'شهريًا',
+    verified: true,
+    languages: ['العربية', 'الإنجليزية'],
+    location: 'جدة · عن بُعد',
+    bio: 'مهندس برمجيات ومرشد للخريجين الجدد، أرشدت أكثر من 120 مبتدئًا للحصول على أول وظيفة تقنية عبر مشاريع محفظة عملية ومراجعات أسبوعية. تركيزي على تحويل المتعلّم النظري إلى مرشّح جاهز للسوق.',
+    specialties: ['أول وظيفة', 'بناء محفظة أعمال', 'أساسيات مقابلات الأكواد', 'التوجيه للخريجين'],
+    serviceElements: [
+      { id: 1, label: 'مراجعة مشروع محفظة', desc: 'تدقيق كود مشروعك مع توصيات لرفع جودته', price: 100 },
+    ],
+    reviews: [
+      { id: 1, author: 'ريان الشهراني', initial: 'ر', rating: 5, date: 'قبل أسبوع', service: 'مسار الانطلاق المهني', text: 'المتابعة الأسبوعية أبقتني منضبطًا. حصلت على تدريب منتهٍ بالتوظيف.' },
+      { id: 2, author: 'لمى الغامدي', initial: 'ل', rating: 4, date: 'قبل شهر', service: 'مسار الانطلاق المهني', text: 'محتوى عملي ممتاز، تمنيت لو الجلسات أطول قليلًا.' },
+    ],
+    successStories: [
+      { id: 1, client: 'ريان الشهراني', headline: 'من متعلّم ذاتي إلى مطوّر موظّف', outcome: 'بنى 3 مشاريع محفظة وحصل على تدريب منتهٍ بالتوظيف خلال 4 أشهر.', metric: 'وظيفة خلال 4 أشهر' },
+    ],
+    articles: [],
+    offers: [
+      { id: 1, label: 'مراجعة محفظة مجانية للطلاب', desc: 'مراجعة سريعة 15 دقيقة لطلاب السنة الأخيرة', active: true },
+    ],
+    stats: { views: 688, shares: 41, saves: 52, referrals: 9 },
+  },
+  {
+    id: 3,
+    slug: 'nouf-alshehri',
+    name: 'م. نوف الشهري',
+    initial: 'ن',
+    role: 'trainer',
+    title: 'مدربة TypeScript معتمدة',
+    specialty: 'TypeScript وأنماط Vue المتقدمة',
+    rating: 4.8,
+    reviewsCount: 94,
+    clients: 210,
+    years: 9,
+    priceFrom: 180,
+    priceUnit: 'للورشة',
+    verified: true,
+    languages: ['العربية', 'الإنجليزية'],
+    location: 'الرياض · حضوري وعن بُعد',
+    bio: 'مهندسة واجهات أولى ومدرّبة معتمدة، درّبت أكثر من 200 مطوّر على TypeScript وأنماط Vue المتقدمة عبر ورش عملية قائمة على مشاريع حقيقية. أصمّم كل ورشة لتنتهي بمخرَج قابل للاستخدام في العمل مباشرة.',
+    specialties: ['TypeScript متقدم', 'Composition API', 'أنماط قابلية إعادة الاستخدام', 'أداء الواجهات'],
+    serviceElements: [
+      { id: 1, label: 'جلسة تصحيح مشاريع فردية', desc: 'مراجعة كود مشروعك الخاص بعد الورشة', price: 90 },
+      { id: 2, label: 'شهادة إتمام موثّقة', desc: 'شهادة برقم تحقّق قابلة للمشاركة', price: 40 },
+    ],
+    reviews: [
+      { id: 1, author: 'خالد الحربي', initial: 'خ', rating: 5, date: 'قبل أسبوعين', service: 'TypeScript المتقدم لمطوري Vue', text: 'أفضل ورشة حضرتها — أمثلة من مشاريع حقيقية وليست نظرية. طبّقت ما تعلّمته في عملي فورًا.' },
+      { id: 2, author: 'مها القرني', initial: 'م', rating: 5, date: 'قبل شهر', service: 'أساسيات اختبار الواجهات بـ Vitest', text: 'شرح واضح وصبر كبير مع الأسئلة. رفعت تغطية اختباراتنا من 20% إلى 75%.', reply: 'رائع يا مها، التغطية استثمار طويل الأمد.' },
+    ],
+    successStories: [
+      { id: 1, client: 'فريق منتج «رواء»', headline: 'رفع جودة قاعدة كود كاملة', outcome: 'بعد ورشتين، تبنّى الفريق TypeScript الصارم وقلّل أخطاء الإنتاج بشكل ملحوظ.', metric: '‎-60% أخطاء إنتاج' },
+    ],
+    articles: [
+      { id: 1, title: '5 أنماط Composition API تكتب كودًا أنظف', excerpt: 'أنماط عملية لفصل المنطق وإعادة استخدامه دون تكرار.', readMinutes: 6, date: 'قبل 3 أسابيع' },
+    ],
+    offers: [
+      { id: 1, label: 'خصم 20% للمجموعات (3+)', desc: 'خصم لتسجيل فريق كامل في الورشة نفسها', active: true },
+    ],
+    stats: { views: 1024, shares: 78, saves: 96, referrals: 14 },
+  },
+  {
+    id: 4,
+    slug: 'sultan-alomari',
+    name: 'م. سلطان العمري',
+    initial: 'س',
+    role: 'trainer',
+    title: 'مدرب اختبارات وجودة',
+    specialty: 'Vitest وتغطية الاختبارات',
+    rating: 4.6,
+    reviewsCount: 47,
+    clients: 95,
+    years: 7,
+    priceFrom: 220,
+    priceUnit: 'للدورة',
+    verified: false,
+    languages: ['العربية'],
+    location: 'الدمام · عن بُعد',
+    bio: 'مهندس ضمان جودة ومدرّب، متخصّص في بناء ثقافة الاختبار داخل الفرق. درّبت 95 مطوّرًا على كتابة اختبارات موثوقة بـVitest وتصميم استراتيجيات تغطية عملية بلا هدر.',
+    specialties: ['Vitest', 'اختبارات التكامل', 'استراتيجية التغطية', 'أتمتة CI'],
+    serviceElements: [
+      { id: 1, label: 'تدقيق استراتيجية اختبار الفريق', desc: 'مراجعة إعداد الاختبارات الحالي وخطة تحسين', price: 150 },
+    ],
+    reviews: [
+      { id: 1, author: 'سارة العتيبي', initial: 'س', rating: 5, date: 'قبل أسبوع', service: 'أساسيات اختبار الواجهات بـ Vitest', text: 'دورة عملية جدًا، أزالت رهبة الاختبارات تمامًا.' },
+      { id: 2, author: 'ثامر السبيعي', initial: 'ث', rating: 4, date: 'قبل شهرين', service: 'أساسيات اختبار الواجهات بـ Vitest', text: 'مفيدة، وأتمنى إضافة جزء عن اختبارات E2E.' },
+    ],
+    successStories: [],
+    articles: [],
+    offers: [],
+    stats: { views: 296, shares: 12, saves: 19, referrals: 3 },
+  },
+  {
+    id: 5,
+    slug: 'reem-alqahtani',
+    name: 'د. ريم القحطاني',
+    initial: 'ر',
+    role: 'consultant',
+    title: 'مستشارة قيادة وموارد بشرية',
+    specialty: 'هيكلة الفرق ورواتب السوق',
+    rating: 4.8,
+    reviewsCount: 29,
+    clients: 38,
+    years: 14,
+    priceFrom: 600,
+    priceUnit: 'للساعة',
+    verified: true,
+    languages: ['العربية', 'الإنجليزية'],
+    location: 'الرياض · حضوري وعن بُعد',
+    bio: 'مستشارة قيادة بخبرة 14 عامًا في بناء وهيكلة فرق التقنية، ساعدت 38 جهة على تصميم مساراتها الوظيفية وسلالمها للرواتب بما يتماشى مع السوق. أعمل بالبيانات لا بالانطباعات.',
+    specialties: ['هيكلة الفرق', 'سلالم الرواتب', 'مسارات التطور', 'تقييم الأداء'],
+    serviceElements: [
+      { id: 1, label: 'تقرير مكتوب شامل', desc: 'تقرير نهائي بالتوصيات وخطة التنفيذ', price: 250 },
+      { id: 2, label: 'جلسة عرض للإدارة التنفيذية', desc: 'عرض النتائج على القيادة مع نقاش', price: 300 },
+    ],
+    reviews: [
+      { id: 1, author: 'شركة تقنية المستقبل', initial: 'ت', rating: 5, date: 'قبل شهر', service: 'هيكلة فريق الواجهات', text: 'استشارة رفعت وضوح المسارات الوظيفية لدينا وخفّضت دوران الموظفين. توصيات عملية وقابلة للتطبيق فورًا.', reply: 'سعدت بالعمل معكم، التطبيق السريع صنع الفرق.' },
+    ],
+    successStories: [
+      { id: 1, client: 'شركة تقنية المستقبل', headline: 'إعادة هيكلة مسارات فريق الهندسة', outcome: 'صمّمنا سلّم رواتب ومسار تطور واضحًا خفّض دوران الموظفين خلال ربعين.', metric: '‎-30% دوران موظفين' },
+    ],
+    articles: [
+      { id: 1, title: 'كيف تبني سلّم رواتب عادلًا ومنافسًا', excerpt: 'منهجية لربط الرواتب بمستويات الأثر لا بسنوات الخبرة فقط.', readMinutes: 9, date: 'قبل شهرين' },
+    ],
+    offers: [
+      { id: 1, label: 'جلسة استكشافية مخفّضة', desc: 'أول 30 دقيقة بنصف السعر لتقييم الاحتياج', active: true },
+    ],
+    stats: { views: 534, shares: 33, saves: 40, referrals: 6 },
+  },
+  {
+    id: 6,
+    slug: 'omar-bawazir',
+    name: 'م. عمر باوزير',
+    initial: 'ع',
+    role: 'consultant',
+    title: 'مستشار هندسة بيانات',
+    specialty: 'اتجاهات سوق البيانات والرواتب',
+    rating: 4.5,
+    reviewsCount: 18,
+    clients: 22,
+    years: 10,
+    priceFrom: 500,
+    priceUnit: 'للساعة',
+    verified: true,
+    languages: ['العربية', 'الإنجليزية'],
+    location: 'جدة · عن بُعد',
+    bio: 'مهندس بيانات أول ومستشار، أساعد الجهات على اتخاذ قرارات مبنية على اتجاهات السوق: من تصميم فرق البيانات إلى معايير الرواتب واختيار المكدّس التقني المناسب لمرحلتها.',
+    specialties: ['فرق البيانات', 'معايير الرواتب', 'اختيار المكدّس التقني', 'خارطة طريق البيانات'],
+    serviceElements: [
+      { id: 1, label: 'خارطة طريق بيانات ربع سنوية', desc: 'خطة أولويات مرتّبة حسب الأثر', price: 200 },
+    ],
+    reviews: [
+      { id: 1, author: 'مؤسسة البناء الرقمي', initial: 'ب', rating: 5, date: 'قبل أسبوعين', service: 'اتجاهات رواتب مطوري البيانات', text: 'أرقام دقيقة ورؤية واضحة ساعدتنا على تعديل عروضنا وكسب مرشّحين أفضل.' },
+      { id: 2, author: 'فريق تحليلات «نُهى»', initial: 'ن', rating: 4, date: 'قبل شهر', service: 'استشارة اختيار مكدّس', text: 'نصائح جيدة، والقرار النهائي كان أسهل بكثير بعد الجلسة.' },
+    ],
+    successStories: [],
+    articles: [
+      { id: 1, title: 'مكدّس البيانات المناسب لمرحلة شركتك', excerpt: 'دليل لاختيار الأدوات حسب حجم الفريق والميزانية بدل تقليد الكبار.', readMinutes: 8, date: 'قبل 3 أسابيع' },
+    ],
+    offers: [],
+    stats: { views: 318, shares: 15, saves: 21, referrals: 2 },
+  },
 ]
+
+export function getExpertBySlug(slug: string): MarketExpert | undefined {
+  return MARKET_EXPERTS.find(e => e.slug === slug)
+}
+export function getExpertById(id: number): MarketExpert | undefined {
+  return MARKET_EXPERTS.find(e => e.id === id)
+}
 
 interface ExpertState {
   coachPrograms: CoachProgram[]
