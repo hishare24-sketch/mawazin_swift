@@ -9,8 +9,27 @@ import EmptyState from '@/components/shared/EmptyState.vue'
 import AttachmentsDialog from '@/components/shared/AttachmentsDialog.vue'
 import TaxonomyTree from '@/components/shared/TaxonomyTree.vue'
 import { ALL_SKILLS, categorizeSkill } from '@/services/taxonomy'
+import { sectorForField } from '@/services/sectors'
 import { ai } from '@/services/ai'
 import type { DayPeriod, TimeSuggestion } from '@/services/ai'
+import BaseCard from '@/components/ui/BaseCard.vue'
+import BaseButton from '@/components/ui/BaseButton.vue'
+import BaseChip from '@/components/ui/BaseChip.vue'
+import BaseIcon from '@/components/ui/BaseIcon.vue'
+import BaseAvatar from '@/components/ui/BaseAvatar.vue'
+import BaseInput from '@/components/ui/BaseInput.vue'
+import BaseSelect from '@/components/ui/BaseSelect.vue'
+import BaseSlider from '@/components/ui/BaseSlider.vue'
+import BaseMultiSelect from '@/components/ui/BaseMultiSelect.vue'
+import BaseModal from '@/components/ui/BaseModal.vue'
+import BaseSnackbar from '@/components/ui/BaseSnackbar.vue'
+import BaseProgressBar from '@/components/ui/BaseProgressBar.vue'
+
+type BaseColor = 'brand' | 'emerald' | 'accent' | 'success' | 'info' | 'warning' | 'error' | 'neutral'
+// خريطة ألوان Vuetify (من metas المخزن) → رموز مكوّنات الأساس
+function mapColor(c: string): BaseColor {
+  return (({ primary: 'brand', secondary: 'emerald', 'medium-emphasis': 'neutral', 'blue-grey': 'neutral' } as Record<string, BaseColor>)[c] ?? c) as BaseColor
+}
 
 const router = useRouter()
 const store = useInterviewersStore()
@@ -23,12 +42,12 @@ const reschedBookingId = ref(0)
 const reschedTimes = ref<TimeSuggestion[]>([])
 const reschedExplanation = ref('')
 const reschedSnackbar = ref(false)
-function reschedColor(v: number) {
+function reschedColor(v: number): BaseColor {
   if (v >= 90)
     return 'success'
   if (v >= 84)
     return 'warning'
-  return 'orange-darken-2'
+  return 'error'
 }
 function openReschedule(bookingId: number, interviewerId: number, interviewerName: string) {
   const iv = store.getById(interviewerId)
@@ -94,10 +113,11 @@ function toggleChip(key: string) {
 }
 const userSkills = computed(() => profile.skills.map(s => s.name))
 
-// Taxonomy tree items (skills for counting, text for sub-category keyword match)
+// Taxonomy tree items (skills + resolved sector for classification)
 const treeItems = computed(() => store.interviewers.map(iv => ({
   skills: iv.specialties,
   text: `${iv.title} ${iv.field} ${iv.specialties.join(' ')}`,
+  sector: sectorForField(iv.field)?.id,
 })))
 
 // Skill options = interviewer specialties ∪ taxonomy skills (so a pick always matches something)
@@ -123,7 +143,9 @@ const filtered = computed(() => {
       return false
     if (selectedSkills.value.length && !iv.specialties.some(s => selectedSkills.value.includes(s)))
       return false
-    if (treeSel.value.category && !iv.specialties.some(s => categorizeSkill(s) === treeSel.value.category))
+    if (treeSel.value.category
+      && sectorForField(iv.field)?.id !== treeSel.value.category
+      && !iv.specialties.some(s => categorizeSkill(s) === treeSel.value.category))
       return false
     if (treeSel.value.sub && !`${iv.title} ${iv.field} ${iv.specialties.join(' ')}`.includes(treeSel.value.sub))
       return false
@@ -151,6 +173,17 @@ const filtered = computed(() => {
 function open(id: number) {
   router.push({ name: 'interviewer-profile', params: { id } })
 }
+
+// نمط رقاقة الفلتر: خلفية/نص باللون الدلالي عند التفعيل، وإلا حدّ محايد
+function chipStyle(vColor: string, active: boolean) {
+  if (!active)
+    return {}
+  return {
+    background: `rgba(var(--v-theme-${vColor}), 0.18)`,
+    color: `rgb(var(--v-theme-${vColor}))`,
+    borderColor: `rgb(var(--v-theme-${vColor}))`,
+  }
+}
 </script>
 
 <template>
@@ -161,294 +194,266 @@ function open(id: number) {
       icon="mdi-account-supervisor-circle-outline"
     >
       <template #actions>
-        <VBtn variant="text" prepend-icon="mdi-medal-outline" @click="tiersDialog = true">
-          المستويات والمزايا
-        </VBtn>
-        <VBtn variant="tonal" color="secondary" prepend-icon="mdi-badge-account-outline" :to="{ name: 'interviewer-register' }">
-          سجّل كمقيّم
-        </VBtn>
+        <BaseButton variant="ghost" size="sm" @click="tiersDialog = true">
+          <BaseIcon name="mdi-medal-outline" :size="18" /> المستويات والمزايا
+        </BaseButton>
+        <BaseButton variant="tonal-emerald" size="sm" :to="{ name: 'interviewer-register' }">
+          <BaseIcon name="mdi-badge-account-outline" :size="18" /> سجّل كمقيّم
+        </BaseButton>
       </template>
     </PageHeader>
 
-    <!-- Accreditation tiers reference -->
-    <VDialog v-model="tiersDialog" max-width="620">
-      <VCard class="pa-2">
-        <VCardTitle class="d-flex align-center ga-2">
-          <VIcon icon="mdi-medal-outline" color="warning" /> مستويات الاعتماد ومزاياها
-        </VCardTitle>
-        <VCardText>
-          <p class="text-caption text-medium-emphasis mb-3">يترقّى المقيّم تلقائيًا بين المستويات كلما زادت مقابلاته المنجزة وتقييماته.</p>
-          <VCard v-for="t in INTERVIEWER_TIERS" :key="t" variant="outlined" class="pa-3 mb-2">
-            <div class="d-flex align-center ga-2 mb-1">
-              <VChip :color="INTERVIEWER_TIER_META[t].color" size="small" variant="tonal" label :prepend-icon="INTERVIEWER_TIER_META[t].icon">
-                {{ INTERVIEWER_TIER_META[t].label }}
-              </VChip>
-              <span class="text-caption text-medium-emphasis">{{ INTERVIEWER_TIER_META[t].req }}</span>
-            </div>
-            <div class="text-body-2"><VIcon icon="mdi-gift-outline" size="14" color="success" /> {{ INTERVIEWER_TIER_META[t].perk }}</div>
-          </VCard>
-        </VCardText>
-        <VCardActions class="justify-end">
-          <VBtn variant="text" @click="tiersDialog = false">إغلاق</VBtn>
-        </VCardActions>
-      </VCard>
-    </VDialog>
-
     <!-- AI recommended -->
     <div v-if="recommended.length" class="mb-6">
-      <div class="d-flex align-center ga-2 mb-3">
-        <VIcon icon="mdi-robot-happy-outline" color="secondary" />
-        <h2 class="text-subtitle-1 font-weight-bold">مقيّمون موصى بهم لك</h2>
+      <div class="mb-3 flex items-center gap-2">
+        <BaseIcon name="mdi-robot-happy-outline" :size="20" style="color: rgb(var(--v-theme-secondary))" />
+        <h2 class="font-bold text-content">مقيّمون موصى بهم لك</h2>
       </div>
-      <VRow>
-        <VCol v-for="r in recommended" :key="r.interviewer.id" cols="12" md="4">
-          <VCard class="pa-4 h-100 cursor-pointer" variant="tonal" color="secondary" @click="open(r.interviewer.id)">
-            <div class="d-flex align-center ga-3 mb-2">
-              <VAvatar :color="INTERVIEWER_TYPE_META[r.interviewer.type].color" size="48">
-                <span class="font-weight-bold">{{ r.interviewer.initial }}</span>
-              </VAvatar>
-              <div class="flex-grow-1">
-                <div class="text-body-2 font-weight-bold">{{ r.interviewer.name }}</div>
-                <div class="text-caption text-medium-emphasis">{{ INTERVIEWER_TYPE_META[r.interviewer.type].label }}</div>
-              </div>
-              <VChip color="success" size="small" label>{{ r.match }}%</VChip>
+      <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
+        <button
+          v-for="r in recommended"
+          :key="r.interviewer.id"
+          type="button"
+          class="rounded-ui-lg p-4 text-start transition hover:brightness-105"
+          style="background: rgba(var(--v-theme-secondary), 0.12)"
+          @click="open(r.interviewer.id)"
+        >
+          <div class="mb-2 flex items-center gap-3">
+            <BaseAvatar :color="mapColor(INTERVIEWER_TYPE_META[r.interviewer.type].color)" :size="48">
+              <span class="font-bold">{{ r.interviewer.initial }}</span>
+            </BaseAvatar>
+            <div class="flex-1">
+              <div class="text-sm font-bold text-content">{{ r.interviewer.name }}</div>
+              <div class="text-xs text-muted">{{ INTERVIEWER_TYPE_META[r.interviewer.type].label }}</div>
             </div>
-            <p class="text-caption mb-0">{{ r.reason }}</p>
-          </VCard>
-        </VCol>
-      </VRow>
+            <BaseChip color="success">{{ r.match }}%</BaseChip>
+          </div>
+          <p class="text-xs text-muted">{{ r.reason }}</p>
+        </button>
+      </div>
     </div>
 
-    <VRow>
+    <div class="grid grid-cols-1 gap-5 md:grid-cols-[260px_1fr]">
       <!-- Filters -->
-      <VCol cols="12" md="3">
-        <VCard class="pa-4 mb-4">
+      <aside class="space-y-4">
+        <BaseCard>
           <TaxonomyTree v-model="treeSel" :items="treeItems" />
-        </VCard>
+        </BaseCard>
 
-        <VCard class="pa-4">
-          <div class="d-flex align-center justify-space-between mb-3">
-            <span class="text-subtitle-2 font-weight-bold">فلترة</span>
-            <VIcon icon="mdi-filter-variant" size="18" />
+        <BaseCard>
+          <div class="mb-3 flex items-center justify-between">
+            <span class="text-sm font-bold text-content">فلترة</span>
+            <BaseIcon name="mdi-filter-variant" :size="18" class="text-muted" />
           </div>
-          <div class="text-caption font-weight-bold mb-2">التخصص</div>
-          <div class="d-flex flex-wrap ga-1 mb-4">
-            <VChip
+          <div class="mb-2 text-xs font-bold text-content">التخصص</div>
+          <div class="mb-4 flex flex-wrap gap-1">
+            <button
               v-for="t in types"
               :key="t"
-              :color="selectedTypes.includes(t) ? INTERVIEWER_TYPE_META[t].color : undefined"
-              :variant="selectedTypes.includes(t) ? 'flat' : 'outlined'"
-              size="small"
+              type="button"
+              class="rounded-full border-ui px-2.5 py-1 text-xs font-medium transition"
+              :style="chipStyle(INTERVIEWER_TYPE_META[t].color, selectedTypes.includes(t))"
               @click="toggleType(t)"
             >
               {{ INTERVIEWER_TYPE_META[t].label }}
-            </VChip>
+            </button>
           </div>
-          <div class="text-caption font-weight-bold mb-1">المهارات</div>
-          <VAutocomplete
-            v-model="selectedSkills"
-            :items="skillOptions"
-            multiple
-            chips
-            closable-chips
-            clearable
-            density="compact"
-            placeholder="مثال: Python، React"
-            hide-details
-            class="mb-4"
-          />
-          <div class="text-caption font-weight-bold mb-1">أدنى تقييم ({{ minRating }}★)</div>
-          <VSlider v-model="minRating" :min="0" :max="5" :step="0.5" color="warning" hide-details class="mb-3" />
-          <div class="text-caption font-weight-bold mb-1">أعلى سعر بداية ({{ maxPrice }} ريال)</div>
-          <VSlider v-model="maxPrice" :min="30" :max="500" :step="10" color="accent" hide-details />
-        </VCard>
-      </VCol>
+          <div class="mb-1 text-xs font-bold text-content">المهارات</div>
+          <BaseMultiSelect v-model="selectedSkills" :options="skillOptions" placeholder="مثال: Python، React" class="mb-4" />
+          <div class="mb-1 text-xs font-bold text-content">أدنى تقييم ({{ minRating }}★)</div>
+          <BaseSlider v-model="minRating" :min="0" :max="5" :step="0.5" class="mb-3" />
+          <div class="mb-1 text-xs font-bold text-content">أعلى سعر بداية ({{ maxPrice }} ريال)</div>
+          <BaseSlider v-model="maxPrice" :min="30" :max="500" :step="10" />
+        </BaseCard>
+      </aside>
 
       <!-- Interviewers grid -->
-      <VCol cols="12" md="9">
+      <div>
         <!-- Local search -->
-        <VTextField
-          v-model="search"
-          placeholder="ابحث في المقيّمين بالاسم أو التخصص..."
-          prepend-inner-icon="mdi-magnify"
-          variant="solo"
-          density="compact"
-          flat
-          hide-details
-          clearable
-          class="mb-3"
-        />
+        <BaseInput v-model="search" prefix-icon="mdi-magnify" placeholder="ابحث في المقيّمين بالاسم أو التخصص..." class="mb-3" />
 
         <!-- AI smart quick-filters -->
-        <div class="d-flex align-center flex-wrap ga-2 mb-3">
-          <span class="text-caption text-medium-emphasis"><VIcon icon="mdi-robot-happy-outline" size="16" color="secondary" /> فلاتر ذكية:</span>
-          <VChip
+        <div class="mb-3 flex flex-wrap items-center gap-2">
+          <span class="flex items-center gap-1 text-xs text-muted">
+            <BaseIcon name="mdi-robot-happy-outline" :size="16" style="color: rgb(var(--v-theme-secondary))" /> فلاتر ذكية:
+          </span>
+          <button
             v-for="chip in smartChips"
             :key="chip.key"
-            :color="activeChips.has(chip.key) ? 'secondary' : undefined"
-            :variant="activeChips.has(chip.key) ? 'flat' : 'outlined'"
-            size="small"
-            :prepend-icon="chip.icon"
+            type="button"
+            class="inline-flex items-center gap-1 rounded-full border-ui px-2.5 py-1 text-xs font-medium transition"
+            :style="chipStyle('secondary', activeChips.has(chip.key))"
             @click="toggleChip(chip.key)"
           >
-            {{ chip.label }}
-          </VChip>
+            <BaseIcon :name="chip.icon" :size="14" /> {{ chip.label }}
+          </button>
         </div>
 
         <!-- Toolbar: count · sort · view -->
-        <div class="d-flex align-center justify-space-between flex-wrap ga-2 mb-3">
-          <span class="text-body-2 text-medium-emphasis">{{ filtered.length }} مقيّم معتمد</span>
-          <div class="d-flex align-center ga-2">
-            <VSelect v-model="sortBy" :items="sortOptions" density="compact" variant="outlined" hide-details prepend-inner-icon="mdi-sort" style="max-width: 180px" />
-            <VBtnToggle v-model="view" mandatory density="compact" variant="outlined" divided>
-              <VBtn value="grid" icon="mdi-view-grid-outline" size="small" />
-              <VBtn value="list" icon="mdi-view-list-outline" size="small" />
-            </VBtnToggle>
+        <div class="mb-3 flex flex-wrap items-center justify-between gap-2">
+          <span class="text-sm text-muted">{{ filtered.length }} مقيّم معتمد</span>
+          <div class="flex items-center gap-2">
+            <BaseSelect v-model="sortBy" :items="sortOptions" prefix-icon="mdi-sort" class="w-[190px]" />
+            <div class="seg">
+              <button type="button" class="seg-btn" :class="{ 'is-active': view === 'grid' }" aria-label="شبكة" @click="view = 'grid'">
+                <BaseIcon name="mdi-view-grid-outline" :size="18" />
+              </button>
+              <button type="button" class="seg-btn" :class="{ 'is-active': view === 'list' }" aria-label="قائمة" @click="view = 'list'">
+                <BaseIcon name="mdi-view-list-outline" :size="18" />
+              </button>
+            </div>
           </div>
         </div>
 
-        <VRow>
-          <VCol v-for="iv in filtered" :key="iv.id" cols="12" :sm="view === 'grid' ? 6 : 12">
-            <VCard class="pa-4 h-100 d-flex flex-column cursor-pointer" @click="open(iv.id)">
-              <div class="d-flex align-start ga-3 mb-2">
-                <VAvatar :color="INTERVIEWER_TYPE_META[iv.type].color" size="52">
-                  <span class="text-h6 font-weight-bold">{{ iv.initial }}</span>
-                </VAvatar>
-                <div class="flex-grow-1">
-                  <div class="d-flex align-center ga-1">
-                    <span class="text-body-1 font-weight-bold">{{ iv.name }}</span>
-                    <VIcon v-if="iv.verified" icon="mdi-check-decagram" color="primary" size="16" />
-                  </div>
-                  <div class="text-caption text-medium-emphasis">{{ iv.title }}</div>
+        <div class="grid grid-cols-1 gap-4" :class="view === 'grid' ? 'sm:grid-cols-2' : ''">
+          <BaseCard
+            v-for="iv in filtered"
+            :key="iv.id"
+            hover
+            class="flex cursor-pointer flex-col"
+            @click="open(iv.id)"
+          >
+            <div class="mb-2 flex items-start gap-3">
+              <BaseAvatar :color="mapColor(INTERVIEWER_TYPE_META[iv.type].color)" :size="52">
+                <span class="text-lg font-bold">{{ iv.initial }}</span>
+              </BaseAvatar>
+              <div class="flex-1">
+                <div class="flex items-center gap-1">
+                  <span class="font-bold text-content">{{ iv.name }}</span>
+                  <BaseIcon v-if="iv.verified" name="mdi-check-decagram" :size="16" style="color: rgb(var(--v-theme-primary))" />
                 </div>
-                <VChip color="success" size="small" label>{{ matchOf(iv.id) }}%</VChip>
+                <div class="text-xs text-muted">{{ iv.title }}</div>
               </div>
+              <BaseChip color="success">{{ matchOf(iv.id) }}%</BaseChip>
+            </div>
 
-              <div class="d-flex align-center flex-wrap ga-2 mb-2">
-                <VChip :color="INTERVIEWER_TYPE_META[iv.type].color" size="x-small" label :prepend-icon="INTERVIEWER_TYPE_META[iv.type].icon">
-                  {{ INTERVIEWER_TYPE_META[iv.type].label }}
-                </VChip>
-                <VChip :color="INTERVIEWER_TIER_META[interviewerTier(iv)].color" size="x-small" variant="tonal" label :prepend-icon="INTERVIEWER_TIER_META[interviewerTier(iv)].icon">
-                  {{ INTERVIEWER_TIER_META[interviewerTier(iv)].label }}
-                </VChip>
-                <div class="d-flex align-center text-caption text-medium-emphasis">
-                  <VIcon icon="mdi-star" color="warning" size="14" class="me-1" />{{ iv.rating }} ({{ iv.reviewsCount }})
-                </div>
+            <div class="mb-2 flex flex-wrap items-center gap-2">
+              <BaseChip :color="mapColor(INTERVIEWER_TYPE_META[iv.type].color)">
+                <BaseIcon :name="INTERVIEWER_TYPE_META[iv.type].icon" :size="12" /> {{ INTERVIEWER_TYPE_META[iv.type].label }}
+              </BaseChip>
+              <BaseChip :color="mapColor(INTERVIEWER_TIER_META[interviewerTier(iv)].color)">
+                <BaseIcon :name="INTERVIEWER_TIER_META[interviewerTier(iv)].icon" :size="12" /> {{ INTERVIEWER_TIER_META[interviewerTier(iv)].label }}
+              </BaseChip>
+              <div class="flex items-center gap-1 text-xs text-muted">
+                <BaseIcon name="mdi-star" :size="14" style="color: rgb(var(--v-theme-warning))" />{{ iv.rating }} ({{ iv.reviewsCount }})
               </div>
+            </div>
 
-              <div class="d-flex flex-wrap ga-1 mb-3 flex-grow-1">
-                <VChip v-for="s in iv.specialties.slice(0, 3)" :key="s" size="x-small" variant="tonal">{{ s }}</VChip>
-              </div>
+            <div class="mb-3 flex flex-1 flex-wrap gap-1">
+              <BaseChip v-for="s in iv.specialties.slice(0, 3)" :key="s" color="neutral">{{ s }}</BaseChip>
+            </div>
 
-              <div class="d-flex align-center justify-space-between">
-                <span class="text-caption text-medium-emphasis">{{ iv.sessionsCount }} مقابلة</span>
-                <span class="text-body-2 font-weight-bold">{{ iv.priceMin }}–{{ iv.priceMax }} ريال</span>
-              </div>
-            </VCard>
-          </VCol>
-        </VRow>
-        <VCard v-if="!filtered.length">
+            <div class="flex items-center justify-between">
+              <span class="text-xs text-muted">{{ iv.sessionsCount }} مقابلة</span>
+              <span class="font-bold text-content">{{ iv.priceMin }}–{{ iv.priceMax }} ريال</span>
+            </div>
+          </BaseCard>
+        </div>
+        <BaseCard v-if="!filtered.length" :padded="false">
           <EmptyState
             icon="mdi-account-search-outline"
             title="لا مقيّمين مطابقين"
             description="جرّب توسيع نطاق التقييم أو السعر، أو إزالة فلتر التخصص."
           />
-        </VCard>
+        </BaseCard>
 
         <!-- My bookings -->
         <div v-if="store.bookings.length" class="mt-6">
-          <h2 class="text-subtitle-1 font-weight-bold mb-3">حجوزاتي مع المقيّمين ({{ store.bookings.length }})</h2>
-          <VCard>
-            <VList lines="two">
-              <template v-for="(b, i) in store.bookings" :key="b.id">
-                <VListItem>
-                  <template #prepend>
-                    <VAvatar color="primary" variant="tonal" rounded="lg"><VIcon icon="mdi-account-tie-voice-outline" /></VAvatar>
-                  </template>
-                  <VListItemTitle class="font-weight-bold">{{ b.interviewerName }} · {{ KIND_META[b.kind].label }}</VListItemTitle>
-                  <VListItemSubtitle>{{ b.datetime }} · {{ b.price }} ريال</VListItemSubtitle>
-                  <template #append>
-                    <div class="d-flex align-center ga-2">
-                      <VBtn
-                        v-if="b.status !== 'completed' && b.status !== 'cancelled'"
-                        size="x-small"
-                        color="secondary"
-                        variant="tonal"
-                        prepend-icon="mdi-paperclip"
-                        @click="openAttachments(b.id, b.interviewerName)"
-                      >
-                        مرفقات
-                        <VChip v-if="b.attachments?.length" size="x-small" color="secondary" class="ms-1" label>{{ b.attachments.length }}</VChip>
-                      </VBtn>
-                      <VBtn
-                        v-if="b.status !== 'completed' && b.status !== 'cancelled'"
-                        size="x-small"
-                        variant="tonal"
-                        prepend-icon="mdi-calendar-refresh-outline"
-                        @click="openReschedule(b.id, b.interviewerId, b.interviewerName)"
-                      >
-                        إعادة جدولة
-                      </VBtn>
-                      <VChip v-if="b.report" color="success" size="small" label>{{ b.report.overall }}%</VChip>
-                      <VChip :color="BOOKING_STATUS_META[b.status].color" size="small" label>{{ BOOKING_STATUS_META[b.status].label }}</VChip>
-                    </div>
-                  </template>
-                </VListItem>
-                <VDivider v-if="i < store.bookings.length - 1" />
-              </template>
-            </VList>
-          </VCard>
+          <h2 class="mb-3 font-bold text-content">حجوزاتي مع المقيّمين ({{ store.bookings.length }})</h2>
+          <BaseCard :padded="false">
+            <div>
+              <div
+                v-for="(b, i) in store.bookings"
+                :key="b.id"
+                class="flex flex-wrap items-center gap-3 p-4"
+                :style="i > 0 ? 'border-top: 1px solid rgba(var(--v-theme-on-surface), 0.12)' : ''"
+              >
+                <BaseAvatar color="brand" tonal square>
+                  <BaseIcon name="mdi-account-tie-voice-outline" :size="22" />
+                </BaseAvatar>
+                <div class="min-w-[10rem] flex-1">
+                  <div class="font-bold text-content">{{ b.interviewerName }} · {{ KIND_META[b.kind].label }}</div>
+                  <div class="text-sm text-muted">{{ b.datetime }} · {{ b.price }} ريال</div>
+                </div>
+                <div class="flex flex-wrap items-center gap-2">
+                  <BaseButton
+                    v-if="b.status !== 'completed' && b.status !== 'cancelled'"
+                    variant="tonal-emerald"
+                    size="sm"
+                    @click="openAttachments(b.id, b.interviewerName)"
+                  >
+                    <BaseIcon name="mdi-paperclip" :size="16" /> مرفقات
+                    <BaseChip v-if="b.attachments?.length" color="emerald" class="ms-1">{{ b.attachments.length }}</BaseChip>
+                  </BaseButton>
+                  <BaseButton
+                    v-if="b.status !== 'completed' && b.status !== 'cancelled'"
+                    variant="outline"
+                    size="sm"
+                    @click="openReschedule(b.id, b.interviewerId, b.interviewerName)"
+                  >
+                    <BaseIcon name="mdi-calendar-refresh-outline" :size="16" /> إعادة جدولة
+                  </BaseButton>
+                  <BaseChip v-if="b.report" color="success">{{ b.report.overall }}%</BaseChip>
+                  <BaseChip :color="mapColor(BOOKING_STATUS_META[b.status].color)">{{ BOOKING_STATUS_META[b.status].label }}</BaseChip>
+                </div>
+              </div>
+            </div>
+          </BaseCard>
         </div>
-      </VCol>
-    </VRow>
+      </div>
+    </div>
+
+    <!-- Accreditation tiers reference -->
+    <BaseModal v-model="tiersDialog" title="مستويات الاعتماد ومزاياها">
+      <p class="mb-3 text-xs text-muted">يترقّى المقيّم تلقائيًا بين المستويات كلما زادت مقابلاته المنجزة وتقييماته.</p>
+      <div class="space-y-2">
+        <div v-for="t in INTERVIEWER_TIERS" :key="t" class="rounded-ui border-ui p-3">
+          <div class="mb-1 flex flex-wrap items-center gap-2">
+            <BaseChip :color="mapColor(INTERVIEWER_TIER_META[t].color)">
+              <BaseIcon :name="INTERVIEWER_TIER_META[t].icon" :size="12" /> {{ INTERVIEWER_TIER_META[t].label }}
+            </BaseChip>
+            <span class="text-xs text-muted">{{ INTERVIEWER_TIER_META[t].req }}</span>
+          </div>
+          <div class="text-sm text-content">
+            <BaseIcon name="mdi-gift-outline" :size="14" style="color: rgb(var(--v-theme-success))" /> {{ INTERVIEWER_TIER_META[t].perk }}
+          </div>
+        </div>
+      </div>
+    </BaseModal>
 
     <AttachmentsDialog v-model="attachDialog" :booking-id="attachBookingId" :interviewer-name="attachInterviewerName" />
 
     <!-- Reschedule dialog — AI suggests 3 new optimal times -->
-    <VDialog v-model="reschedDialog" max-width="620">
-      <VCard class="pa-2">
-        <VCardTitle class="d-flex justify-space-between align-center">
-          <span class="text-body-1 font-weight-bold">إعادة جدولة مع {{ reschedName }}</span>
-          <VBtn icon="mdi-close" variant="text" size="small" @click="reschedDialog = false" />
-        </VCardTitle>
-        <VCardText>
-          <div class="d-flex align-center ga-2 mb-3">
-            <VIcon icon="mdi-robot-happy-outline" color="secondary" size="18" />
-            <span class="text-caption text-medium-emphasis">اقترح الـ AI مواعيد بديلة بناءً على تفضيلاتك وتوفّر المقيّم — اختر بنقرة:</span>
+    <BaseModal v-model="reschedDialog" :title="`إعادة جدولة مع ${reschedName}`">
+      <div class="mb-3 flex items-center gap-2">
+        <BaseIcon name="mdi-robot-happy-outline" :size="18" style="color: rgb(var(--v-theme-secondary))" />
+        <span class="text-xs text-muted">اقترح الـ AI مواعيد بديلة بناءً على تفضيلاتك وتوفّر المقيّم — اختر بنقرة:</span>
+      </div>
+      <div class="grid grid-cols-1 gap-2 sm:grid-cols-3">
+        <button
+          v-for="s in reschedTimes"
+          :key="s.id"
+          type="button"
+          class="rounded-ui border-ui p-3 text-start transition hover:-translate-y-0.5"
+          @click="applyReschedule(s)"
+        >
+          <BaseChip :color="reschedColor(s.compatibility)" class="mb-2">{{ s.tag }}</BaseChip>
+          <div class="mb-2 text-sm font-bold text-content">{{ s.label }}</div>
+          <div class="mb-1 flex items-center justify-between text-xs">
+            <span class="text-muted">توافق</span>
+            <span class="font-bold" :style="{ color: `rgb(var(--v-theme-${reschedColor(s.compatibility)}))` }">{{ s.compatibility }}%</span>
           </div>
-          <VRow dense>
-            <VCol v-for="s in reschedTimes" :key="s.id" cols="12" sm="4">
-              <VCard variant="outlined" class="pa-3 h-100 cursor-pointer suggest-card" @click="applyReschedule(s)">
-                <VChip size="x-small" :color="reschedColor(s.compatibility)" label class="mb-2">{{ s.tag }}</VChip>
-                <div class="text-body-2 font-weight-bold mb-2">{{ s.label }}</div>
-                <div class="d-flex align-center justify-space-between text-caption mb-1">
-                  <span class="text-medium-emphasis">توافق</span>
-                  <span class="font-weight-bold" :class="`text-${reschedColor(s.compatibility)}`">{{ s.compatibility }}%</span>
-                </div>
-                <VProgressLinear :model-value="s.compatibility" :color="reschedColor(s.compatibility)" height="6" rounded />
-              </VCard>
-            </VCol>
-          </VRow>
-          <VAlert color="secondary" variant="tonal" density="compact" class="mt-3 text-caption" border="start">
-            <template #prepend><VIcon icon="mdi-lightbulb-on-outline" size="18" /></template>
-            {{ reschedExplanation }}
-          </VAlert>
-        </VCardText>
-      </VCard>
-    </VDialog>
+          <BaseProgressBar :value="s.compatibility" :color="reschedColor(s.compatibility)" :height="6" />
+        </button>
+      </div>
+      <div class="mt-3 flex items-start gap-2 rounded-ui p-3 text-xs" style="background: rgba(var(--v-theme-secondary), 0.12); color: rgb(var(--v-theme-secondary))">
+        <BaseIcon name="mdi-lightbulb-on-outline" :size="18" class="shrink-0" />
+        <span>{{ reschedExplanation }}</span>
+      </div>
+    </BaseModal>
 
-    <VSnackbar v-model="reschedSnackbar" color="success" timeout="4000">
+    <BaseSnackbar v-model="reschedSnackbar" color="success">
       تمت إعادة جدولة المقابلة — أُرسل الموعد الجديد للمقيّم للتأكيد.
-    </VSnackbar>
+    </BaseSnackbar>
   </div>
 </template>
-
-<style scoped>
-.suggest-card {
-  transition: border-color 0.18s ease, transform 0.18s ease;
-}
-.suggest-card:hover {
-  border-color: rgba(var(--v-theme-secondary), 0.55);
-  transform: translateY(-2px);
-}
-</style>
