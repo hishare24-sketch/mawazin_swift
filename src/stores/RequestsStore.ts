@@ -1,8 +1,16 @@
 import { defineStore } from 'pinia'
 import { computed, ref, watch } from 'vue'
 import { syncPrivateDoc } from '@/services/cloudSync'
+import { OPP_TYPE_FROM_REQUEST_KIND, type OpportunityTypeId } from '@/services/sectors'
 
+// «شكل ارتباط» الطلب — محور متمايز عن نوع الفرصة الموظّفي (أدقّ لسوق الأعمال الحرّة).
+// لا يُدمَج بالأنواع الثمانية (سيُفقِد تمييز مشروع/استشارة)، بل يُجسَّر إليها قانونيًّا.
 export type RequestKind = 'job' | 'project' | 'consultation' | 'task'
+
+/** جسر قانوني: شكل ارتباط الطلب → نوع الفرصة المعتمد (للمطابقة/الفلترة العابرة) */
+export function opportunityTypeOf(kind: RequestKind): OpportunityTypeId {
+  return OPP_TYPE_FROM_REQUEST_KIND[kind]
+}
 export type RequestStatus = 'reviewing' | 'accepted' | 'rejected' | 'done' | 'cancelled'
 export type RequestState = 'new' | 'reviewing' | 'accepted' | 'closed'
 

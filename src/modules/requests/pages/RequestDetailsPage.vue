@@ -2,8 +2,11 @@
 import { computed, ref } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { KIND_META, useRequestsStore } from '@/stores/RequestsStore'
+import type { MarketRequest } from '@/stores/RequestsStore'
 import { useProfileStore } from '@/stores/ProfileStore'
 import { useResumesStore } from '@/stores/ResumesStore'
+import { matchScore } from '@/services/matching'
+import { requestMatchProfile, seekerMatchProfile } from '@/services/matchProfile'
 import { ai } from '@/services/ai'
 import BaseCard from '@/components/ui/BaseCard.vue'
 import BaseButton from '@/components/ui/BaseButton.vue'
@@ -31,6 +34,17 @@ const resumesStore = useResumesStore()
 const request = computed(() => store.getById(Number(route.params.id)))
 const similar = computed(() => store.similar(Number(route.params.id)))
 const applied = computed(() => (request.value ? store.hasApplied(request.value.id) : false))
+
+// نسبة التطابق الحيّة (نفس محرّك سوق الطلبات)
+const seeker = computed(() => seekerMatchProfile({
+  skills: profile.skills.map(s => s.name),
+  city: profile.prefs.location,
+  opportunityType: profile.prefs.preferred_employment_types[0],
+}))
+function liveMatch(r: MarketRequest): number {
+  return matchScore(seeker.value, requestMatchProfile({ field: r.field, skills: r.skills, city: r.city, remote: r.remote })).score
+}
+const matchRate = computed(() => (request.value ? liveMatch(request.value) : 0))
 
 const breakdown = computed(() => {
   const b = request.value?.breakdown
@@ -170,7 +184,7 @@ function copyNegotiation() {
               <BaseChip :color="mapColor(KIND_META[r.kind].color)" class="mb-2">{{ KIND_META[r.kind].label }}</BaseChip>
               <div class="truncate font-bold">{{ r.title }}</div>
               <div class="text-xs text-muted">{{ r.org }}</div>
-              <BaseChip color="success" class="mt-2">{{ r.matchRate }}% تطابق</BaseChip>
+              <BaseChip color="success" class="mt-2">{{ liveMatch(r) }}% تطابق</BaseChip>
             </BaseCard>
           </div>
         </template>
@@ -180,8 +194,8 @@ function copyNegotiation() {
       <div>
         <BaseCard class="mb-4">
           <div class="mb-3 text-center">
-            <BaseProgressRing :value="request.matchRate" :size="110" :width="10" color="success" class="mx-auto">
-              <span class="text-2xl font-bold">{{ request.matchRate }}%</span>
+            <BaseProgressRing :value="matchRate" :size="110" :width="10" color="success" class="mx-auto">
+              <span class="text-2xl font-bold">{{ matchRate }}%</span>
             </BaseProgressRing>
             <div class="mt-2 text-sm text-muted">نسبة تطابقك مع الطلب</div>
           </div>

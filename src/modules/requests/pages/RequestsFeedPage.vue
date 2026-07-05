@@ -9,6 +9,9 @@ import EmptyState from '@/components/shared/EmptyState.vue'
 import TaxonomyTree from '@/components/shared/TaxonomyTree.vue'
 import { categorizeSkill } from '@/services/taxonomy'
 import { useProfileStore } from '@/stores/ProfileStore'
+import { matchScore } from '@/services/matching'
+import { requestMatchProfile, seekerMatchProfile } from '@/services/matchProfile'
+import type { MarketRequest } from '@/stores/RequestsStore'
 import BaseCard from '@/components/ui/BaseCard.vue'
 import BaseButton from '@/components/ui/BaseButton.vue'
 import BaseChip from '@/components/ui/BaseChip.vue'
@@ -41,6 +44,16 @@ function toggleChip(key: string) {
 }
 const userSkills = computed(() => profile.skills.map(s => s.name))
 
+// نسبة التطابق الحيّة — نفس محرّك بطاقة الفرصة (قطاع + مهارات + موقع)
+const seekerProfile = computed(() => seekerMatchProfile({
+  skills: userSkills.value,
+  city: profile.prefs.location,
+  opportunityType: profile.prefs.preferred_employment_types[0],
+}))
+function liveMatch(r: MarketRequest): number {
+  return matchScore(seekerProfile.value, requestMatchProfile({ field: r.field, skills: r.skills, city: r.city, remote: r.remote })).score
+}
+
 const search = ref('')
 const searchFocused = ref(false)
 const suggestions = computed(() => (searchFocused.value ? ai.searchSuggestions(search.value) : []))
@@ -58,8 +71,8 @@ const treeItems = computed(() => store.requests.map(r => ({
   text: `${r.title} ${r.field} ${r.skills.join(' ')}`,
 })))
 
-// AI personalized top match (highest match with the user's profile)
-const topMatch = computed(() => [...store.requests].sort((a, b) => b.matchRate - a.matchRate)[0])
+// AI personalized top match (highest LIVE match with the user's profile)
+const topMatch = computed(() => [...store.requests].sort((a, b) => liveMatch(b) - liveMatch(a))[0])
 
 // Side-sheet filter + sorting
 const filterDrawer = ref(false)
@@ -127,7 +140,7 @@ const filtered = computed(() => {
     case 'rating': sorted.sort((a, b) => b.orgRating - a.orgRating); break
     case 'price': sorted.sort((a, b) => a.budgetValue - b.budgetValue); break
     case 'applicants': sorted.sort((a, b) => b.applicants - a.applicants); break
-    default: sorted.sort((a, b) => b.matchRate - a.matchRate)
+    default: sorted.sort((a, b) => liveMatch(b) - liveMatch(a))
   }
   return sorted
 })
@@ -231,7 +244,7 @@ function open(id: number) {
     >
       <span class="text-sm">
         <BaseIcon name="mdi-robot-happy-outline" :size="16" /> ترشيح مخصّص لك: «{{ topMatch.title }}» من {{ topMatch.org }} — تطابق
-        <strong>{{ topMatch.matchRate }}%</strong> مع ملفك.
+        <strong>{{ liveMatch(topMatch) }}%</strong> مع ملفك.
       </span>
       <BaseButton variant="emerald" size="sm" @click="open(topMatch.id)">عرض</BaseButton>
     </div>
@@ -271,8 +284,8 @@ function open(id: number) {
 
         <!-- Match ring + action -->
         <div class="flex flex-col items-center text-center" style="min-width: 84px" title="نسبة التطابق الذكي مع مهاراتك المُثبتة">
-          <BaseProgressRing :value="r.matchRate" :color="matchColor(r.matchRate)" :size="58" :width="5">
-            <span class="text-xs font-bold">{{ r.matchRate }}%</span>
+          <BaseProgressRing :value="liveMatch(r)" :color="matchColor(liveMatch(r))" :size="58" :width="5">
+            <span class="text-xs font-bold">{{ liveMatch(r) }}%</span>
           </BaseProgressRing>
           <div class="mt-1 text-xs text-muted">تطابق</div>
           <BaseChip v-if="store.hasApplied(r.id)" color="success" class="mt-1"><BaseIcon name="mdi-check" :size="12" /> مقدّم</BaseChip>

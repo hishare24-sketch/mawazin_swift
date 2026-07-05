@@ -1,6 +1,7 @@
 import { beforeEach, describe, expect, it } from 'vitest'
 import { createPinia, setActivePinia } from 'pinia'
-import { STATE_META, useRequestsStore } from './RequestsStore'
+import { STATE_META, opportunityTypeOf, useRequestsStore } from './RequestsStore'
+import { OPPORTUNITY_TYPE_IDS } from '@/services/sectors'
 
 describe('RequestsStore', () => {
   beforeEach(() => {
@@ -27,5 +28,13 @@ describe('RequestsStore', () => {
     expect(store.hasApplied(req.id)).toBe(true)
     store.apply(req) // no duplicate
     expect(store.mine.length).toBe(before + 1)
+  })
+
+  it('bridges every request kind to a canonical opportunity type', () => {
+    const valid = new Set(OPPORTUNITY_TYPE_IDS)
+    for (const kind of ['job', 'project', 'consultation', 'task'] as const)
+      expect(valid.has(opportunityTypeOf(kind))).toBe(true)
+    expect(opportunityTypeOf('job')).toBe('full_time')
+    expect(opportunityTypeOf('project')).toBe('freelance')
   })
 })
