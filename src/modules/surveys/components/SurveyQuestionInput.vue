@@ -1,6 +1,13 @@
 <script setup lang="ts">
 import { computed } from 'vue'
 import type { AnswerValue, SurveyQuestion } from '@/stores/SurveysStore'
+import BaseIcon from '@/components/ui/BaseIcon.vue'
+import BaseInput from '@/components/ui/BaseInput.vue'
+import BaseTextarea from '@/components/ui/BaseTextarea.vue'
+import BaseSelect from '@/components/ui/BaseSelect.vue'
+import BaseCheckbox from '@/components/ui/BaseCheckbox.vue'
+import BaseRating from '@/components/ui/BaseRating.vue'
+import BaseChip from '@/components/ui/BaseChip.vue'
 
 const props = defineProps<{
   question: SurveyQuestion
@@ -12,6 +19,8 @@ const val = computed({
   get: () => props.modelValue,
   set: (v: AnswerValue) => emit('update:modelValue', v),
 })
+
+const dropdownItems = computed(() => (props.question.options ?? []).map(o => ({ value: o, title: o })))
 
 // matrix: value is Record<row, 1..5>
 function matrixValue(row: string): number {
@@ -39,59 +48,70 @@ const SCALE = Array.from({ length: 10 }, (_, i) => i + 1)
 function npsColor(n: number): string {
   return n <= 6 ? 'error' : n <= 8 ? 'warning' : 'success'
 }
+// نغمة زرّ الرقم المختار (NPS/scale) — صلب بلون دلالي
+function numStyle(active: boolean, color: string) {
+  if (active)
+    return { background: `rgb(var(--v-theme-${color}))`, color: `rgb(var(--v-theme-on-${color}))`, borderColor: 'transparent' }
+  return { borderColor: 'rgba(var(--v-theme-on-surface), 0.2)', color: 'rgb(var(--v-theme-on-surface))' }
+}
 </script>
 
 <template>
   <div>
     <!-- single -->
-    <VRadioGroup v-if="question.type === 'single'" :model-value="val as string" hide-details @update:model-value="v => (val = v as string)">
-      <VRadio v-for="opt in question.options" :key="opt" :label="opt" :value="opt" />
-    </VRadioGroup>
+    <div v-if="question.type === 'single'" class="flex flex-col gap-2">
+      <button
+        v-for="opt in question.options"
+        :key="opt"
+        type="button"
+        class="flex w-full items-center gap-3 rounded-ui border p-2.5 text-start transition"
+        :class="val === opt ? 'border-transparent bg-brand text-on-brand' : 'border-ui'"
+        @click="val = opt"
+      >
+        <BaseIcon :name="val === opt ? 'mdi-radiobox-marked' : 'mdi-radiobox-blank'" :size="20" />
+        <span>{{ opt }}</span>
+      </button>
+    </div>
 
     <!-- multiple -->
-    <div v-else-if="question.type === 'multiple'">
-      <VCheckbox
+    <div v-else-if="question.type === 'multiple'" class="flex flex-col">
+      <BaseCheckbox
         v-for="opt in question.options"
         :key="opt"
         :model-value="(val as string[] | undefined) ?? []"
         :value="opt"
         :label="opt"
-        density="compact"
-        hide-details
         @update:model-value="v => (val = v as string[])"
       />
     </div>
 
     <!-- dropdown -->
-    <VSelect v-else-if="question.type === 'dropdown'" :model-value="val as string" :items="question.options" label="اختر" hide-details @update:model-value="v => (val = v as string)" />
+    <BaseSelect v-else-if="question.type === 'dropdown'" :model-value="val as string" :items="dropdownItems" placeholder="اختر" @update:model-value="v => v != null && (val = v)" />
 
     <!-- text -->
-    <VTextField v-else-if="question.type === 'text'" :model-value="val as string" placeholder="اكتب إجابتك…" hide-details @update:model-value="v => (val = v)" />
+    <BaseInput v-else-if="question.type === 'text'" :model-value="val as string" placeholder="اكتب إجابتك…" @update:model-value="v => (val = String(v))" />
 
     <!-- longtext -->
-    <VTextarea v-else-if="question.type === 'longtext'" :model-value="val as string" placeholder="اكتب إجابتك بالتفصيل…" rows="3" auto-grow hide-details @update:model-value="v => (val = v)" />
+    <BaseTextarea v-else-if="question.type === 'longtext'" :model-value="val as string" placeholder="اكتب إجابتك بالتفصيل…" :rows="3" @update:model-value="v => (val = v)" />
 
     <!-- rating -->
-    <div v-else-if="question.type === 'rating'" class="text-center py-2">
-      <VRating :model-value="Number(val) || 0" color="warning" hover size="42" @update:model-value="v => (val = Number(v))" />
+    <div v-else-if="question.type === 'rating'" class="py-2 text-center">
+      <BaseRating :model-value="Number(val) || 0" color="warning" :size="42" @update:model-value="v => (val = Number(v))" />
     </div>
 
     <!-- nps -->
     <div v-else-if="question.type === 'nps'">
-      <div class="d-flex flex-wrap ga-1 justify-center py-2">
-        <VBtn
+      <div class="flex flex-wrap justify-center gap-1 py-2">
+        <button
           v-for="n in NPS"
           :key="n"
-          size="small"
-          width="40"
-          :color="Number(val) === n ? npsColor(n) : undefined"
-          :variant="Number(val) === n ? 'flat' : 'outlined'"
+          type="button"
+          class="h-10 w-10 rounded-ui border text-sm font-medium transition"
+          :style="numStyle(Number(val) === n, npsColor(n))"
           @click="val = n"
-        >
-          {{ n }}
-        </VBtn>
+        >{{ n }}</button>
       </div>
-      <div class="d-flex justify-space-between text-caption text-medium-emphasis px-1">
+      <div class="flex justify-between px-1 text-xs text-muted">
         <span>غير محتمل إطلاقًا</span>
         <span>محتمل جدًا</span>
       </div>
@@ -99,20 +119,17 @@ function npsColor(n: number): string {
 
     <!-- scale -->
     <div v-else-if="question.type === 'scale'">
-      <div class="d-flex flex-wrap ga-1 justify-center py-2">
-        <VBtn
+      <div class="flex flex-wrap justify-center gap-1 py-2">
+        <button
           v-for="n in SCALE"
           :key="n"
-          size="small"
-          width="36"
-          :color="Number(val) === n ? 'primary' : undefined"
-          :variant="Number(val) === n ? 'flat' : 'outlined'"
+          type="button"
+          class="h-9 w-9 rounded-ui border text-sm font-medium transition"
+          :style="numStyle(Number(val) === n, 'primary')"
           @click="val = n"
-        >
-          {{ n }}
-        </VBtn>
+        >{{ n }}</button>
       </div>
-      <div class="d-flex justify-space-between text-caption text-medium-emphasis px-1">
+      <div class="flex justify-between px-1 text-xs text-muted">
         <span>{{ question.scaleMin || 'ضعيف' }}</span>
         <span>{{ question.scaleMax || 'ممتاز' }}</span>
       </div>
@@ -120,20 +137,20 @@ function npsColor(n: number): string {
 
     <!-- matrix -->
     <div v-else-if="question.type === 'matrix'">
-      <div v-for="row in question.rows" :key="row" class="d-flex align-center justify-space-between flex-wrap ga-2 py-2">
-        <span class="text-body-2">{{ row }}</span>
-        <VRating :model-value="matrixValue(row)" color="warning" density="compact" hover @update:model-value="v => setMatrix(row, Number(v))" />
+      <div v-for="row in question.rows" :key="row" class="flex flex-wrap items-center justify-between gap-2 py-2">
+        <span class="text-sm text-content">{{ row }}</span>
+        <BaseRating :model-value="matrixValue(row)" color="warning" :size="26" @update:model-value="v => setMatrix(row, Number(v))" />
       </div>
     </div>
 
     <!-- ranking -->
     <div v-else-if="question.type === 'ranking'">
-      <p class="text-caption text-medium-emphasis mb-2">رتّب من الأهم (أعلى) إلى الأقل أهمية</p>
-      <div v-for="(opt, i) in rankingOrder" :key="opt" class="d-flex align-center ga-2 pa-2 mb-1 rounded-lg ranking-row">
-        <VChip size="x-small" color="primary" label>{{ i + 1 }}</VChip>
-        <span class="text-body-2 flex-grow-1">{{ opt }}</span>
-        <VBtn icon="mdi-chevron-up" size="x-small" variant="text" :disabled="i === 0" @click="move(i, -1)" />
-        <VBtn icon="mdi-chevron-down" size="x-small" variant="text" :disabled="i === rankingOrder.length - 1" @click="move(i, 1)" />
+      <p class="mb-2 text-xs text-muted">رتّب من الأهم (أعلى) إلى الأقل أهمية</p>
+      <div v-for="(opt, i) in rankingOrder" :key="opt" class="ranking-row mb-1 flex items-center gap-2 rounded-ui p-2">
+        <BaseChip color="brand">{{ i + 1 }}</BaseChip>
+        <span class="flex-1 text-sm text-content">{{ opt }}</span>
+        <button class="icon-btn h-8 w-8 disabled:opacity-40" :disabled="i === 0" aria-label="لأعلى" @click="move(i, -1)"><BaseIcon name="mdi-chevron-up" :size="18" /></button>
+        <button class="icon-btn h-8 w-8 disabled:opacity-40" :disabled="i === rankingOrder.length - 1" aria-label="لأسفل" @click="move(i, 1)"><BaseIcon name="mdi-chevron-down" :size="18" /></button>
       </div>
     </div>
   </div>
