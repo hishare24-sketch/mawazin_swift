@@ -3,6 +3,7 @@ import { computed } from 'vue'
 import BaseIcon from '@/components/ui/BaseIcon.vue'
 
 // تقييم نجمي أساس يحاكي VRating — صفّ نجوم قابلة للنقر (1..max)، لون دلالي من الثيم.
+// في وضع العرض (readonly) يدعم أنصاف النجوم (half-increments) لعرض المتوسّطات.
 const props = withDefaults(defineProps<{
   modelValue?: number
   max?: number
@@ -13,6 +14,18 @@ const props = withDefaults(defineProps<{
 const emit = defineEmits<{ 'update:modelValue': [value: number] }>()
 
 const stars = computed(() => Array.from({ length: props.max }, (_, i) => i + 1))
+
+// أيقونة كل نجمة: ممتلئة/نصف/فارغة (النصف في وضع العرض فقط)
+function iconFor(n: number) {
+  if (n <= props.modelValue)
+    return 'mdi-star'
+  if (props.readonly && n - props.modelValue <= 0.5)
+    return 'mdi-star-half-full'
+  return 'mdi-star-outline'
+}
+function isFilled(n: number) {
+  return n <= props.modelValue || (props.readonly && n - props.modelValue <= 0.5)
+}
 
 function set(v: number) {
   if (!props.readonly)
@@ -33,9 +46,9 @@ function set(v: number) {
       @click="set(n)"
     >
       <BaseIcon
-        :name="n <= modelValue ? 'mdi-star' : 'mdi-star-outline'"
+        :name="iconFor(n)"
         :size="size"
-        :style="{ color: n <= modelValue ? `rgb(var(--v-theme-${color}))` : 'rgba(var(--v-theme-on-surface), 0.3)' }"
+        :style="{ color: isFilled(n) ? `rgb(var(--v-theme-${color}))` : 'rgba(var(--v-theme-on-surface), 0.3)' }"
       />
     </button>
   </div>

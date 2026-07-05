@@ -4,12 +4,28 @@ import { useRouter } from 'vue-router'
 import { useTrustStore } from '@/stores/TrustStore'
 import { ai } from '@/services/ai'
 import TrustRadar from './TrustRadar.vue'
+import BaseCard from '@/components/ui/BaseCard.vue'
+import BaseButton from '@/components/ui/BaseButton.vue'
+import BaseChip from '@/components/ui/BaseChip.vue'
+import BaseIcon from '@/components/ui/BaseIcon.vue'
+import BaseProgressRing from '@/components/ui/BaseProgressRing.vue'
+import BaseProgressBar from '@/components/ui/BaseProgressBar.vue'
+import BaseModal from '@/components/ui/BaseModal.vue'
+import BaseSnackbar from '@/components/ui/BaseSnackbar.vue'
 
 const store = useTrustStore()
 const router = useRouter()
 const dialog = ref(false)
 const refreshing = ref(false)
 const motivation = ref('')
+
+type BaseColor = 'brand' | 'emerald' | 'accent' | 'success' | 'info' | 'warning' | 'error' | 'neutral'
+function mapColor(c?: string): BaseColor {
+  return (({ primary: 'brand', secondary: 'emerald', 'medium-emphasis': 'neutral', 'surface-variant': 'neutral', grey: 'neutral', amber: 'warning' } as Record<string, BaseColor>)[c ?? ''] ?? c ?? 'brand') as BaseColor
+}
+function colorVar(c: string) {
+  return `rgb(var(--v-theme-${c === 'amber' ? 'warning' : c}))`
+}
 
 // Motivational nudge whenever the score changes (live reaction to new proofs/interviews)
 let prevScore = store.score
@@ -39,75 +55,74 @@ function factorColor(v: number) {
 </script>
 
 <template>
-  <VCard class="pa-4">
-    <div class="d-flex align-center ga-4">
-      <VProgressCircular :model-value="store.score" :size="88" :width="9" :color="store.level.color">
-        <span class="text-h6 font-weight-bold">{{ store.score }}</span>
-      </VProgressCircular>
-      <div class="flex-grow-1">
-        <div class="d-flex align-center ga-2">
-          <span class="text-subtitle-1 font-weight-bold">نسبة الثقة</span>
-          <VChip :color="store.level.color" size="small" label>{{ store.level.label }}</VChip>
+  <BaseCard>
+    <div class="flex items-center gap-4">
+      <BaseProgressRing :value="store.score" :size="88" :width="9" :color="store.level.color">
+        <span class="text-lg font-bold text-content">{{ store.score }}</span>
+      </BaseProgressRing>
+      <div class="flex-1">
+        <div class="flex items-center gap-2">
+          <span class="text-base font-bold text-content">نسبة الثقة</span>
+          <BaseChip :color="mapColor(store.level.color)">{{ store.level.label }}</BaseChip>
         </div>
-        <p class="text-caption text-medium-emphasis mb-2">مؤشر مصداقية ملفك بناءً على 8 عوامل موضوعية</p>
-        <div class="d-flex ga-2 flex-wrap">
-          <VBtn variant="tonal" color="primary" size="small" prepend-icon="mdi-chart-timeline-variant" @click="dialog = true">
-            عرض التفاصيل
-          </VBtn>
-          <VBtn variant="text" color="secondary" size="small" :loading="refreshing" prepend-icon="mdi-refresh" @click="refreshAnalysis">
-            تحديث التحليل
-          </VBtn>
+        <p class="mb-2 text-xs text-muted">مؤشر مصداقية ملفك بناءً على 8 عوامل موضوعية</p>
+        <div class="flex flex-wrap gap-2">
+          <BaseButton variant="tonal-brand" size="sm" @click="dialog = true">
+            <BaseIcon name="mdi-chart-timeline-variant" :size="16" />عرض التفاصيل
+          </BaseButton>
+          <BaseButton variant="ghost" size="sm" :loading="refreshing" @click="refreshAnalysis">
+            <BaseIcon name="mdi-refresh" :size="16" :style="{ color: 'rgb(var(--v-theme-secondary))' }" />
+            <span :style="{ color: 'rgb(var(--v-theme-secondary))' }">تحديث التحليل</span>
+          </BaseButton>
         </div>
       </div>
     </div>
 
     <!-- Motivational AI nudge -->
-    <VSnackbar :model-value="!!motivation" color="secondary" location="top" timeout="4500" @update:model-value="motivation = ''">
-      <div class="d-flex align-center ga-2">
-        <VIcon icon="mdi-robot-happy-outline" />
-        <span>{{ motivation }}</span>
-      </div>
-    </VSnackbar>
+    <BaseSnackbar :model-value="!!motivation" color="secondary" :timeout="4500" @update:model-value="motivation = ''">
+      <BaseIcon name="mdi-robot-happy-outline" :size="20" />
+      <span>{{ motivation }}</span>
+    </BaseSnackbar>
 
     <!-- Breakdown dialog -->
-    <VDialog v-model="dialog" max-width="640">
-      <VCard class="pa-2">
-        <VCardTitle class="d-flex justify-space-between align-center">
-          <span>تحليل نسبة الثقة — {{ store.score }}/100</span>
-          <VBtn icon="mdi-close" variant="text" size="small" @click="dialog = false" />
-        </VCardTitle>
-        <VCardText>
-          <VRow>
-            <VCol cols="12" md="5" class="d-flex justify-center align-center text-medium-emphasis">
-              <TrustRadar :points="store.factors.map(f => ({ label: f.label.split(' ')[0], value: f.value }))" :size="240" />
-            </VCol>
-            <VCol cols="12" md="7">
-              <div v-for="f in store.factors" :key="f.key" class="mb-2">
-                <div class="d-flex justify-space-between text-caption mb-1">
-                  <span>{{ f.label }} <span class="text-medium-emphasis">({{ f.weight }}%)</span></span>
-                  <span class="font-weight-bold" :class="`text-${factorColor(f.value)}`">{{ f.value }}%</span>
-                </div>
-                <VProgressLinear :model-value="f.value" :color="factorColor(f.value)" height="6" rounded />
-              </div>
-            </VCol>
-          </VRow>
-
-          <VDivider class="my-3" />
-          <div class="d-flex align-center ga-2 mb-2">
-            <VIcon icon="mdi-robot-happy-outline" color="secondary" />
-            <span class="text-subtitle-2 font-weight-bold">نصائح الذكاء الاصطناعي لرفع نسبتك</span>
+    <BaseModal v-model="dialog" :max-width="640">
+      <template #title>
+        <span>تحليل نسبة الثقة — {{ store.score }}/100</span>
+      </template>
+      <div class="grid grid-cols-1 gap-4 md:grid-cols-12">
+        <div class="flex items-center justify-center text-muted md:col-span-5">
+          <TrustRadar :points="store.factors.map(f => ({ label: f.label.split(' ')[0], value: f.value }))" :size="240" />
+        </div>
+        <div class="md:col-span-7">
+          <div v-for="f in store.factors" :key="f.key" class="mb-2">
+            <div class="mb-1 flex justify-between text-xs">
+              <span>{{ f.label }} <span class="text-muted">({{ f.weight }}%)</span></span>
+              <span class="font-bold" :style="{ color: colorVar(factorColor(f.value)) }">{{ f.value }}%</span>
+            </div>
+            <BaseProgressBar :value="f.value" :color="factorColor(f.value)" :height="6" />
           </div>
-          <VCard v-for="(tip, i) in store.tips" :key="i" variant="tonal" color="secondary" class="pa-2 px-3 mb-2 d-flex align-center justify-space-between flex-wrap ga-2">
-            <span class="text-body-2">
-              {{ tip.text }}
-              <VChip v-if="tip.gain" size="x-small" color="success" label class="ms-1">+{{ tip.gain }}%</VChip>
-            </span>
-            <VBtn v-if="tip.action" size="x-small" color="accent" variant="flat" @click="dialog = false; router.push({ name: tip.action })">
-              {{ tip.actionLabel }}
-            </VBtn>
-          </VCard>
-        </VCardText>
-      </VCard>
-    </VDialog>
-  </VCard>
+        </div>
+      </div>
+
+      <hr class="my-3 border-ui">
+      <div class="mb-2 flex items-center gap-2">
+        <BaseIcon name="mdi-robot-happy-outline" :size="20" :style="{ color: 'rgb(var(--v-theme-secondary))' }" />
+        <span class="text-sm font-bold text-content">نصائح الذكاء الاصطناعي لرفع نسبتك</span>
+      </div>
+      <div
+        v-for="(tip, i) in store.tips"
+        :key="i"
+        class="mb-2 flex flex-wrap items-center justify-between gap-2 rounded-ui px-3 py-2"
+        style="background: rgba(var(--v-theme-secondary), 0.16); color: rgb(var(--v-theme-secondary))"
+      >
+        <span class="text-sm">
+          {{ tip.text }}
+          <BaseChip v-if="tip.gain" color="success" class="ms-1">+{{ tip.gain }}%</BaseChip>
+        </span>
+        <BaseButton v-if="tip.action" variant="accent" size="sm" @click="dialog = false; router.push({ name: tip.action })">
+          {{ tip.actionLabel }}
+        </BaseButton>
+      </div>
+    </BaseModal>
+  </BaseCard>
 </template>
