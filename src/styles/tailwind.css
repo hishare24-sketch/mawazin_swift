@@ -135,6 +135,39 @@
     border-inline-end: 2px solid rgb(var(--v-theme-primary));
   }
 
+  /* تبويب جانبي (SettingsPage) — عمودي على سطح المكتب، أفقي على الموبايل */
+  .settings-tab {
+    @apply flex items-center gap-2 whitespace-nowrap rounded-ui px-3 py-2 text-start text-sm font-medium transition;
+    color: rgba(var(--v-theme-on-surface), 0.75);
+  }
+  .settings-tab:hover {
+    background: rgba(var(--v-theme-on-surface), 0.05);
+  }
+  .settings-tab.is-active {
+    background: rgba(var(--v-theme-primary), 0.14);
+    color: rgb(var(--v-theme-primary));
+    font-weight: 700;
+  }
+
+  /* أزرار مجزّأة (segmented) بديل VBtnToggle — النشط صلب brand */
+  .seg {
+    @apply inline-flex overflow-hidden rounded-ui border-ui;
+  }
+  .seg-btn {
+    @apply px-3 py-1.5 text-sm font-medium transition;
+    color: rgba(var(--v-theme-on-surface), 0.75);
+  }
+  .seg-btn:hover {
+    background: rgba(var(--v-theme-on-surface), 0.06);
+  }
+  .seg .seg-btn + .seg-btn {
+    border-inline-start: 1px solid rgba(var(--v-theme-on-surface), 0.14);
+  }
+  .seg-btn.is-active {
+    background: rgb(var(--v-theme-primary));
+    color: rgb(var(--v-theme-on-primary));
+  }
+
   /* دخول لطيف للوحة المنسدلة عبر CSS فقط (لا Transition من Vue كي يبقى الإزالة فوريًّا) */
   .dd-panel {
     animation: dd-in 0.15s ease-out;

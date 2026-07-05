@@ -2,7 +2,13 @@
 import { computed, ref, watch } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { useI18n } from 'vue-i18n'
-import { useDisplay } from 'vuetify'
+import BaseButton from '@/components/ui/BaseButton.vue'
+import BaseCard from '@/components/ui/BaseCard.vue'
+import BaseChip from '@/components/ui/BaseChip.vue'
+import BaseCheckbox from '@/components/ui/BaseCheckbox.vue'
+import BaseIcon from '@/components/ui/BaseIcon.vue'
+import BaseInput from '@/components/ui/BaseInput.vue'
+import BaseSwitch from '@/components/ui/BaseSwitch.vue'
 import PageHeader from '@/components/shared/PageHeader.vue'
 import ThemeCustomizer from '@/components/shared/ThemeCustomizer.vue'
 import AccountPlanPage from '@/modules/account/pages/AccountPlanPage.vue'
@@ -15,7 +21,6 @@ import { usePublicProfileStore } from '@/stores/PublicProfileStore'
 const { locale } = useI18n()
 const route = useRoute()
 const router = useRouter()
-const { mdAndUp } = useDisplay()
 const authStore = useAuthStore()
 const plan = useAccountPlanStore()
 const pub = usePublicProfileStore()
@@ -51,13 +56,17 @@ const SETTINGS_INDEX: SettingEntry[] = [
   { label: 'خصوصية الملف والتوصيات والنتائج', tab: 'privacy', icon: 'mdi-shield-lock-outline' },
   { label: 'الحسابات المرتبطة (LinkedIn/GitHub/Google)', tab: 'integrations', icon: 'mdi-connection' },
 ]
-const search = ref<SettingEntry | null>(null)
-watch(search, (v) => {
-  if (v) {
-    tab.value = v.tab
-    search.value = null
-  }
+const searchQuery = ref('')
+const searchOpen = ref(false)
+const filteredSettings = computed(() => {
+  const q = searchQuery.value.trim()
+  return q ? SETTINGS_INDEX.filter(e => e.label.includes(q)) : SETTINGS_INDEX
 })
+function pickSetting(e: SettingEntry) {
+  tab.value = e.tab
+  searchQuery.value = ''
+  searchOpen.value = false
+}
 
 const TAB_META: { value: SettingsTab, label: string, icon: string }[] = [
   { value: 'general', label: 'الحساب', icon: 'mdi-account-outline' },
@@ -85,6 +94,7 @@ const phone = ref(authStore.authUser?.phone ?? '')
 
 // Preferences
 const fontSize = ref('medium')
+const FONT_SIZES = [{ value: 'small', label: 'صغير' }, { value: 'medium', label: 'متوسط' }, { value: 'large', label: 'كبير' }]
 
 // Notifications
 const notif = ref({
@@ -95,7 +105,20 @@ const notif = ref({
   reminders: false,
   surveys: false,
 })
-const notifChannel = ref(['in_app', 'email'])
+const NOTIF_TYPES: { key: keyof typeof notif.value, label: string }[] = [
+  { key: 'opportunities', label: 'فرص جديدة' },
+  { key: 'wishes', label: 'رغبات واردة' },
+  { key: 'endorsements', label: 'توصيات' },
+  { key: 'messages', label: 'رسائل' },
+  { key: 'reminders', label: 'تذكيرات' },
+  { key: 'surveys', label: 'استبيانات' },
+]
+const notifChannel = ref<string[]>(['in_app', 'email'])
+const NOTIF_CHANNELS = [
+  { value: 'in_app', label: 'داخل المنصة' },
+  { value: 'email', label: 'بريد إلكتروني' },
+  { value: 'whatsapp', label: 'واتساب' },
+]
 
 // Privacy (7 settings)
 const privacy = ref([
@@ -129,145 +152,175 @@ function toggleLocale(val: string) {
   <div>
     <PageHeader title="الإعدادات" subtitle="كل تحكم حسابك من مكان واحد — ابحث أو تنقّل بين الأقسام" icon="mdi-cog-outline">
       <template #actions>
-        <VAutocomplete
-          v-model="search"
-          :items="SETTINGS_INDEX"
-          item-title="label"
-          return-object
-          placeholder="ابحث في الإعدادات..."
-          prepend-inner-icon="mdi-magnify"
-          density="compact"
-          hide-details
-          clearable
-          style="min-width: 260px"
-        >
-          <template #item="{ props, item }">
-            <VListItem v-bind="props" :prepend-icon="item.raw.icon" density="compact" />
+        <div class="relative" style="min-width: 260px">
+          <BaseInput
+            v-model="searchQuery"
+            placeholder="ابحث في الإعدادات..."
+            prefix-icon="mdi-magnify"
+            @focus="searchOpen = true"
+          />
+          <template v-if="searchOpen">
+            <div class="fixed inset-0 z-40" @click="searchOpen = false" />
+            <div class="dd-panel absolute z-50 mt-1 max-h-72 w-full overflow-y-auto rounded-ui border-ui bg-surface py-1 shadow-lg">
+              <button
+                v-for="e in filteredSettings"
+                :key="e.label"
+                type="button"
+                class="menu-row"
+                @click="pickSetting(e)"
+              >
+                <BaseIcon :name="e.icon" :size="18" class="text-muted" />
+                <span>{{ e.label }}</span>
+              </button>
+              <div v-if="!filteredSettings.length" class="px-4 py-2 text-sm text-muted">لا نتائج</div>
+            </div>
           </template>
-        </VAutocomplete>
+        </div>
       </template>
     </PageHeader>
 
-    <VRow>
+    <div class="grid grid-cols-1 gap-5 md:grid-cols-[220px_1fr]">
       <!-- تنقّل جانبي على الشاشات الواسعة، أفقي على الموبايل -->
-      <VCol cols="12" md="3" lg="2">
-        <VTabs v-model="tab" :direction="mdAndUp ? 'vertical' : 'horizontal'" color="primary" :show-arrows="!mdAndUp">
-          <VTab v-for="t in TAB_META" :key="t.value" :value="t.value" :prepend-icon="t.icon" class="justify-start">
-            {{ t.label }}
-            <VChip v-if="tabBadge(t.value)" size="x-small" color="primary" variant="tonal" label class="ms-1">{{ tabBadge(t.value) }}</VChip>
-          </VTab>
-        </VTabs>
-      </VCol>
+      <aside class="flex gap-2 overflow-x-auto pb-1 md:flex-col md:overflow-visible md:pb-0">
+        <button
+          v-for="t in TAB_META"
+          :key="t.value"
+          type="button"
+          class="settings-tab"
+          :class="{ 'is-active': tab === t.value }"
+          @click="tab = t.value"
+        >
+          <BaseIcon :name="t.icon" :size="18" />
+          <span>{{ t.label }}</span>
+          <BaseChip v-if="tabBadge(t.value)" color="brand" class="ms-auto">{{ tabBadge(t.value) }}</BaseChip>
+        </button>
+      </aside>
 
-      <VCol cols="12" md="9" lg="10">
-        <VWindow v-model="tab">
-          <!-- General -->
-          <VWindowItem value="general">
-            <VCard class="pa-5">
-              <h3 class="text-subtitle-1 font-weight-bold mb-4">معلومات الحساب</h3>
-              <VRow dense>
-                <VCol cols="12" md="6"><VTextField v-model="name" label="الاسم" /></VCol>
-                <VCol cols="12" md="6"><VTextField v-model="email" label="البريد الإلكتروني" type="email" /></VCol>
-                <VCol cols="12" md="6"><VTextField v-model="phone" label="رقم الجوال" /></VCol>
-              </VRow>
-              <VDivider class="my-4" />
-              <h3 class="text-subtitle-1 font-weight-bold mb-3">كلمة المرور</h3>
-              <VRow dense>
-                <VCol cols="12" md="6"><VTextField label="كلمة المرور الحالية" type="password" /></VCol>
-                <VCol cols="12" md="6"><VTextField label="كلمة المرور الجديدة" type="password" /></VCol>
-              </VRow>
-              <div class="d-flex justify-end mt-3">
-                <VBtn color="accent" prepend-icon="mdi-content-save">حفظ التغييرات</VBtn>
+      <div>
+        <!-- General -->
+        <BaseCard v-if="tab === 'general'">
+          <h3 class="mb-4 font-bold text-content">معلومات الحساب</h3>
+          <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
+            <BaseInput v-model="name" label="الاسم" />
+            <BaseInput v-model="email" label="البريد الإلكتروني" type="email" />
+            <BaseInput v-model="phone" label="رقم الجوال" />
+          </div>
+          <div class="my-4 border-t border-ui" />
+          <h3 class="mb-3 font-bold text-content">كلمة المرور</h3>
+          <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
+            <BaseInput label="كلمة المرور الحالية" type="password" />
+            <BaseInput label="كلمة المرور الجديدة" type="password" />
+          </div>
+          <div class="mt-4 flex justify-end">
+            <BaseButton variant="accent">
+              <BaseIcon name="mdi-content-save" :size="18" />
+              حفظ التغييرات
+            </BaseButton>
+          </div>
+        </BaseCard>
+
+        <!-- صفحتي التعريفية (الإدارة الكاملة داخل الإعدادات) -->
+        <PublicProfileManagePage v-else-if="tab === 'publicProfile'" embedded />
+
+        <!-- باقتي (باقة الحساب الموحّدة داخل الإعدادات) -->
+        <AccountPlanPage v-else-if="tab === 'plan'" embedded />
+
+        <!-- Preferences -->
+        <template v-else-if="tab === 'preferences'">
+          <ThemeCustomizer class="mb-4" max-width="100%" />
+          <BaseCard>
+            <h3 class="mb-4 font-bold text-content">التفضيلات</h3>
+            <div class="mb-4">
+              <div class="mb-2 text-sm font-medium text-content">اللغة</div>
+              <div class="seg">
+                <button
+                  v-for="l in [{ value: 'ar', label: 'العربية' }, { value: 'en', label: 'English' }]"
+                  :key="l.value"
+                  type="button"
+                  class="seg-btn"
+                  :class="{ 'is-active': locale === l.value }"
+                  @click="toggleLocale(l.value)"
+                >{{ l.label }}</button>
               </div>
-            </VCard>
-          </VWindowItem>
-
-          <!-- صفحتي التعريفية (الإدارة الكاملة داخل الإعدادات) -->
-          <VWindowItem value="publicProfile">
-            <PublicProfileManagePage embedded />
-          </VWindowItem>
-
-          <!-- باقتي (باقة الحساب الموحّدة داخل الإعدادات) -->
-          <VWindowItem value="plan">
-            <AccountPlanPage embedded />
-          </VWindowItem>
-
-          <!-- Preferences -->
-          <VWindowItem value="preferences">
-            <ThemeCustomizer class="mb-4" max-width="100%" />
-            <VCard class="pa-5">
-              <h3 class="text-subtitle-1 font-weight-bold mb-4">التفضيلات</h3>
-              <div class="mb-4">
-                <div class="text-body-2 font-weight-medium mb-2">اللغة</div>
-                <VBtnToggle :model-value="locale" mandatory color="primary" variant="outlined" @update:model-value="toggleLocale">
-                  <VBtn value="ar">العربية</VBtn>
-                  <VBtn value="en">English</VBtn>
-                </VBtnToggle>
+            </div>
+            <div>
+              <div class="mb-2 text-sm font-medium text-content">حجم الخط</div>
+              <div class="seg">
+                <button
+                  v-for="f in FONT_SIZES"
+                  :key="f.value"
+                  type="button"
+                  class="seg-btn"
+                  :class="{ 'is-active': fontSize === f.value }"
+                  @click="fontSize = f.value"
+                >{{ f.label }}</button>
               </div>
-              <div>
-                <div class="text-body-2 font-weight-medium mb-2">حجم الخط</div>
-                <VBtnToggle v-model="fontSize" mandatory color="primary" variant="outlined">
-                  <VBtn value="small">صغير</VBtn>
-                  <VBtn value="medium">متوسط</VBtn>
-                  <VBtn value="large">كبير</VBtn>
-                </VBtnToggle>
-              </div>
-            </VCard>
-          </VWindowItem>
+            </div>
+          </BaseCard>
+        </template>
 
-          <!-- Notifications -->
-          <VWindowItem value="notifications">
-            <VCard class="pa-5">
-              <h3 class="text-subtitle-1 font-weight-bold mb-2">أنواع الإشعارات</h3>
-              <VSwitch v-model="notif.opportunities" label="فرص جديدة" color="secondary" hide-details />
-              <VSwitch v-model="notif.wishes" label="رغبات واردة" color="secondary" hide-details />
-              <VSwitch v-model="notif.endorsements" label="توصيات" color="secondary" hide-details />
-              <VSwitch v-model="notif.messages" label="رسائل" color="secondary" hide-details />
-              <VSwitch v-model="notif.reminders" label="تذكيرات" color="secondary" hide-details />
-              <VSwitch v-model="notif.surveys" label="استبيانات" color="secondary" hide-details />
-              <VDivider class="my-4" />
-              <h3 class="text-subtitle-1 font-weight-bold mb-2">وسيلة الإشعار</h3>
-              <VSelect
-                v-model="notifChannel"
-                :items="[{ value: 'in_app', title: 'داخل المنصة' }, { value: 'email', title: 'بريد إلكتروني' }, { value: 'whatsapp', title: 'واتساب' }]"
-                multiple
-                chips
-              />
-            </VCard>
-          </VWindowItem>
+        <!-- Notifications -->
+        <BaseCard v-else-if="tab === 'notifications'">
+          <h3 class="mb-2 font-bold text-content">أنواع الإشعارات</h3>
+          <BaseSwitch
+            v-for="n in NOTIF_TYPES"
+            :key="n.key"
+            v-model="notif[n.key]"
+            :label="n.label"
+          />
+          <div class="my-4 border-t border-ui" />
+          <h3 class="mb-2 font-bold text-content">وسيلة الإشعار</h3>
+          <div class="flex flex-wrap gap-4">
+            <BaseCheckbox
+              v-for="c in NOTIF_CHANNELS"
+              :key="c.value"
+              v-model="notifChannel"
+              :value="c.value"
+              :label="c.label"
+            />
+          </div>
+        </BaseCard>
 
-          <!-- Privacy -->
-          <VWindowItem value="privacy">
-            <VCard class="pa-5">
-              <h3 class="text-subtitle-1 font-weight-bold mb-4">إعدادات الخصوصية</h3>
-              <div v-for="(s, i) in privacy" :key="i" class="d-flex align-center justify-space-between flex-wrap ga-2 py-2">
-                <span class="text-body-2">{{ s.label }}</span>
-                <VBtnToggle v-model="s.value" mandatory density="compact" color="primary" variant="outlined">
-                  <VBtn v-for="opt in privacyOptions" :key="opt.value" :value="opt.value" size="small">{{ opt.title }}</VBtn>
-                </VBtnToggle>
-              </div>
-            </VCard>
-          </VWindowItem>
+        <!-- Privacy -->
+        <BaseCard v-else-if="tab === 'privacy'">
+          <h3 class="mb-4 font-bold text-content">إعدادات الخصوصية</h3>
+          <div
+            v-for="(s, i) in privacy"
+            :key="i"
+            class="flex flex-wrap items-center justify-between gap-2 py-2"
+          >
+            <span class="text-sm text-content">{{ s.label }}</span>
+            <div class="seg">
+              <button
+                v-for="opt in privacyOptions"
+                :key="opt.value"
+                type="button"
+                class="seg-btn"
+                :class="{ 'is-active': s.value === opt.value }"
+                @click="s.value = opt.value"
+              >{{ opt.title }}</button>
+            </div>
+          </div>
+        </BaseCard>
 
-          <!-- Integrations -->
-          <VWindowItem value="integrations">
-            <VCard class="pa-5">
-              <h3 class="text-subtitle-1 font-weight-bold mb-4">الحسابات المرتبطة</h3>
-              <VRow>
-                <VCol v-for="ig in integrations" :key="ig.name" cols="12" sm="4">
-                  <VCard variant="outlined" class="pa-4 text-center">
-                    <VIcon :icon="ig.icon" size="40" class="mb-2" />
-                    <div class="text-body-2 font-weight-bold mb-2">{{ ig.name }}</div>
-                    <VBtn :color="ig.connected ? 'error' : 'primary'" :variant="ig.connected ? 'outlined' : 'flat'" size="small" block>
-                      {{ ig.connected ? 'فصل' : 'ربط' }}
-                    </VBtn>
-                  </VCard>
-                </VCol>
-              </VRow>
-            </VCard>
-          </VWindowItem>
-        </VWindow>
-      </VCol>
-    </VRow>
+        <!-- Integrations -->
+        <BaseCard v-else-if="tab === 'integrations'">
+          <h3 class="mb-4 font-bold text-content">الحسابات المرتبطة</h3>
+          <div class="grid grid-cols-1 gap-4 sm:grid-cols-3">
+            <div
+              v-for="ig in integrations"
+              :key="ig.name"
+              class="rounded-ui border-ui p-4 text-center"
+            >
+              <BaseIcon :name="ig.icon" :size="40" class="mb-2 text-content" />
+              <div class="mb-2 text-sm font-bold text-content">{{ ig.name }}</div>
+              <BaseButton :variant="ig.connected ? 'outline' : 'brand'" size="sm" block>
+                {{ ig.connected ? 'فصل' : 'ربط' }}
+              </BaseButton>
+            </div>
+          </div>
+        </BaseCard>
+      </div>
+    </div>
   </div>
 </template>
