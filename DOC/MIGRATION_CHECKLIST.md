@@ -42,11 +42,11 @@
 - [x] **تحقّق حيّ بعد كل مخزن** — كل الدفعات أعلاه مُتحقَّقة حيًّا (register→JWT · Profile · PublicProfile · Marketplace · Interviews/Interviewers · Surveys/Notifications · Wallet/Plan · السحب الأخير). **المصادر المرجعية لكل نداءات المخازن الخاصة صارت NestJS، وSupabase مُعطَّل في الوضع الحقيقي.**
 - [x] تحقّق حيّ بعد كل مخزن (Auth ✓ · Profile ✓ · PublicProfile ✓ · Marketplace ✓ · Interviews/Interviewers ✓ · Surveys/Notifications ✓ · Wallet/Plan ✓)
 
-## ⬜ المرحلة 4 — نزع Supabase + البثّ اللحظي
-- [ ] استبدال `cloudSync`/`directMessages` بنداءات العقد
-- [ ] البثّ اللحظي عبر **NestJS WebSocket Gateway** (بدل Supabase Realtime)
-- [ ] حذف `src/services/supabase.ts` + مجلّد `supabase/` بعد التغطية
-- [ ] تحقّق حيّ: رسالة لحظية بين مستخدمين
+## 🟡 المرحلة 4 — نزع Supabase + البثّ اللحظي — جارية
+- [x] **البثّ اللحظي عبر NestJS WebSocket Gateway (Socket.IO) — بديل Supabase Realtime.** كيان `DirectMessage` + مورد `/direct-messages` (send/list/read/resolve) + `MessagesGateway` (توثيق JWT في المصافحة، غرفة لكل uuid، دفع للمستقبِل). `directMessages.ts` أُعيدت كتابته للـ NestJS REST + `socket.io-client`، و`MessagesStore.wireInbound` صار يعتمد `USE_REAL_API` + uuid الجلسة (بلا Supabase). openapi + مخطط `DirectMessage`. **مُتحقَّق حيًّا:** المستخدم A في المتصفح مشترك عبر WS، والمستخدم B يرسل من الخادم → وصلت **لحظيًا بلا تحديث** لمخزن A (محادثة peer جديدة + unread + إشعار)، عربية سليمة (✅)، بلا أخطاء console. e2e: 17 اختبارًا (منها تسليم WS بين عميلين).
+- [x] استبدال `directMessages` بنداءات العقد (مُنجز أعلاه). `cloudSync` صار مُوجَّهًا لـ NestJS/معطّلًا في الوضع الحقيقي منذ المرحلة 3.
+- [ ] **إزالة Supabase نهائيًّا:** حذف فرع Supabase من `AuthService`، تفريغ محرّك Supabase من `cloudSync.ts` (إبقاء توجيه NestJS + fallback محلي)، حذف `src/services/supabase.ts` + `supabase.test.ts` + مجلّد `supabase/`، تنظيف `.env`/`deploy.yml`.
+- [x] تحقّق حيّ: رسالة لحظية بين مستخدمين ✓
 
 ## ⬜ المرحلة 5 — الواجهة: Vuetify → Tailwind
 - [ ] إعداد Tailwind + رموز التصميم من الثيم الحالي

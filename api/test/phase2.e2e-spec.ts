@@ -5,6 +5,7 @@ import { UnprocessableEntityException, ValidationPipe } from '@nestjs/common'
 import type { ValidationError, INestApplication } from '@nestjs/common'
 import { Test } from '@nestjs/testing'
 import request from 'supertest'
+import { io as ioClient } from 'socket.io-client'
 
 // قاعدة اختبار معزولة (ملف مؤقّت يُحذف بعد الجولة) — قبل تحميل AppModule
 const DB_FILE = join(tmpdir(), `srs-e2e-${process.pid}.sqlite`)
@@ -44,7 +45,8 @@ describe('Phase 2 resources (e2e)', () => {
     }))
     app.useGlobalInterceptors(new ResponseInterceptor())
     app.useGlobalFilters(new HttpExceptionFilter())
-    await app.init()
+    // listen على منفذ عشوائي — يلزم لبوّابة Socket.IO (init وحده لا يفتح منفذًا)
+    await app.listen(0)
     http = request(app.getHttpServer())
   })
 
@@ -243,6 +245,58 @@ describe('Phase 2 resources (e2e)', () => {
     // مخزن آخر معزول
     const other = await http.get('/api/v1/account-states/postedOpportunities').set(auth()).expect(200)
     expect(other.body.data).toBeNull()
+  })
+
+  it('direct-messages: send persists + lists for both parties; resolve owner by slug', async () => {
+    // مستخدم ثانٍ يستقبل الرسالة
+    const bob = await http.post('/api/v1/auth/register').send({
+      name: 'بوب', email: 'bob@test.local', password: 'password123',
+    }).expect(201)
+    const bobUuid = bob.body.data.user.uuid
+    const bobToken = bob.body.data.token
+
+    const sent = await http.post('/api/v1/direct-messages').set(auth())
+      .send({ recipientId: bobUuid, recipientName: 'بوب', body: 'مرحبًا بوب' }).expect(201)
+    expect(sent.body.data.senderName).toBe('تجربة المرحلة الثانية')
+    expect(sent.body.data.recipientId).toBe(bobUuid)
+
+    // يظهر لدى الطرفين
+    const mine = await http.get('/api/v1/direct-messages').set(auth()).expect(200)
+    expect(mine.body.data.some((m: { body: string }) => m.body === 'مرحبًا بوب')).toBe(true)
+    const bobsBearer = () => ({ Authorization: `Bearer ${bobToken}` })
+    const bobs = await http.get('/api/v1/direct-messages').set(bobsBearer()).expect(200)
+    expect(bobs.body.data).toHaveLength(1)
+
+    // بوب يعلّم الخيط مقروءًا
+    await http.post('/api/v1/direct-messages/read').set(bobsBearer())
+      .send({ peerId: mine.body.data[0].senderId }).expect(204)
+
+    // حلّ مالك الصفحة من slug (أنشئ صفحة أولًا)
+    const page = await http.patch('/api/v1/public-profiles/me').set(bobsBearer()).send({ doc: {} }).expect(200)
+    const resolved = await http.get(`/api/v1/direct-messages/resolve/${page.body.data.slug}`).set(auth()).expect(200)
+    expect(resolved.body.data.ownerId).toBe(bobUuid)
+  })
+
+  it('realtime: recipient receives the message over WebSocket', async () => {
+    const url = await app.getUrl() // http://[::1]:<port>
+    const base = url.replace('[::1]', '127.0.0.1')
+    // بوب مسجّل من الاختبار السابق — سجّل الدخول لأخذ توكن جديد
+    const bobLogin = await http.post('/api/v1/auth/login').send({ email: 'bob@test.local', password: 'password123' }).expect(200)
+    const bobToken = bobLogin.body.data.token
+    const bobUuid = bobLogin.body.data.user.uuid
+
+    const received = await new Promise<{ body: string }>((resolve, reject) => {
+      const socket = ioClient(base, { auth: { token: bobToken }, transports: ['websocket'], reconnection: false })
+      const timer = setTimeout(() => { socket.close(); reject(new Error('timeout: no WS message')) }, 8000)
+      socket.on('connect', () => {
+        // أرسل بعد الاتصال ليضمن انضمام بوب لغرفته
+        http.post('/api/v1/direct-messages').set(auth())
+          .send({ recipientId: bobUuid, recipientName: 'بوب', body: 'رسالة لحظية' }).end(() => {})
+      })
+      socket.on('message', (msg: { body: string }) => { clearTimeout(timer); socket.close(); resolve(msg) })
+      socket.on('connect_error', (e: Error) => { clearTimeout(timer); reject(e) })
+    })
+    expect(received.body).toBe('رسالة لحظية')
   })
 
   it('guards: protected route without token → 401', async () => {

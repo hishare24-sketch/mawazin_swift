@@ -23,5 +23,6 @@ import { JwtStrategy } from './jwt.strategy'
   ],
   controllers: [AuthController],
   providers: [AuthService, JwtStrategy],
+  exports: [JwtModule], // البوّابة (WS) تستخدم JwtService للتحقّق من المصافحة
 })
 export class AuthModule {}

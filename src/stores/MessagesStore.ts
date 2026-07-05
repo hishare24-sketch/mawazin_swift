@@ -2,7 +2,7 @@ import { defineStore } from 'pinia'
 import { computed, ref, watch } from 'vue'
 import type { DirectMessageRow } from '@/services/directMessages'
 import { fetchMyMessages, markThreadRead, sendDirectMessage, subscribeInbound } from '@/services/directMessages'
-import { getSupabase } from '@/services/supabase'
+import { USE_REAL_API } from '@/services/api'
 import { syncPrivateDoc } from '@/services/cloudSync'
 import { useAuthStore } from '@/stores/AuthStore'
 import { useNotificationsStore } from '@/stores/NotificationsStore'
@@ -172,18 +172,17 @@ export const useMessagesStore = defineStore('messages', () => {
       ingest(row, uid) // اعرضها للمرسِل فورًا
   }
 
-  // —— التوصيل: جلب المحادثات الحقيقية عند الجلسة + اشتراك الوارد لحظيًا ——
-  const remote = getSupabase()
+  // —— التوصيل: جلب المحادثات الحقيقية عند الجلسة + اشتراك الوارد لحظيًا (NestJS) ——
   let detachInbound: (() => void) | null = null
   async function wireInbound() {
-    if (!remote)
+    if (!USE_REAL_API)
       return
     detachInbound?.()
     detachInbound = null
-    const uid = (await remote.auth.getSession()).data.session?.user?.id
+    const uid = currentUid()
     if (!uid)
       return
-    for (const row of await fetchMyMessages(uid))
+    for (const row of await fetchMyMessages())
       ingest(row, uid)
     detachInbound = subscribeInbound(uid, (row) => {
       ingest(row, uid)
@@ -198,16 +197,16 @@ export const useMessagesStore = defineStore('messages', () => {
       })
     })
   }
-  if (remote) {
-    remote.auth.onAuthStateChange((event) => {
-      if (event === 'SIGNED_IN' || event === 'INITIAL_SESSION')
+  if (USE_REAL_API) {
+    // إعادة التوصيل عند تغيّر الجلسة (دخول/خروج)
+    watch(() => useAuthStore().authUser?.uuid, (uid) => {
+      if (uid)
         wireInbound()
-      else if (event === 'SIGNED_OUT') {
+      else {
         detachInbound?.()
         detachInbound = null
       }
-    })
-    wireInbound()
+    }, { immediate: true })
   }
 
   /** محادثة جديدة واردة من طرف خارجي (مثل زائر الصفحة التعريفية) */

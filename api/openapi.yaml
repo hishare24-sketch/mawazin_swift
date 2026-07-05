@@ -581,6 +581,65 @@ paths:
         '200': { description: تم التبديل }
         '402': { $ref: '#/components/responses/Error' }
 
+  # ===== الرسائل المباشرة بين المستخدمين (تسليم علائقي + بثّ WS) =====
+  /direct-messages:
+    get:
+      tags: [Messaging]
+      summary: كل رسائلي (مُرسَلة ووارِدة) لإعادة بناء المحادثات
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: array
+                items: { $ref: '#/components/schemas/DirectMessage' }
+    post:
+      tags: [Messaging]
+      summary: إرسال رسالة مباشرة لمستخدم (يصله لحظيًا عبر Socket.IO)
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [recipientId, recipientName, body]
+              properties:
+                recipientId: { type: string }
+                recipientName: { type: string }
+                body: { type: string }
+      responses:
+        '201':
+          content:
+            application/json:
+              schema: { $ref: '#/components/schemas/DirectMessage' }
+  /direct-messages/read:
+    post:
+      tags: [Messaging]
+      summary: تعليم رسائل خيط (من طرف معيّن) مقروءة
+      requestBody:
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [peerId]
+              properties:
+                peerId: { type: string }
+      responses:
+        '204': { description: تم }
+  /direct-messages/resolve/{slug}:
+    get:
+      tags: [Messaging]
+      summary: يحلّ مالك صفحة تعريفية من slug (uuid واسم) لتوجيه «تواصل معي»
+      parameters: [{ $ref: '#/components/parameters/slug' }]
+      responses:
+        '200':
+          content:
+            application/json:
+              schema:
+                type: [object, 'null']
+                properties:
+                  ownerId: { type: string }
+                  name: { type: string }
+
   # ===== المستندات الخاصة العامة (blob) — تقابل Supabase account_states =====
   /account-states/{store}:
     get:
@@ -938,6 +997,17 @@ components:
               from: { type: string, enum: [me, them] }
               text: { type: string }
               at: { type: string, format: date-time }
+    DirectMessage:
+      type: object
+      properties:
+        id: { type: integer }
+        senderId: { type: string }
+        recipientId: { type: string }
+        senderName: { type: string }
+        recipientName: { type: string }
+        body: { type: string }
+        created_at: { type: string, format: date-time }
+        read_at: { type: [string, 'null'], format: date-time }
     Wallet:
       type: object
       properties:

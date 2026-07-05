@@ -98,6 +98,11 @@ export const API_PATHS = {
     conversations: '/v1/conversations',
     messages: (id: number) => `/v1/conversations/${id}/messages`,
   },
+  directMessages: {
+    root: '/v1/direct-messages',
+    read: '/v1/direct-messages/read',
+    resolve: (slug: string) => `/v1/direct-messages/resolve/${slug}`,
+  },
   account: {
     wallet: '/v1/wallet',
     plan: '/v1/account/plan',
@@ -217,6 +222,13 @@ export const api = {
     readAll: () => post(API_PATHS.messaging.readAll),
     conversations: () => get(API_PATHS.messaging.conversations),
     send: (id: number, text: string) => post(API_PATHS.messaging.messages(id), { text }),
+  },
+  /** الرسائل المباشرة بين المستخدمين (REST؛ البثّ اللحظي عبر Socket.IO في directMessages.ts) */
+  directMessages: {
+    list: <T>() => get<T>(API_PATHS.directMessages.root),
+    send: <T>(body: { recipientId: string, recipientName: string, body: string }) => post<T>(API_PATHS.directMessages.root, body),
+    markRead: (peerId: string) => post(API_PATHS.directMessages.read, { peerId }),
+    resolveOwner: <T>(slug: string) => get<T>(API_PATHS.directMessages.resolve(slug)),
   },
   /** مستندات خاصة عامة (blob) لكل مخزن — يقابل Supabase account_states */
   accountStates: {

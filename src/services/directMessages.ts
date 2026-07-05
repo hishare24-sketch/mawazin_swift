@@ -1,16 +1,14 @@
-import type { RealtimeChannel, SupabaseClient } from '@supabase/supabase-js'
-import { getSupabase } from '@/services/supabase'
+import { io } from 'socket.io-client'
+import type { Socket } from 'socket.io-client'
+import { USE_REAL_API, api } from '@/services/api'
+import { useAuthStore } from '@/stores/AuthStore'
 
 /**
- * ===== خدمة الرسائل المباشرة — التسليم الحقيقي بين المستخدمين =====
+ * ===== خدمة الرسائل المباشرة — التسليم الحقيقي بين المستخدمين (NestJS) =====
  *
- * بخلاف محرك cloudSync (مزامنة مستند خاص لكل مستخدم)، هذه طبقة علائقية:
- * المرسِل يُدرج صفًّا في direct_messages موجّهًا للمستقبِل، فيصله لحظيًا عبر
- * Realtime. الخدمة نقية وقابلة للحقن (client) — منطق العرض في MessagesStore.
- *
- * جدول direct_messages: (sender_id, recipient_id, sender_name, recipient_name,
- * body, created_at, read_at). سياسات RLS: القراءة لطرفَي الرسالة، والكتابة
- * باسم صاحب الجلسة فقط، والتعليم مقروءًا للمستقبِل.
+ * طبقة علائقية: المرسِل يُدرج صفًّا عبر REST، فيصل المستقبِل لحظيًا عبر
+ * Socket.IO (غرفة لكل uuid). بديل Supabase Realtime السابق.
+ * في وضع المحاكاة (USE_REAL_API=false) كل الدوال محايدة — يبقى المحلي.
  */
 
 export interface DirectMessageRow {
@@ -24,6 +22,31 @@ export interface DirectMessageRow {
   read_at: string | null
 }
 
+/** شكل رسالة الباك-إند (camelCase) */
+interface ApiMessage {
+  id: number
+  senderId: string
+  recipientId: string
+  senderName: string
+  recipientName: string
+  body: string
+  created_at: string
+  read_at: string | null
+}
+
+function toRow(m: ApiMessage): DirectMessageRow {
+  return {
+    id: m.id,
+    sender_id: m.senderId,
+    recipient_id: m.recipientId,
+    sender_name: m.senderName,
+    recipient_name: m.recipientName,
+    body: m.body,
+    created_at: m.created_at,
+    read_at: m.read_at,
+  }
+}
+
 export interface SendArgs {
   senderId: string
   senderName: string
@@ -32,99 +55,75 @@ export interface SendArgs {
   body: string
 }
 
-/** يُدرج رسالة موجّهة — يعيد الصف المُدرَج أو null عند الفشل/التعطّل */
-export async function sendDirectMessage(
-  args: SendArgs,
-  client: SupabaseClient | null = getSupabase(),
-): Promise<DirectMessageRow | null> {
-  if (!client)
+/** يُدرج رسالة موجّهة — يعيد الصف المُدرَج أو null (محاكاة/فشل). */
+export async function sendDirectMessage(args: SendArgs): Promise<DirectMessageRow | null> {
+  if (!USE_REAL_API)
     return null
-  const { data, error } = await client
-    .from('direct_messages')
-    .insert({
-      sender_id: args.senderId,
-      recipient_id: args.recipientId,
-      sender_name: args.senderName,
-      recipient_name: args.recipientName,
+  try {
+    const m = await api.directMessages.send<ApiMessage>({
+      recipientId: args.recipientId,
+      recipientName: args.recipientName,
       body: args.body,
     })
-    .select()
-    .single()
-  return error ? null : (data as DirectMessageRow)
+    return toRow(m)
+  }
+  catch {
+    return null
+  }
 }
 
-/** يحلّ مالك صفحة تعريفية من الـslug — أساس التسليم الحقيقي عبر «تواصل معي» */
-export async function resolveProfileOwner(
-  slug: string,
-  client: SupabaseClient | null = getSupabase(),
-): Promise<{ ownerId: string, name: string } | null> {
-  if (!client)
+/** يحلّ مالك صفحة تعريفية من الـslug — أساس التسليم الحقيقي عبر «تواصل معي». */
+export async function resolveProfileOwner(slug: string): Promise<{ ownerId: string, name: string } | null> {
+  if (!USE_REAL_API)
     return null
-  const { data, error } = await client
-    .from('public_profiles')
-    .select('owner_id, data')
-    .eq('slug', slug)
-    .maybeSingle()
-  if (error || !data?.owner_id)
+  try {
+    return await api.directMessages.resolveOwner<{ ownerId: string, name: string } | null>(slug)
+  }
+  catch {
     return null
-  const name = (data.data as { displayName?: string })?.displayName ?? slug
-  return { ownerId: data.owner_id as string, name }
+  }
 }
 
-/** كل رسائل المستخدم (مُرسَلة ووارِدة) مرتّبة زمنيًا — لإعادة بناء المحادثات */
-export async function fetchMyMessages(
-  uid: string,
-  client: SupabaseClient | null = getSupabase(),
-): Promise<DirectMessageRow[]> {
-  if (!client)
+/** كل رسائل المستخدم (مُرسَلة ووارِدة) مرتّبة زمنيًا — لإعادة بناء المحادثات. */
+export async function fetchMyMessages(_uid?: string): Promise<DirectMessageRow[]> {
+  if (!USE_REAL_API)
     return []
-  const { data, error } = await client
-    .from('direct_messages')
-    .select('*')
-    .or(`sender_id.eq.${uid},recipient_id.eq.${uid}`)
-    .order('created_at', { ascending: true })
-  return error ? [] : (data as DirectMessageRow[])
+  try {
+    return (await api.directMessages.list<ApiMessage[]>()).map(toRow)
+  }
+  catch {
+    return []
+  }
 }
 
-/** يعلّم كل الرسائل الواردة من طرف معيّن مقروءة */
-export async function markThreadRead(
-  uid: string,
-  peerId: string,
-  client: SupabaseClient | null = getSupabase(),
-): Promise<void> {
-  if (!client)
+/** يعلّم كل الرسائل الواردة من طرف معيّن مقروءة. */
+export async function markThreadRead(_uid: string, peerId: string): Promise<void> {
+  if (!USE_REAL_API)
     return
-  await client
-    .from('direct_messages')
-    .update({ read_at: new Date().toISOString() })
-    .eq('recipient_id', uid)
-    .eq('sender_id', peerId)
-    .is('read_at', null)
+  try {
+    await api.directMessages.markRead(peerId)
+  }
+  catch { /* المحلي كافٍ */ }
+}
+
+function socketBase(): string {
+  const raw = (import.meta.env.VITE_BASE_API_URL as string) || ''
+  return raw.replace(/\/api\/?$/, '') || window.location.origin
 }
 
 /**
- * يشترك في الرسائل الوارِدة للمستخدم لحظيًا — يعيد دالة إلغاء.
- * onMessage يُستدعى بكل رسالة جديدة موجَّهة إلى uid.
+ * يشترك في الرسائل الوارِدة لحظيًا عبر Socket.IO — يعيد دالة إلغاء.
+ * التوثيق بتوكن JWT في المصافحة؛ الخادم ينضمّ العميل لغرفة uuidه.
  */
-export function subscribeInbound(
-  uid: string,
-  onMessage: (row: DirectMessageRow) => void,
-  client: SupabaseClient | null = getSupabase(),
-): () => void {
-  if (!client)
+export function subscribeInbound(_uid: string, onMessage: (row: DirectMessageRow) => void): () => void {
+  if (!USE_REAL_API)
     return () => {}
-  const channel: RealtimeChannel = client
-    .channel(`dm-inbound:${uid}`)
-    .on(
-      'postgres_changes' as 'system',
-      { event: 'INSERT', schema: 'public', table: 'direct_messages', filter: `recipient_id=eq.${uid}` } as never,
-      (payload: { new?: DirectMessageRow }) => {
-        if (payload.new)
-          onMessage(payload.new)
-      },
-    )
-    .subscribe()
-  return () => {
-    client.removeChannel(channel)
-  }
+  const token = useAuthStore().getToken
+  const socket: Socket = io(socketBase(), {
+    auth: { token },
+    transports: ['websocket'],
+    reconnection: true,
+  })
+  socket.on('message', (m: ApiMessage) => onMessage(toRow(m)))
+  return () => { socket.disconnect() }
 }

@@ -12,6 +12,7 @@ import { InterviewersModule } from './interviewers/interviewers.module'
 import { InterviewsModule } from './interviews/interviews.module'
 import { NotificationsModule } from './notifications/notifications.module'
 import { AccountStatesModule } from './account-states/account-states.module'
+import { MessagesModule } from './messages/messages.module'
 
 @Module({
   imports: [
@@ -27,6 +28,7 @@ import { AccountStatesModule } from './account-states/account-states.module'
     InterviewsModule,
     NotificationsModule,
     AccountStatesModule,
+    MessagesModule,
   ],
   controllers: [HealthController],
 })
