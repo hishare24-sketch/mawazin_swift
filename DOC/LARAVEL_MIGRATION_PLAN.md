@@ -120,24 +120,27 @@
 - [~] الروابط بين الموديولات → **Observers**: طُبّق التفاعل العابر المباشر (PublicProfile→Profile عبر حقن الخدمة للفعل الأساسيّ). دفعات الإشعارات المُطلَقة من التدفّقات (حجز/رسالة) تُوصَل عبر Observers في دفعة لاحقة عند الحاجة.
 - [x] **تحقّق حيّ:** Profile + PublicProfile مُتحقَّقان curl؛ الجميع مُتحقَّق بـ **43 Feature test** مقابل MySQL.
 
-### ⬜ المرحلة 3 — تطبيع الـ blobs (ع5)
-- [ ] تطبيع مخازن الموارد إلى جداولها (جدول التصنيف أعلاه) + فهارس على كل FK
-- [ ] إبقاء `saved/wishes/searchPrefs/gamification` في `account_states` (JSON) عبر Module **AccountState**
-- [ ] الواجهة: نزع إدراج المخازن المطبّعة من `NEST_PRIVATE_STORES` وتوجيهها لموردها
+### ✅ المرحلة 3 — الـ blobs (ع5) — مُنجزة
+- [x] مخازن الموارد مُطبَّعة إلى جداولها في المرحلة 2 (marketplace/surveys/interviews/notifications/wallet/plan/profile/public-profiles)
+- [x] Module **AccountState**: `GET/PUT /account-states/{store}` (blob عامّ userId×store، upsert) — يخدم كل المخازن الخاصّة الباقية (candidates/roleProfiles/resumes/expertRoles/peerRequests/roleRequests/endorser/interviewerBrand/reviews/saved/wishes/searchPrefs/gamification). **4 Feature tests خضراء.**
+- **قرار (ع5):** أبقيتُها blobs كما فعل NestJS تمامًا (لم يُطبّعها هو الآخر) — لا عقد لها ولا حاجة استعلام عابر؛ التطبيع المخصّص يبقى تحسينًا اختياريًّا لاحقًا. **بهذا كل مخازن الواجهة الخاصّة مخدومة من Laravel** (عدا الرسائل اللحظيّة → المرحلة 5).
+- [ ] الواجهة: توجيه المخازن لـ Laravel — مؤجّل لطور التحويل الأماميّ (المرحلة 6)
 
-### ⬜ المرحلة 4 — الصلاحيّات (Spatie teams + حارس أدمن)
-- [ ] فصل **دور المنصّة (persona)** عن **دور المشروع (team role)** — تعريف «المشروع» (ع2)
-- [ ] Spatie teams: `team_id = project_id` + middleware `setPermissionsTeamId()` (ع3)
-- [ ] guard `admin` منفصل + `PermissionEnum` + `authorize()` في متحكّمات `/api/admin` (ع4)
-- [ ] `RoleHasPermissionSeeder` لأدوار seeker/interviewer/company + أدمن المنصّة
-- [ ] **تحقّق حيّ:** 403/405 لمستخدم بلا صلاحية داخل مشروع، ونفاذ الأدمن للوحة
+### ✅ المرحلة 4 — الصلاحيّات (حارس أدمن، **بلا teams**) — مُنجزة
+> **قرار ع2 (المالك):** **بلا Spatie teams** — المنصّة persona-based (أدوار seeker/interviewer/company فورية، admin الوحيد المُعتمَد؛ فلسفة «الحساب الموحّد»). فأُلغيت teams وبُسّطت المرحلة.
+- [x] `config/permission.php` **teams=false** + إعادة تأسيس المخطّط نظيفًا
+- [x] حارس `admin` معرَّف في `config/auth.php` (driver sanctum، provider users) — يجعل guard `admin` معترَفًا به لأدوار Spatie على المستخدم (حلّ GuardDoesNotMatch)
+- [x] `AdminMiddleware` يفرض: مصادَق (auth:sanctum) + يحمل دورًا على guard admin، وإلا **403**
+- [x] `/api/admin` group = `[api, auth:sanctum, admin]`؛ كل متحكّم يفرض `$this->authorize('...')` (على guard admin عبر Base Controller)
+- [x] نقطة إثبات `GET /api/admin/users` (authorize `view_users` + `dashboardResponse` مقسّم `{data, meta}`) + أمر `user:promote {email} {role}`
+- [x] **تحقّق (4 Feature tests):** 401 بلا توكن · 403 لغير الأدمن · 200 للأدمن بـ view_users · **403 لدور أدمن بلا الصلاحية المحدّدة**. (الحزمة: 51 اختبارًا)
 
-### ⬜ المرحلة 5 — البثّ اللحظيّ (Reverb + Redis)
-- [ ] Reverb + `BROADCAST_CONNECTION=redis` + Redis Pub/Sub (جاهز للتوسّع AWS)
-- [ ] Module **Chat**: `direct_messages` + بثّ على قناة خاصّة لكل مستخدم عبر Observer
-- [ ] `/broadcasting/auth` موثّق بـ Sanctum
-- [ ] الواجهة: `socket.io-client` ← `laravel-echo` (+ `pusher-js`) في `MessagesStore.wireInbound`
-- [ ] **تحقّق حيّ:** رسالة لحظية بين مستخدمين بلا تحديث (كنمط المرحلة 4a في NestJS)
+### 🟡 المرحلة 5 — البثّ اللحظيّ (Reverb) — الباك-إند مُنجز
+- [x] Module **Chat**: كيان `DirectMessage` (uuid طرفين، فهارس sender/recipient) + `POST/GET /direct-messages` + `POST /direct-messages/read` + `GET /direct-messages/resolve/{slug}` (يحلّ مالك الصفحة عبر PublicProfile+User)
+- [x] حدث **`MessageSent`** (`ShouldBroadcast`) على `PrivateChannel('user.{uuid}')` + `broadcastAs('message.sent')`؛ الإرسال يبثّه. تفويض القناة في `routes/channels.php` (`$user->uuid === $uuid`). `BROADCAST_CONNECTION=reverb` (dev، مُصفّ عبر queue فلا يعطّل الإرسال)
+- [x] **5 Feature tests خضراء** (منها تأكيد بثّ الحدث على القناة الصحيحة). الحزمة: **56 اختبارًا**
+- [ ] **مؤجّل للتحويل الأماميّ:** تشغيل `reverb:start` + الواجهة `socket.io-client`←`laravel-echo`(+pusher-js) + `/broadcasting/auth` بـ Sanctum + تحقّق WS حيّ بين متصفّحين
+- [ ] Redis Pub/Sub (`BROADCAST_CONNECTION` عبر Redis) — للتوسّع على AWS، يُضبط في النشر
 
 ### ⬜ المرحلة 6 — الترقيم الحقيقيّ + هجرة البيانات + التقاعد
 - [ ] `->paginate()` + `{data,meta}` لكل قائمة؛ الواجهة تُضيف أزرار الصفحات تدريجيًّا (البند 6)

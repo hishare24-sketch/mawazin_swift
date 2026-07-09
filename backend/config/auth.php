@@ -42,6 +42,13 @@ return [
             'driver' => 'session',
             'provider' => 'users',
         ],
+
+        // حارس أدمن المنصّة — صلاحيّات Spatie على guard 'admin' (بلا teams).
+        // المصادقة تبقى عبر Sanctum؛ هذا الحارس يجعل 'admin' اسمًا معترَفًا به للأدوار.
+        'admin' => [
+            'driver' => 'sanctum',
+            'provider' => 'users',
+        ],
     ],
 
     /*

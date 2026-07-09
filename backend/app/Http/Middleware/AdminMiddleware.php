@@ -9,12 +9,17 @@ use Symfony\Component\HttpFoundation\Response;
 class AdminMiddleware
 {
     /**
-     * حارس لوحة الأدمن (/api/admin).
-     * المرحلة 0: مرور. المرحلة 4: يُوصَل بحارس admin (Sanctum) + فحص دور أدمن المنصّة.
+     * حارس لوحة الأدمن (/api/admin): المستخدم مصادَق (auth:sanctum) ويحمل دورًا على guard admin.
+     * الفحص الدقيق للصلاحية يتمّ في كل متحكّم عبر $this->authorize('...').
      */
     public function handle(Request $request, Closure $next): Response
     {
-        // TODO (المرحلة 4): auth('admin')->check() + فحص الدور/الصلاحية
+        $user = $request->user();
+
+        if (! $user || ! $user->roles()->where('guard_name', 'admin')->exists()) {
+            abort(403, __('You are not authorized to access the admin panel'));
+        }
+
         return $next($request);
     }
 }
