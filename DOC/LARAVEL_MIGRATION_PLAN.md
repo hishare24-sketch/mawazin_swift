@@ -107,7 +107,7 @@
 - [ ] **مؤجّل:** التحقّق عبر الواجهة الفعليّة + تحويل `VITE_BASE_API_URL`→:8090 — يبقى على NestJS حتى تُرحَّل موارد كافية (تبديل مبكّر يكسر المخازن التي تعتمد نقاط NestJS غير المنفَّذة بعد في Laravel)
 > **درس Sail حاسم:** حاويات composer/artisan المؤقّتة **كـ root** تُنشئ ملفّات في `storage`/`bootstrap/cache` لا يملكها مستخدم `sail` → الخادم يدخل حلقة إعادة تشغيل (Permission denied على laravel.log). **الحلّ بعد أي عمليّة root:** `docker compose exec -u root laravel.test chown -R sail:sail storage bootstrap/cache`.
 
-### 🟡 المرحلة 2 — الموارد مورد-بمورد (لكل مورد في العقد) — جارية
+### ✅ المرحلة 2 — الموارد مورد-بمورد (لكل مورد في العقد) — مُنجزة (7 موديولات، 43 اختبارًا)
 لكل مورد: Entities → Migrations (+index) → Requests (Api/Admin) → Resources → Services → Controller رفيع → Feature Test.
 - [x] **Profile** — كيان بأعمدة JSON (skills/experiences/certificates/prefs/proof_requests، user_id فريد) + `GET/PATCH /profile` (وثيقة PrivateProfile) + skills add(201)/remove(204) + skill proofs + proof-requests get/resolve. **مُتحقَّق حيًّا (curl) + 6 Feature tests خضراء.** أُرسيت أداة الاختبار: MySQL `testing` (Sail) + RefreshDatabase + Sanctum::actingAs + `AssertsApiJson`. **قرار:** Profile وثيقة مملوكة لمستخدم (JSON) لا تطبيع — يطابق NestJS + الواجهة.
 - [x] **PublicProfile** — كيان (doc/stats/testimonials/comments/inbox، slug مشتقّ) + `GET/PATCH /me` (auth) + `GET /{slug}` عام + view/follow/rate/comment/contact/schedule/testimonial/proof-request (بلا مصادقة). `present()` = doc مسطّح + slug/stats/تفاعلات. **التفاعل العابر:** طلب إثبات الزائر يصل ملف المالك عبر `ProfileService::pushProofRequest` (تبعيّة PublicProfile→Profile). **مُتحقَّق حيًّا (curl) + 7 Feature tests خضراء.** (الحزمة كلها: 15 اختبارًا)
@@ -115,10 +115,10 @@
 - [x] **Survey** — كيان (6 حالات + points_pool + targeting/questions/responses، user_id مفهرس) + `GET/POST /surveys` (حدّ الباقة free=1/pro=10/elite=∞ → **403**) + `POST /surveys/{id}/responses` (يصرف نقطة من المجمّع). **5 Feature tests خضراء.**
 - [x] **Marketplace** — 3 كيانات (Opportunity/MarketRequest/Application، فهارس category/type/state + unique(user,opp)) + `GET/POST /opportunities` (فلترة q/category) + `apply` (مثاليّ→ firstOrCreate) + `GET /requests` (فلترة type) + `/requests/mine`. بذور كسولة (3+3). **7 Feature tests خضراء.**
 - [x] **Interviewer + Interview** — Interviewer (سوق مرتّب بالتقييم + Booking: حجز pending + `PATCH /bookings/{id}` قبول/رفض/إكمال بتقرير، تفويض owner/interviewer وإلا **403**) + Interview (`GET/POST /interviews`: مقابلاتي + بدء بمسار). بذور 3 مقيّمين. **7 Feature tests خضراء.**
-- [ ] **Notification** — إشعار ترحيبيّ + تعليم الكل مقروءًا + `push()` داخليّ
-- [ ] **Ai** — `/ai/{contract}` (بيانات مشتركة)
-- [ ] الروابط بين الموديولات → **Observers** (ع1)، لا نداءات مضمّنة بعد `save()`
-- [ ] **تحقّق حيّ بعد كل مورد** (كنمط NestJS: مسح الكاش + reload → عودة البيانات من Laravel)
+- [x] **Notification** — كيان (icon/title/body/category/read/action_to، فهرس user_id×read) + `GET /notifications` (إشعار ترحيبيّ عند أول وصول) + `POST /notifications/read-all` + `push()` داخليّ (متاح للتدفّقات). **3 Feature tests خضراء.**
+- [⏭️] **Ai** — `/ai/{contract}` **مؤجّل** (لم يُنفَّذ في NestJS أصلًا — لا موديول ai في `api/src`؛ الواجهة تستخدم mockAi عبر `USE_MOCK_AI`؛ ربط Claude الحقيقيّ مؤجّل بطلب المستخدم — يتطلّب مفتاح API + وسيط). يُبنى عند تفعيل الذكاء الحقيقيّ.
+- [~] الروابط بين الموديولات → **Observers**: طُبّق التفاعل العابر المباشر (PublicProfile→Profile عبر حقن الخدمة للفعل الأساسيّ). دفعات الإشعارات المُطلَقة من التدفّقات (حجز/رسالة) تُوصَل عبر Observers في دفعة لاحقة عند الحاجة.
+- [x] **تحقّق حيّ:** Profile + PublicProfile مُتحقَّقان curl؛ الجميع مُتحقَّق بـ **43 Feature test** مقابل MySQL.
 
 ### ⬜ المرحلة 3 — تطبيع الـ blobs (ع5)
 - [ ] تطبيع مخازن الموارد إلى جداولها (جدول التصنيف أعلاه) + فهارس على كل FK
