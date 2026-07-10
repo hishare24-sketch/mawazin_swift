@@ -6,6 +6,7 @@ import { EXPERT_TIER_META, MARKET_EXPERTS, MARKET_ROLE_META, expertTier } from '
 import { EXPERT_SPECIALTY_META } from '@/services/personas'
 import type { FacetSpec, SortSpec } from '@/composables/useFacetedList'
 import FacetedList from '@/components/shared/FacetedList.vue'
+import { uniq } from '@/utils/array'
 import type { PeerRequestType } from '@/stores/PeerRequestsStore'
 import { usePeerRequestsStore } from '@/stores/PeerRequestsStore'
 import { useNotificationsStore } from '@/stores/NotificationsStore'
@@ -28,9 +29,6 @@ const authStore = useAuthStore()
 const snackbar = ref(false)
 
 // —— العقد الموحّد: الدور محوريّ + التخصّص فاسِت باحث (بلا محور قطاعيّ — محور مستقلّ) ——
-function uniq<A>(xs: A[]): A[] {
-  return [...new Set(xs)]
-}
 const roleKeys = Object.keys(MARKET_ROLE_META) as MarketExpertRole[]
 const facets = computed<FacetSpec<MarketExpert>[]>(() => [
   {

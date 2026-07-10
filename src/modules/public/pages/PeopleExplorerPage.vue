@@ -5,9 +5,11 @@ import PageHeader from '@/components/shared/PageHeader.vue'
 import { usePublicProfileStore } from '@/stores/PublicProfileStore'
 import { useSectorContext } from '@/composables/useSectorContext'
 import { dominantSector } from '@/services/matchProfile'
-import { getSector, visibleSectors } from '@/services/sectors'
+import { getSector } from '@/services/sectors'
+import { sectorFacet } from '@/composables/sectorFacet'
 import type { FacetSpec, SortSpec } from '@/composables/useFacetedList'
 import FacetedList from '@/components/shared/FacetedList.vue'
+import { uniq } from '@/utils/array'
 
 // ===== استكشاف الأشخاص — دليل الصفحات التعريفية العامة: بوابة هوية أهل المنصة =====
 const router = useRouter()
@@ -17,9 +19,6 @@ const sector = useSectorContext()
 // قطاع الشخص يُشتقّ من مهاراته (لا حقل قطاع صريح) ويُطبَّع إلى slug ليطابق الفاسِت
 function personSector(skills: string[]): string | undefined {
   return getSector(dominantSector(skills))?.id
-}
-function uniq<A>(xs: A[]): A[] {
-  return [...new Set(xs)]
 }
 
 interface PersonCard {
@@ -63,11 +62,7 @@ const people = computed<PersonCard[]>(() => [
 
 // —— العقد الموحّد: القطاع (مشتقّ) + الدور + المدينة فاسِتات ——
 const facets = computed<FacetSpec<PersonCard>[]>(() => [
-  {
-    key: 'sector', label: 'القطاعات', kind: 'multi', primary: true, searchable: true,
-    value: p => personSector(p.skills),
-    options: () => visibleSectors().map(s => ({ value: s.id, label: s.label, icon: s.icon })),
-  },
+  sectorFacet(p => personSector(p.skills)),
   {
     key: 'role', label: 'الدور', kind: 'multi', value: p => p.roles,
     options: () => uniq(people.value.flatMap(p => p.roles)).map(r => ({ value: r, label: r })),
@@ -82,9 +77,7 @@ const sorts = computed<SortSpec<PersonCard>[]>(() => [
   { key: 'credibility', label: 'الأعلى مصداقية', cmp: (a, b) => b.credibility - a.credibility },
   { key: 'rating', label: 'الأعلى تقييمًا', cmp: (a, b) => b.rating - a.rating },
 ])
-const primaryPreset = computed(() =>
-  sector.has.value ? { label: 'قطاعاتي', icon: 'mdi-shape-outline', values: sector.effective.value } : undefined,
-)
+const primaryPreset = sector.mySectorsPreset
 const personText = (p: PersonCard) => `${p.name} ${p.headline} ${p.skills.join(' ')}`
 
 // —— فتح الملف: الحيّ يفتح صفحته، والتجريبي بطاقة معاينة ——

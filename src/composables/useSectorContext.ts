@@ -126,6 +126,11 @@ export function useSectorContext() {
     return primary.value ? { sector: primary.value } : {}
   }
 
+  /** بذرة «قطاعاتي» لشريط FacetedList المحوريّ (undefined حين لا سياق) */
+  const mySectorsPreset = computed(() =>
+    has.value ? { label: 'قطاعاتي', icon: 'mdi-shape-outline', values: effective.value } : undefined,
+  )
+
   return {
     // الدور النشط (العدسة يحدّدها السطح؛ السياق نفسه بلا عدسة)
     role: computed(() => auth.role),
@@ -136,6 +141,7 @@ export function useSectorContext() {
     primary,
     has,
     hasExplicit,
+    mySectorsPreset,
     // الأدوات
     boost,
     inEffective,

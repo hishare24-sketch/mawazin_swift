@@ -9,6 +9,7 @@ import EmptyState from '@/components/shared/EmptyState.vue'
 import { useSearchPrefsStore } from '@/stores/SearchPrefsStore'
 import BaseCard from '@/components/ui/BaseCard.vue'
 import BaseButton from '@/components/ui/BaseButton.vue'
+import BaseInput from '@/components/ui/BaseInput.vue'
 import BaseChip from '@/components/ui/BaseChip.vue'
 import BaseIcon from '@/components/ui/BaseIcon.vue'
 import BaseAvatar from '@/components/ui/BaseAvatar.vue'
@@ -93,7 +94,7 @@ function searchAlt(alt: string) {
 <template>
   <div>
     <div class="mb-1 flex flex-wrap items-center justify-between gap-2">
-      <h1 class="text-xl font-bold text-content">نتائج البحث</h1>
+      <h1 class="text-xl font-bold text-content">اكتشف</h1>
       <BaseButton
         v-if="query"
         size="sm"
@@ -102,6 +103,16 @@ function searchAlt(alt: string) {
       >
         <BaseIcon :name="savedNow ? 'mdi-bookmark' : 'mdi-bookmark-outline'" :size="16" />{{ savedNow ? 'محفوظ' : 'حفظ البحث' }}
       </BaseButton>
+    </div>
+    <p class="mb-3 text-sm text-muted">ابحث واستكشف عبر كل الأسواق معًا — فرص، طلبات، أشخاص، خبراء، ومقيّمون.</p>
+
+    <!-- ① البحث البطل (عابر للأسواق) -->
+    <div class="mb-4">
+      <BaseInput v-model="query" prefix-icon="mdi-magnify" placeholder="ابحث في كل المنصّة: مسمّى، شخص، شركة، مهارة…">
+        <template #suffix>
+          <button v-if="query" type="button" class="text-muted" aria-label="مسح" @click="query = ''"><BaseIcon name="mdi-close" :size="18" /></button>
+        </template>
+      </BaseInput>
     </div>
     <p v-if="query" class="mb-3 text-sm text-muted">
       عن «{{ query }}» — {{ totalCount }} نتيجة

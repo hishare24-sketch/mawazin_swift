@@ -2,6 +2,7 @@
 import { computed, ref } from 'vue'
 import type { FacetSpec, SortSpec } from '@/composables/useFacetedList'
 import { useFacetedList } from '@/composables/useFacetedList'
+import { useMediaQuery } from '@/composables/useMediaQuery'
 import BaseIcon from '@/components/ui/BaseIcon.vue'
 import BaseInput from '@/components/ui/BaseInput.vue'
 import BaseSlider from '@/components/ui/BaseSlider.vue'
@@ -38,6 +39,8 @@ const RIBBON_LIMIT = 8
 
 const filterOpen = ref(false)
 const sortOpen = ref(false)
+// الشاشات الواسعة: درج جانبيّ للفلاتر بدل الشيت السفليّ (الموبايل يبقى شيتًا)
+const isWide = useMediaQuery('(min-width: 1024px)')
 // حالة مستقلّة لكل فاسِت باحث (بحث + توسّع) — لا تتقاطع عند وجود فاسِتين قابلين للبحث
 const sheetSearch = ref<Record<string, string>>({})
 const showAllOpts = ref<Record<string, boolean>>({})
@@ -216,10 +219,10 @@ function pickSort(key: string) {
       </div>
     </slot>
 
-    <!-- شيت «كل الفلاتر» -->
-    <BaseDrawer v-model="filterOpen" side="bottom">
+    <!-- «كل الفلاتر»: درج جانبيّ على الواسعة · شيت سفليّ على الموبايل -->
+    <BaseDrawer v-model="filterOpen" :side="isWide ? 'end' : 'bottom'" :width="360">
       <div class="p-4">
-        <div class="handle" />
+        <div v-if="!isWide" class="handle" />
         <div class="mb-1 flex items-center">
           <span class="flex-1 text-base font-bold text-content">كل الفلاتر</span>
           <button class="icon-btn h-8 w-8" aria-label="إغلاق" @click="filterOpen = false"><BaseIcon name="mdi-close" :size="20" /></button>
