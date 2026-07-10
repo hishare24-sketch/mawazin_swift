@@ -3,14 +3,14 @@ import { computed, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import PageHeader from '@/components/shared/PageHeader.vue'
 import { BOOKING_STATUS_META, INTERVIEWER_TIER_META, INTERVIEWER_TIERS, INTERVIEWER_TYPE_META, KIND_META, interviewerTier, useInterviewersStore } from '@/stores/InterviewersStore'
-import type { InterviewerType } from '@/stores/InterviewersStore'
+import type { Interviewer, InterviewerType } from '@/stores/InterviewersStore'
 import { useProfileStore } from '@/stores/ProfileStore'
-import EmptyState from '@/components/shared/EmptyState.vue'
 import AttachmentsDialog from '@/components/shared/AttachmentsDialog.vue'
-import TaxonomyTree from '@/components/shared/TaxonomyTree.vue'
-import { ALL_SKILLS, categorizeSkill } from '@/services/taxonomy'
-import { sectorForField } from '@/services/sectors'
+import { ALL_SKILLS } from '@/services/taxonomy'
+import { sectorForField, visibleSectors } from '@/services/sectors'
 import { useSectorContext } from '@/composables/useSectorContext'
+import FacetedList from '@/components/shared/FacetedList.vue'
+import type { FacetSpec, SortSpec } from '@/composables/useFacetedList'
 import { ai } from '@/services/ai'
 import type { DayPeriod, TimeSuggestion } from '@/services/ai'
 import BaseCard from '@/components/ui/BaseCard.vue'
@@ -18,10 +18,6 @@ import BaseButton from '@/components/ui/BaseButton.vue'
 import BaseChip from '@/components/ui/BaseChip.vue'
 import BaseIcon from '@/components/ui/BaseIcon.vue'
 import BaseAvatar from '@/components/ui/BaseAvatar.vue'
-import BaseInput from '@/components/ui/BaseInput.vue'
-import BaseSelect from '@/components/ui/BaseSelect.vue'
-import BaseSlider from '@/components/ui/BaseSlider.vue'
-import BaseMultiSelect from '@/components/ui/BaseMultiSelect.vue'
 import BaseModal from '@/components/ui/BaseModal.vue'
 import BaseSnackbar from '@/components/ui/BaseSnackbar.vue'
 import BaseProgressBar from '@/components/ui/BaseProgressBar.vue'
@@ -37,9 +33,6 @@ const store = useInterviewersStore()
 const profile = useProfileStore()
 const sector = useSectorContext()
 
-// نطاق القطاع: «قطاعاتي» (اتّحاد قطاعات المستخدم) ⟷ «الكل» — بذر افتراضيّ لا قفل.
-// العدسة هنا: مقيّمون/خبراء «في قطاعاتي» (نفس السياق، مخرَج مختلف حسب الدور).
-const sectorScope = ref<'mine' | 'all'>(sector.hasExplicit.value ? 'mine' : 'all')
 /** قطاع المقيّم (slug) من حقل مجاله عبر resolver الترحيل */
 function ivSector(iv: { field: string }): string | undefined {
   return sectorForField(iv.field)?.id
@@ -95,25 +88,10 @@ const candidate = computed(() => ({
 
 const recommended = computed(() => store.recommendedFor(candidate.value))
 
-// Filters
+// —— العقد الموحّد: القطاع محوريّ + التخصص/المهارات فاسِتات + أدنى تقييم ——
 const types = Object.keys(INTERVIEWER_TYPE_META) as InterviewerType[]
-const selectedTypes = ref<InterviewerType[]>([])
-const selectedSkills = ref<string[]>([])
-const minRating = ref(0)
-const maxPrice = ref(500)
-const treeSel = ref<{ category?: string, sub?: string }>({})
-const search = ref('')
-const sortBy = ref<'match' | 'rating' | 'priceLow' | 'priceHigh' | 'sessions'>('match')
 const view = ref<'grid' | 'list'>('grid')
-const sortOptions = [
-  { value: 'match', title: 'الأعلى تطابقًا' },
-  { value: 'rating', title: 'الأعلى تقييمًا' },
-  { value: 'priceLow', title: 'الأقل سعرًا' },
-  { value: 'priceHigh', title: 'الأعلى سعرًا' },
-  { value: 'sessions', title: 'الأكثر مقابلات' },
-]
 
-// AI smart quick-filters
 const smartChips = computed(() => ai.smartFilterChips({ section: 'interviewers', skills: profile.skills.map(s => s.name) }))
 const activeChips = ref<Set<string>>(new Set())
 function toggleChip(key: string) {
@@ -122,71 +100,49 @@ function toggleChip(key: string) {
   activeChips.value = next
 }
 const userSkills = computed(() => profile.skills.map(s => s.name))
-
-// Taxonomy tree items (skills + resolved sector for classification)
-const treeItems = computed(() => store.interviewers.map(iv => ({
-  skills: iv.specialties,
-  text: `${iv.title} ${iv.field} ${iv.specialties.join(' ')}`,
-  sector: sectorForField(iv.field)?.id,
-})))
-
-// Skill options = interviewer specialties ∪ taxonomy skills (so a pick always matches something)
 const skillOptions = computed(() =>
   [...new Set([...store.interviewers.flatMap(i => i.specialties), ...ALL_SKILLS])].sort(),
 )
-
-function toggleType(t: InterviewerType) {
-  selectedTypes.value = selectedTypes.value.includes(t)
-    ? selectedTypes.value.filter(x => x !== t)
-    : [...selectedTypes.value, t]
-}
 
 function matchOf(id: number) {
   return store.matchFor(candidate.value, id)
 }
 
-const filtered = computed(() => {
-  const list = store.interviewers.filter((iv) => {
-    if (search.value.trim() && !`${iv.name} ${iv.title} ${iv.field} ${iv.specialties.join(' ')}`.includes(search.value.trim()))
-      return false
-    if (selectedTypes.value.length && !selectedTypes.value.includes(iv.type))
-      return false
-    if (selectedSkills.value.length && !iv.specialties.some(s => selectedSkills.value.includes(s)))
-      return false
-    if (treeSel.value.category
-      && sectorForField(iv.field)?.id !== treeSel.value.category
-      && !iv.specialties.some(s => categorizeSkill(s) === treeSel.value.category))
-      return false
-    if (treeSel.value.sub && !`${iv.title} ${iv.field} ${iv.specialties.join(' ')}`.includes(treeSel.value.sub))
-      return false
-    // نطاق «قطاعاتي» — يقيّد على اتّحاد قطاعات المستخدم (قابل للتجاوز بـ«الكل»)
-    if (sectorScope.value === 'mine' && sector.has.value && !sector.inEffective(ivSector(iv)))
-      return false
-    if (iv.rating < minRating.value)
-      return false
-    if (iv.priceMin > maxPrice.value)
-      return false
-    // AI smart quick-filters
-    if (activeChips.value.has('topRated') && iv.rating < 4.5)
-      return false
-    if (activeChips.value.has('skills') && !iv.specialties.some(s => userSkills.value.includes(s)))
-      return false
-    return true
-  })
-  const sorted = [...list]
-  switch (sortBy.value) {
-    case 'rating': sorted.sort((a, b) => b.rating - a.rating); break
-    case 'priceLow': sorted.sort((a, b) => a.priceMin - b.priceMin); break
-    case 'priceHigh': sorted.sort((a, b) => b.priceMax - a.priceMax); break
-    case 'sessions': sorted.sort((a, b) => b.sessionsCount - a.sessionsCount); break
-    default: sorted.sort((a, b) => {
-      const d = matchOf(b.id) - matchOf(a.id)
-      // عند تعادل التطابق: ترفع قطاعات المستخدم (الأبرز ثم الصريح ثم المشتقّ)
-      return d !== 0 ? d : sector.boost(ivSector(b)) - sector.boost(ivSector(a))
-    })
-  }
-  return sorted
-})
+const facets = computed<FacetSpec<Interviewer>[]>(() => [
+  {
+    key: 'sector', label: 'القطاعات', kind: 'multi', primary: true, searchable: true,
+    value: iv => ivSector(iv),
+    options: () => visibleSectors().map(s => ({ value: s.id, label: s.label, icon: s.icon })),
+  },
+  {
+    key: 'type', label: 'التخصص', kind: 'multi', value: iv => iv.type,
+    options: () => types.map(t => ({ value: t, label: INTERVIEWER_TYPE_META[t].label, icon: INTERVIEWER_TYPE_META[t].icon })),
+  },
+  {
+    key: 'skills', label: 'المهارات', kind: 'multi', searchable: true,
+    value: iv => iv.specialties,
+    options: () => skillOptions.value.map(s => ({ value: s, label: s })),
+  },
+  { key: 'rating', label: 'أدنى تقييم', kind: 'range', numberValue: iv => iv.rating, range: { min: 0, max: 5, step: 0.5 } },
+])
+const sorts = computed<SortSpec<Interviewer>[]>(() => [
+  { key: 'match', label: 'الأعلى تطابقًا', cmp: (a, b) => { const d = matchOf(b.id) - matchOf(a.id); return d !== 0 ? d : sector.boost(ivSector(b)) - sector.boost(ivSector(a)) } },
+  { key: 'rating', label: 'الأعلى تقييمًا', cmp: (a, b) => b.rating - a.rating },
+  { key: 'priceLow', label: 'الأقل سعرًا', cmp: (a, b) => a.priceMin - b.priceMin },
+  { key: 'priceHigh', label: 'الأعلى سعرًا', cmp: (a, b) => b.priceMax - a.priceMax },
+  { key: 'sessions', label: 'الأكثر مقابلات', cmp: (a, b) => b.sessionsCount - a.sessionsCount },
+])
+const primaryPreset = computed(() =>
+  sector.has.value ? { label: 'قطاعاتي', icon: 'mdi-shape-outline', values: sector.effective.value } : undefined,
+)
+const preFiltered = computed(() => store.interviewers.filter((iv) => {
+  if (activeChips.value.has('topRated') && iv.rating < 4.5)
+    return false
+  if (activeChips.value.has('skills') && !iv.specialties.some(s => userSkills.value.includes(s)))
+    return false
+  return true
+}))
+const ivText = (iv: Interviewer) => `${iv.name} ${iv.title} ${iv.field} ${iv.specialties.join(' ')}`
 function open(id: number) {
   router.push({ name: 'interviewer-profile', params: { id } })
 }
@@ -250,95 +206,48 @@ function chipStyle(vColor: string, active: boolean) {
       </div>
     </div>
 
-    <div class="grid grid-cols-1 gap-5 md:grid-cols-[260px_1fr]">
-      <!-- Filters -->
-      <aside class="space-y-4">
-        <BaseCard v-if="sector.has.value">
-          <div class="mb-1 text-xs font-bold">نطاق القطاع</div>
-          <div class="seg w-full" role="group" aria-label="نطاق القطاع">
-            <button type="button" class="seg-btn flex-1" :class="{ 'is-active': sectorScope === 'mine' }" @click="sectorScope = 'mine'">
-              <BaseIcon name="mdi-shape-outline" :size="15" /> قطاعاتي
-            </button>
-            <button type="button" class="seg-btn flex-1" :class="{ 'is-active': sectorScope === 'all' }" @click="sectorScope = 'all'">الكل</button>
-          </div>
-        </BaseCard>
-        <BaseCard>
-          <TaxonomyTree v-model="treeSel" :items="treeItems" />
-        </BaseCard>
+    <!-- AI smart quick-filters -->
+    <div class="mb-3 flex flex-wrap items-center gap-2">
+      <span class="flex items-center gap-1 text-xs text-muted">
+        <BaseIcon name="mdi-robot-happy-outline" :size="16" style="color: rgb(var(--v-theme-secondary))" /> فلاتر ذكية:
+      </span>
+      <button
+        v-for="chip in smartChips"
+        :key="chip.key"
+        type="button"
+        class="inline-flex items-center gap-1 rounded-full border-ui px-2.5 py-1 text-xs font-medium transition"
+        :style="chipStyle('secondary', activeChips.has(chip.key))"
+        @click="toggleChip(chip.key)"
+      >
+        <BaseIcon :name="chip.icon" :size="14" /> {{ chip.label }}
+      </button>
+    </div>
 
-        <BaseCard>
-          <div class="mb-3 flex items-center justify-between">
-            <span class="text-sm font-bold text-content">فلترة</span>
-            <BaseIcon name="mdi-filter-variant" :size="18" class="text-muted" />
-          </div>
-          <div class="mb-2 text-xs font-bold text-content">التخصص</div>
-          <div class="mb-4 flex flex-wrap gap-1">
-            <button
-              v-for="t in types"
-              :key="t"
-              type="button"
-              class="rounded-full border-ui px-2.5 py-1 text-xs font-medium transition"
-              :style="chipStyle(INTERVIEWER_TYPE_META[t].color, selectedTypes.includes(t))"
-              @click="toggleType(t)"
-            >
-              {{ INTERVIEWER_TYPE_META[t].label }}
-            </button>
-          </div>
-          <div class="mb-1 text-xs font-bold text-content">المهارات</div>
-          <BaseMultiSelect v-model="selectedSkills" :options="skillOptions" placeholder="مثال: Python، React" class="mb-4" />
-          <div class="mb-1 text-xs font-bold text-content">أدنى تقييم ({{ minRating }}★)</div>
-          <BaseSlider v-model="minRating" :min="0" :max="5" :step="0.5" class="mb-3" />
-          <div class="mb-1 text-xs font-bold text-content">أعلى سعر بداية ({{ maxPrice }} ريال)</div>
-          <BaseSlider v-model="maxPrice" :min="30" :max="500" :step="10" />
-        </BaseCard>
-      </aside>
-
-      <!-- Interviewers grid -->
-      <div>
-        <!-- Local search -->
-        <BaseInput v-model="search" prefix-icon="mdi-magnify" placeholder="ابحث في المقيّمين بالاسم أو التخصص..." class="mb-3" />
-
-        <!-- AI smart quick-filters -->
-        <div class="mb-3 flex flex-wrap items-center gap-2">
-          <span class="flex items-center gap-1 text-xs text-muted">
-            <BaseIcon name="mdi-robot-happy-outline" :size="16" style="color: rgb(var(--v-theme-secondary))" /> فلاتر ذكية:
-          </span>
-          <button
-            v-for="chip in smartChips"
-            :key="chip.key"
-            type="button"
-            class="inline-flex items-center gap-1 rounded-full border-ui px-2.5 py-1 text-xs font-medium transition"
-            :style="chipStyle('secondary', activeChips.has(chip.key))"
-            @click="toggleChip(chip.key)"
-          >
-            <BaseIcon :name="chip.icon" :size="14" /> {{ chip.label }}
+    <FacetedList
+      :items="preFiltered"
+      :facets="facets"
+      :sorts="sorts"
+      :text="ivText"
+      :item-key="(iv: Interviewer) => iv.id"
+      :view="view"
+      :primary-preset="primaryPreset"
+      noun="مقيّم معتمد"
+      search-placeholder="ابحث في المقيّمين بالاسم أو التخصص…"
+    >
+      <template #toolbar>
+        <div class="seg">
+          <button type="button" class="seg-btn" :class="{ 'is-active': view === 'grid' }" aria-label="شبكة" @click="view = 'grid'">
+            <BaseIcon name="mdi-view-grid-outline" :size="18" />
+          </button>
+          <button type="button" class="seg-btn" :class="{ 'is-active': view === 'list' }" aria-label="قائمة" @click="view = 'list'">
+            <BaseIcon name="mdi-view-list-outline" :size="18" />
           </button>
         </div>
+      </template>
 
-        <!-- Toolbar: count · sort · view -->
-        <div class="mb-3 flex flex-wrap items-center justify-between gap-2">
-          <span class="text-sm text-muted">{{ filtered.length }} مقيّم معتمد</span>
-          <div class="flex items-center gap-2">
-            <BaseSelect v-model="sortBy" :items="sortOptions" prefix-icon="mdi-sort" class="w-[190px]" />
-            <div class="seg">
-              <button type="button" class="seg-btn" :class="{ 'is-active': view === 'grid' }" aria-label="شبكة" @click="view = 'grid'">
-                <BaseIcon name="mdi-view-grid-outline" :size="18" />
-              </button>
-              <button type="button" class="seg-btn" :class="{ 'is-active': view === 'list' }" aria-label="قائمة" @click="view = 'list'">
-                <BaseIcon name="mdi-view-list-outline" :size="18" />
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <div class="grid grid-cols-1 gap-4" :class="view === 'grid' ? 'sm:grid-cols-2' : ''">
-          <BaseCard
-            v-for="iv in filtered"
-            :key="iv.id"
-            hover
-            class="flex cursor-pointer flex-col"
-            @click="open(iv.id)"
-          >
+      <template #item="{ item }">
+        <template v-for="iv in [item as Interviewer]" :key="iv.id">
+          <BaseCard hover class="flex cursor-pointer flex-col" @click="open(iv.id)">
             <div class="mb-2 flex items-start gap-3">
               <BaseAvatar :color="mapColor(INTERVIEWER_TYPE_META[iv.type].color)" :size="52">
                 <span class="text-lg font-bold">{{ iv.initial }}</span>
@@ -374,16 +283,11 @@ function chipStyle(vColor: string, active: boolean) {
               <span class="font-bold text-content">{{ iv.priceMin }}–{{ iv.priceMax }} ريال</span>
             </div>
           </BaseCard>
-        </div>
-        <BaseCard v-if="!filtered.length" :padded="false">
-          <EmptyState
-            icon="mdi-account-search-outline"
-            title="لا مقيّمين مطابقين"
-            description="جرّب توسيع نطاق التقييم أو السعر، أو إزالة فلتر التخصص."
-          />
-        </BaseCard>
+        </template>
+      </template>
+    </FacetedList>
 
-        <!-- My bookings -->
+    <!-- My bookings -->
         <div v-if="store.bookings.length" class="mt-6">
           <h2 class="mb-3 font-bold text-content">حجوزاتي مع المقيّمين ({{ store.bookings.length }})</h2>
           <BaseCard :padded="false">
@@ -426,8 +330,6 @@ function chipStyle(vColor: string, active: boolean) {
             </div>
           </BaseCard>
         </div>
-      </div>
-    </div>
 
     <!-- Accreditation tiers reference -->
     <BaseModal v-model="tiersDialog" title="مستويات الاعتماد ومزاياها">
