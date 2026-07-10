@@ -183,6 +183,56 @@ const INTERVIEWERS_SEED: Interviewer[] = [
       { id: 1, name: 'تدقيق حملة نمو', description: 'مراجعة استراتيجية نمو أو حملة تسويقية مع توصيات', price: 90 },
     ],
   },
+  {
+    id: 6, name: 'أ. عبدالله الغامدي', initial: 'ع', type: 'specialist', title: 'محلل مالي معتمد (CFA) · تمويل شركات',
+    bio: 'خبرة 10 سنوات في التحليل المالي ونمذجة الاستثمار، أجريت مقابلات تقييم للأدوار المالية في بنوك وصناديق.',
+    specialties: ['التحليل المالي', 'النمذجة المالية', 'التقييم'], field: 'المالية',
+    rating: 4.7, reviewsCount: 44, sessionsCount: 72, priceMin: 130, priceMax: 320,
+    availability: ['الأحد', 'الثلاثاء'], languages: ['العربية', 'English'], verified: true,
+    evalElements: [
+      { id: 1, name: 'تقييم مالي تطبيقي', description: 'حالة عملية في النمذجة والتحليل مع تقرير', price: 110 },
+    ],
+  },
+  {
+    id: 7, name: 'م. ريم الحربي', initial: 'ر', type: 'technical', title: 'مهندسة مدنية · إدارة مشاريع إنشائية',
+    bio: 'مهندسة مدنية بخبرة 12 سنة في مشاريع البنية التحتية والمباني، متخصصة في تقييم كفاءات الهندسة والتخطيط.',
+    specialties: ['إدارة المشاريع', 'الإشراف الهندسي', 'AutoCAD'], field: 'الهندسة والمقاولات والبناء',
+    rating: 4.6, reviewsCount: 38, sessionsCount: 55, priceMin: 110, priceMax: 260,
+    availability: ['الإثنين', 'الأربعاء'], languages: ['العربية'], verified: true,
+    evalElements: [
+      { id: 1, name: 'تقييم كفاءة هندسية', description: 'مراجعة خبرة إدارة المشاريع عبر سيناريو موقعي', price: 90 },
+    ],
+  },
+  {
+    id: 8, name: 'د. سارة الزهراني', initial: 'س', type: 'specialist', title: 'استشارية جودة رعاية صحية',
+    bio: 'استشارية في تحسين جودة الخدمات الصحية بخبرة 13 سنة، تُقيّم كفاءات الأدوار الطبية والإدارية في القطاع الصحي.',
+    specialties: ['جودة الرعاية', 'تجربة المريض', 'تحسين العمليات'], field: 'الصحة والرعاية الطبية',
+    rating: 4.9, reviewsCount: 57, sessionsCount: 81, priceMin: 150, priceMax: 340,
+    availability: ['الأحد', 'الخميس'], languages: ['العربية', 'English'], verified: true,
+    evalElements: [
+      { id: 1, name: 'تقييم كفاءات صحية', description: 'سيناريوهات جودة وسلامة المرضى مع توصيات', price: 120 },
+    ],
+  },
+  {
+    id: 9, name: 'أ. ليان القحطاني', initial: 'ل', type: 'specialist', title: 'مديرة تصميم منتج · UX',
+    bio: 'قائدة تصميم بخبرة 9 سنوات في منتجات رقمية، أقيّم مهارات التصميم والتفكير التصميمي عبر ملفات الأعمال.',
+    specialties: ['UX', 'أنظمة التصميم', 'أبحاث المستخدم'], field: 'التصميم',
+    rating: 4.8, reviewsCount: 49, sessionsCount: 66, priceMin: 90, priceMax: 240,
+    availability: ['الثلاثاء', 'الخميس'], languages: ['العربية', 'English'], verified: true,
+    evalElements: [
+      { id: 1, name: 'مراجعة ملف أعمال تصميم', description: 'نقد ملف الأعمال وتقييم التفكير التصميمي', price: 85 },
+    ],
+  },
+  {
+    id: 10, name: 'أ. ماجد العتيبي', initial: 'م', type: 'leadership', title: 'مدير موارد بشرية · اكتساب المواهب',
+    bio: 'قائد موارد بشرية بخبرة 15 سنة في اكتساب المواهب وتطوير المؤسسات، متخصص في تقييم التوافق القيادي والثقافي.',
+    specialties: ['التوظيف', 'إدارة الأداء', 'تطوير المؤسسات'], field: 'الموارد البشرية',
+    rating: 4.5, reviewsCount: 61, sessionsCount: 94, priceMin: 100, priceMax: 250,
+    availability: ['الأحد', 'الإثنين', 'الأربعاء'], languages: ['العربية', 'English'], verified: false,
+    evalElements: [
+      { id: 1, name: 'تقييم توافق قيادي', description: 'مقابلة سلوكية موجّهة مع تقرير توافق', price: 95 },
+    ],
+  },
 ]
 
 const BOOKINGS_STORAGE = 'interviewerBookings'
