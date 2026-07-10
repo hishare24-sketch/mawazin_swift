@@ -19,6 +19,7 @@ const ALL_ROLES: UserRole[] = ['seeker', 'company', 'interviewer', 'endorser', '
 // Single source of truth for sidebar items, filtered by role
 export const navItems: NavItem[] = [
   // ===== المنصة — الأسواق والاكتشاف تتصدر: هنا يلتقي العرض بالطلب =====
+  { title: 'discover', icon: 'mdi-telescope', to: 'search', roles: ALL_ROLES, section: 'platform' },
   { title: 'opportunities', icon: 'mdi-briefcase-search-outline', to: 'opportunities', roles: ALL_ROLES, section: 'platform' },
   { title: 'requests', icon: 'mdi-storefront-outline', to: 'requests', roles: ALL_ROLES, section: 'platform' },
   { title: 'interviewers', icon: 'mdi-account-supervisor-circle-outline', to: 'interviewers', roles: ALL_ROLES, section: 'platform' },
