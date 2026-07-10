@@ -9,10 +9,11 @@ import { useProfileStore } from '@/stores/ProfileStore'
 import { matchScore } from '@/services/matching'
 import { requestMatchProfile, seekerMatchProfile } from '@/services/matchProfile'
 import { useSectorContext } from '@/composables/useSectorContext'
-import { sectorForField, visibleSectors } from '@/services/sectors'
-import { categorizeSkill } from '@/services/taxonomy'
+import { sectorFacet, sectorFromFieldAndSkills } from '@/composables/sectorFacet'
+import { sectorForField } from '@/services/sectors'
 import type { FacetSpec, SortSpec } from '@/composables/useFacetedList'
 import FacetedList from '@/components/shared/FacetedList.vue'
+import { uniq } from '@/utils/array'
 import BaseCard from '@/components/ui/BaseCard.vue'
 import BaseButton from '@/components/ui/BaseButton.vue'
 import BaseChip from '@/components/ui/BaseChip.vue'
@@ -55,18 +56,10 @@ function matchColor(v: number) {
 function reqSector(r: MarketRequest): string | undefined {
   return sectorForField(r.field)?.id
 }
-function uniq<A>(xs: A[]): A[] {
-  return [...new Set(xs)]
-}
 const kinds = Object.keys(KIND_META) as RequestKind[]
 
 const facets = computed<FacetSpec<MarketRequest>[]>(() => [
-  {
-    key: 'sector', label: 'القطاعات', kind: 'multi', primary: true, searchable: true,
-    // القطاع من المجال أو من أي مهارة تُصنَّف إليه (يحفظ تسامح الشجرة القديمة)
-    value: r => [reqSector(r), ...r.skills.map(s => categorizeSkill(s))].filter((x): x is string => !!x),
-    options: () => visibleSectors().map(s => ({ value: s.id, label: s.label, icon: s.icon })),
-  },
+  sectorFacet(sectorFromFieldAndSkills(reqSector, r => r.skills)),
   {
     key: 'field', label: 'المجال', kind: 'multi', searchable: true, value: r => r.field,
     options: () => store.fields.map(f => ({ value: f, label: f })),
@@ -93,9 +86,7 @@ const sorts = computed<SortSpec<MarketRequest>[]>(() => [
   { key: 'applicants', label: 'الأكثر تقدّمًا', cmp: (a, b) => b.applicants - a.applicants },
 ])
 
-const primaryPreset = computed(() =>
-  sector.has.value ? { label: 'قطاعاتي', icon: 'mdi-shape-outline', values: sector.effective.value } : undefined,
-)
+const primaryPreset = sector.mySectorsPreset
 
 const preFiltered = computed(() => store.requests.filter((r) => {
   if (activeChips.value.has('newToday') && r.state !== 'new')

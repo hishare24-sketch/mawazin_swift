@@ -6,9 +6,10 @@ import { BOOKING_STATUS_META, INTERVIEWER_TIER_META, INTERVIEWER_TIERS, INTERVIE
 import type { Interviewer, InterviewerType } from '@/stores/InterviewersStore'
 import { useProfileStore } from '@/stores/ProfileStore'
 import AttachmentsDialog from '@/components/shared/AttachmentsDialog.vue'
-import { ALL_SKILLS, categorizeSkill } from '@/services/taxonomy'
-import { sectorForField, visibleSectors } from '@/services/sectors'
+import { ALL_SKILLS } from '@/services/taxonomy'
+import { sectorForField } from '@/services/sectors'
 import { useSectorContext } from '@/composables/useSectorContext'
+import { sectorFacet, sectorFromFieldAndSkills } from '@/composables/sectorFacet'
 import FacetedList from '@/components/shared/FacetedList.vue'
 import type { FacetSpec, SortSpec } from '@/composables/useFacetedList'
 import { ai } from '@/services/ai'
@@ -34,7 +35,7 @@ const profile = useProfileStore()
 const sector = useSectorContext()
 
 /** قطاع المقيّم (slug) من حقل مجاله عبر resolver الترحيل */
-function ivSector(iv: { field: string }): string | undefined {
+function ivSector(iv: Interviewer): string | undefined {
   return sectorForField(iv.field)?.id
 }
 
@@ -109,12 +110,7 @@ function matchOf(id: number) {
 }
 
 const facets = computed<FacetSpec<Interviewer>[]>(() => [
-  {
-    key: 'sector', label: 'القطاعات', kind: 'multi', primary: true, searchable: true,
-    // القطاع من المجال أو من أي تخصّص يُصنَّف إليه (يحفظ تسامح الشجرة القديمة)
-    value: iv => [ivSector(iv), ...iv.specialties.map(s => categorizeSkill(s))].filter((x): x is string => !!x),
-    options: () => visibleSectors().map(s => ({ value: s.id, label: s.label, icon: s.icon })),
-  },
+  sectorFacet(sectorFromFieldAndSkills(ivSector, iv => iv.specialties)),
   {
     key: 'type', label: 'التخصص', kind: 'multi', value: iv => iv.type,
     options: () => types.map(t => ({ value: t, label: INTERVIEWER_TYPE_META[t].label, icon: INTERVIEWER_TYPE_META[t].icon })),
@@ -134,9 +130,8 @@ const sorts = computed<SortSpec<Interviewer>[]>(() => [
   { key: 'priceHigh', label: 'الأعلى سعرًا', cmp: (a, b) => b.priceMax - a.priceMax },
   { key: 'sessions', label: 'الأكثر مقابلات', cmp: (a, b) => b.sessionsCount - a.sessionsCount },
 ])
-const primaryPreset = computed(() =>
-  sector.has.value ? { label: 'قطاعاتي', icon: 'mdi-shape-outline', values: sector.effective.value } : undefined,
-)
+const primaryPreset = sector.mySectorsPreset
+
 const preFiltered = computed(() => store.interviewers.filter((iv) => {
   if (activeChips.value.has('topRated') && iv.rating < 4.5)
     return false

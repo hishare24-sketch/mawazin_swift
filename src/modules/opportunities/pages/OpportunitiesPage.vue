@@ -9,11 +9,12 @@ import { useSavedStore } from '@/stores/SavedStore'
 import { useProfileStore } from '@/stores/ProfileStore'
 import { matchScore } from '@/services/matching'
 import { opportunityMatchProfile, seekerMatchProfile } from '@/services/matchProfile'
-import { sectorForField, visibleSectors } from '@/services/sectors'
-import { categorizeSkill } from '@/services/taxonomy'
+import { sectorForField } from '@/services/sectors'
 import { useSectorContext } from '@/composables/useSectorContext'
+import { sectorFacet, sectorFromFieldAndSkills } from '@/composables/sectorFacet'
 import type { FacetSpec, SortSpec } from '@/composables/useFacetedList'
 import FacetedList from '@/components/shared/FacetedList.vue'
+import { uniq } from '@/utils/array'
 import { ai } from '@/services/ai'
 import BaseButton from '@/components/ui/BaseButton.vue'
 import BaseIcon from '@/components/ui/BaseIcon.vue'
@@ -50,19 +51,10 @@ const view = ref<'grid' | 'list'>('grid')
 function oppSector(o: Opportunity): string | undefined {
   return sectorForField(o.department)?.id
 }
-function uniq<A>(xs: A[]): A[] {
-  return [...new Set(xs)]
-}
 
 // —— العقد الموحّد: spec الفاسِتات + الفرز (القطاع محوريّ، مُنتقٍ باحث) ——
 const facets = computed<FacetSpec<Opportunity>[]>(() => [
-  {
-    // القطاع فاسِت محوريّ = كامل التصنيف المرئيّ (مرتّب بالأولويّة، يُخفي «أخرى»)
-    key: 'sector', label: 'القطاعات', kind: 'multi', primary: true, searchable: true,
-    // القطاع من القسم أو من أي مهارة تُصنَّف إليه (يحفظ تسامح الشجرة القديمة)
-    value: o => [oppSector(o), ...o.skills.map(s => categorizeSkill(s))].filter((x): x is string => !!x),
-    options: () => visibleSectors().map(s => ({ value: s.id, label: s.label, icon: s.icon })),
-  },
+  sectorFacet(sectorFromFieldAndSkills(oppSector, o => o.skills)),
   {
     key: 'city', label: 'المدينة', kind: 'multi', value: o => o.city,
     options: () => uniq(mockOpportunities.map(o => o.city)).map(c => ({ value: c, label: c })),
@@ -86,10 +78,7 @@ const sorts = computed<SortSpec<Opportunity>[]>(() => [
   { key: 'salaryLow', label: 'الأقل راتبًا', cmp: (a, b) => a.salaryMax - b.salaryMax },
 ])
 
-// «قطاعاتي» بذرة على الشريط المحوريّ (بلا قفل — الافتراض «الكل»)
-const primaryPreset = computed(() =>
-  sector.has.value ? { label: 'قطاعاتي', icon: 'mdi-shape-outline', values: sector.effective.value } : undefined,
-)
+const primaryPreset = sector.mySectorsPreset
 
 // تصفية سابقة بطبقة الرقائق الذكيّة + المحفوظة، ثم يتولّى العقد الموحّد الباقي
 const preFiltered = computed(() => mockOpportunities.filter((o) => {
