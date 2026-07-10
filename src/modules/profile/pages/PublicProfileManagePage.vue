@@ -3,7 +3,6 @@ import { computed, ref } from 'vue'
 import PageHeader from '@/components/shared/PageHeader.vue'
 import { fileToDataUrl } from '@/services/imageTools'
 import { ACCOUNT_TIER_META, useAccountPlanStore } from '@/stores/AccountPlanStore'
-import { useNotificationsStore } from '@/stores/NotificationsStore'
 import { useProfileStore } from '@/stores/ProfileStore'
 import type { AvailabilityStatus, ProfileFont, ProfileThemeKey } from '@/stores/PublicProfileStore'
 import { AVAILABILITY_META, PROFILE_FONTS, PROFILE_THEMES, SECTION_TIER, usePublicProfileStore } from '@/stores/PublicProfileStore'
@@ -19,6 +18,8 @@ import BaseSwitch from '@/components/ui/BaseSwitch.vue'
 import BaseTagInput from '@/components/ui/BaseTagInput.vue'
 import BaseModal from '@/components/ui/BaseModal.vue'
 import BaseProgressRing from '@/components/ui/BaseProgressRing.vue'
+import BaseToggleChip from '@/components/ui/BaseToggleChip.vue'
+import BaseColorField from '@/components/ui/BaseColorField.vue'
 
 // ===== إدارة الصفحة التعريفية — مقسومة لثلاث مهام واضحة: هويتي / محتواي / ظهوري =====
 // embedded: تُعرض داخل مركز الإعدادات بلا ترويسة مكررة
@@ -27,7 +28,6 @@ withDefaults(defineProps<{ embedded?: boolean }>(), { embedded: false })
 const pub = usePublicProfileStore()
 const profile = useProfileStore()
 const roleProfiles = useRoleProfilesStore()
-const notifications = useNotificationsStore()
 const plan = useAccountPlanStore()
 const s = computed(() => pub.state)
 
@@ -39,25 +39,10 @@ const SUB_TABS = [
   { value: 'visibility', label: 'الظهور والإشراف', icon: 'mdi-eye-settings-outline' },
 ] as const
 
-// —— تلوين الرقائق-كأزرار (بديل VChip flat/outlined) ——
+// —— تلوين الرقائق (بديل VChip flat/outlined) ——
 type BaseColor = 'brand' | 'emerald' | 'accent' | 'success' | 'info' | 'warning' | 'error' | 'neutral'
 function mapColor(c: string): BaseColor {
   return (({ primary: 'brand', secondary: 'emerald', 'medium-emphasis': 'neutral', 'surface-variant': 'neutral', grey: 'neutral', amber: 'warning' } as Record<string, BaseColor>)[c] ?? c) as BaseColor
-}
-// نغمة صلبة (نشط) أو حدّ خافت (غير نشط) — بلون ثيم Vuetify
-function toggleStyle(active: boolean, color: string) {
-  if (active) {
-    return {
-      background: `rgb(var(--v-theme-${color}))`,
-      color: `rgb(var(--v-theme-on-${color}))`,
-      borderColor: 'transparent',
-    }
-  }
-  return {
-    background: 'transparent',
-    color: 'rgba(var(--v-theme-on-surface), 0.75)',
-    borderColor: 'rgba(var(--v-theme-on-surface), 0.2)',
-  }
 }
 
 // —— المظهر: الثيمات والحالة المهنية ونقاط القوة وترتيب الأقسام ——
@@ -229,16 +214,14 @@ function setSection(key: keyof typeof SECTION_LABELS, v: boolean) {
   }
 }
 
+// مؤشّر حفظ عابر صامت — بدل إغراق مركز الإشعارات بإشعار دائم لكل @blur/تبديل
+const justSaved = ref(false)
+let savedTimer: ReturnType<typeof setTimeout> | undefined
 function saved() {
-  notifications.push({
-    icon: 'mdi-content-save-check-outline',
-    color: 'success',
-    title: 'حُفظت صفحتك التعريفية',
-    body: 'تغييراتك ظاهرة الآن على رابطك العام.',
-    category: 'system',
-    actionTo: `/${pub.publicPath}`,
-    actionLabel: 'معاينة الصفحة',
-  })
+  justSaved.value = true
+  if (savedTimer)
+    clearTimeout(savedTimer)
+  savedTimer = setTimeout(() => (justSaved.value = false), 1600)
 }
 </script>
 
@@ -264,6 +247,9 @@ function saved() {
           </div>
         </div>
         <span class="flex-1" />
+        <BaseChip v-if="justSaved" color="success">
+          <BaseIcon name="mdi-check" :size="14" />تم الحفظ
+        </BaseChip>
         <BaseChip
           v-if="pub.syncStatus !== 'off'"
           :color="mapColor(syncMeta.color)"
@@ -283,11 +269,13 @@ function saved() {
     </BaseCard>
 
     <!-- ثلاث مهام واضحة -->
-    <div class="mb-4 flex flex-wrap gap-1">
+    <div class="mb-4 flex flex-wrap gap-1" role="tablist">
       <button
         v-for="t in SUB_TABS"
         :key="t.value"
         type="button"
+        role="tab"
+        :aria-selected="subTab === t.value"
         class="nav-tab"
         :class="{ 'is-active': subTab === t.value }"
         @click="subTab = t.value"
@@ -349,16 +337,15 @@ function saved() {
           <h2 class="mb-1 flex items-center gap-1 text-base font-bold text-content"><BaseIcon name="mdi-account-badge-outline" :size="20" :style="{ color: 'rgb(var(--v-theme-success))' }" />حالتي المهنية</h2>
           <p class="mb-3 text-xs text-muted">تظهر في أعلى صفحتك — أخبر الزوار بجاهزيتك فورًا.</p>
           <div class="mb-3 flex flex-wrap gap-2">
-            <button
+            <BaseToggleChip
               v-for="[status, meta] in AVAILABILITY_CHOICES"
               :key="status"
-              type="button"
-              class="inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-medium transition"
-              :style="toggleStyle(s.availability.status === status, meta.color)"
-              @click="s.availability.status = status; saved()"
+              :active="s.availability.status === status"
+              :color="meta.color"
+              @toggle="s.availability.status = status; saved()"
             >
               <BaseIcon :name="s.availability.status === status ? 'mdi-check-circle' : 'mdi-circle-outline'" :size="14" />{{ meta.label }}
-            </button>
+            </BaseToggleChip>
           </div>
           <BaseInput v-model="s.availability.message" label="رسالة مخصصة بجانب الحالة (اختياري)" @blur="saved" />
         </BaseCard>
@@ -400,6 +387,7 @@ function saved() {
             </button>
           </div>
           <BaseSwitch :model-value="s.appearance.avatarRing" label="إطار ملون حول الصورة (بلون اللكنة)" class="mb-3" @update:model-value="s.appearance.avatarRing = $event; saved()" />
+          <p class="mb-2 text-xs text-muted">خطّ صفحتك:</p>
           <BaseSelect
             :model-value="s.appearance.font"
             :items="FONT_CHOICES"
@@ -431,16 +419,15 @@ function saved() {
           </h2>
           <p class="mb-2 text-xs text-muted">اختر حتى 5 مهارات رئيسية تُبرَز في أعلى قسم المهارات.</p>
           <div class="flex flex-wrap gap-2">
-            <button
+            <BaseToggleChip
               v-for="sk in featuredCandidates"
               :key="sk.id"
-              type="button"
-              class="inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-medium transition"
-              :style="toggleStyle(s.featuredSkillIds.includes(sk.id), 'accent')"
-              @click="pub.toggleFeaturedSkill(sk.id) && saved()"
+              :active="s.featuredSkillIds.includes(sk.id)"
+              color="accent"
+              @toggle="pub.toggleFeaturedSkill(sk.id) && saved()"
             >
               <BaseIcon :name="s.featuredSkillIds.includes(sk.id) ? 'mdi-star' : 'mdi-star-outline'" :size="14" />{{ sk.name }}
-            </button>
+            </BaseToggleChip>
           </div>
           <p v-if="!featuredCandidates.length" class="mb-0 mt-2 text-xs text-muted">أظهر مهارات أولًا من تبويب «محتواي».</p>
         </BaseCard>
@@ -474,24 +461,29 @@ function saved() {
           <hr class="my-3 border-ui">
           <!-- الثيم المخصص الموسع — ميزة الاحترافية -->
           <div class="mb-2 flex flex-wrap items-center gap-2">
-            <button
-              type="button"
-              class="inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-medium transition disabled:cursor-not-allowed disabled:opacity-50"
-              :style="toggleStyle(s.appearance.theme === 'custom', 'primary')"
+            <BaseToggleChip
+              :active="s.appearance.theme === 'custom'"
+              color="primary"
               :disabled="!canCustomTheme"
-              @click="pickTheme('custom')"
+              @toggle="pickTheme('custom')"
             >
               <BaseIcon name="mdi-eyedropper-variant" :size="14" />ثيم مخصص بألواني
-            </button>
+            </BaseToggleChip>
             <BaseChip v-if="!canCustomTheme" :color="mapColor(ACCOUNT_TIER_META.pro.color)">
               <BaseIcon name="mdi-lock-outline" :size="12" />{{ ACCOUNT_TIER_META.pro.label }}
             </BaseChip>
           </div>
           <template v-if="canCustomTheme && s.appearance.theme === 'custom'">
-            <div v-for="f in CUSTOM_COLOR_FIELDS" :key="f.key" class="flex items-center gap-2 py-1">
-              <input v-model="s.appearance[f.key]" type="color" class="color-input" @change="saved">
-              <span class="text-sm text-content">{{ f.label }}</span>
+            <div class="grid grid-cols-1 gap-2 sm:grid-cols-2">
+              <BaseColorField
+                v-for="f in CUSTOM_COLOR_FIELDS"
+                :key="f.key"
+                v-model="s.appearance[f.key]"
+                :label="f.label"
+                @update:model-value="saved"
+              />
             </div>
+            <p class="mb-1 mt-2 text-xs text-muted">اختر لونًا أو الصق قيمة HEX — تُطبَّق فورًا على صفحتك.</p>
             <!-- حفظ القالب وتطبيق المحفوظ -->
             <div class="mt-2 flex items-end gap-2">
               <BaseInput v-model="templateName" label="اسم القالب" class="flex-1" />
@@ -557,16 +549,15 @@ function saved() {
           <h2 class="mb-1 flex items-center gap-1 text-base font-bold text-content"><BaseIcon name="mdi-star-outline" :size="20" :style="{ color: 'rgb(var(--v-theme-primary))' }" />المهارات الظاهرة</h2>
           <p class="mb-2 text-xs text-muted">اختر ما يظهر — قد تختلف عن مهارات ملفك الخاص.</p>
           <div class="flex flex-wrap gap-2">
-            <button
+            <BaseToggleChip
               v-for="sk in profile.skills"
               :key="sk.id"
-              type="button"
-              class="inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-medium transition"
-              :style="toggleStyle(s.selectedSkillIds.includes(sk.id), 'primary')"
-              @click="pub.toggleSkill(sk.id); saved()"
+              :active="s.selectedSkillIds.includes(sk.id)"
+              color="primary"
+              @toggle="pub.toggleSkill(sk.id); saved()"
             >
               <BaseIcon :name="s.selectedSkillIds.includes(sk.id) ? 'mdi-check' : 'mdi-plus'" :size="14" />{{ sk.name }}
-            </button>
+            </BaseToggleChip>
           </div>
         </BaseCard>
       </div>
@@ -698,16 +689,6 @@ function saved() {
   height: 14px;
   border-radius: 50%;
   border: 1px solid rgba(128, 128, 128, 0.4);
-}
-
-.color-input {
-  width: 42px;
-  height: 30px;
-  padding: 0;
-  border: 1px solid rgba(128, 128, 128, 0.4);
-  border-radius: 6px;
-  background: transparent;
-  cursor: pointer;
 }
 
 /* سحب وإفلات ترتيب الأقسام */

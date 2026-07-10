@@ -64,6 +64,35 @@ services:
                 - ping
             retries: 3
             timeout: 5s
+    reverb:
+        image: 'sail-8.5/app'
+        command: 'php artisan reverb:start --host=0.0.0.0 --port=8091'
+        ports:
+            - '${REVERB_SERVER_PORT:-8091}:8091'
+        environment:
+            WWWUSER: '${WWWUSER}'
+            LARAVEL_SAIL: 1
+        volumes:
+            - '.:/var/www/html'
+        networks:
+            - sail
+        depends_on:
+            - laravel.test
+            - redis
+    queue:
+        image: 'sail-8.5/app'
+        command: 'php artisan queue:work --tries=3 --timeout=90 --sleep=1'
+        environment:
+            WWWUSER: '${WWWUSER}'
+            LARAVEL_SAIL: 1
+        volumes:
+            - '.:/var/www/html'
+        networks:
+            - sail
+        depends_on:
+            - laravel.test
+            - mysql
+            - redis
 networks:
     sail:
         driver: bridge

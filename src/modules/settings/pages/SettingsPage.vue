@@ -15,6 +15,8 @@ import AccountPlanPage from '@/modules/account/pages/AccountPlanPage.vue'
 import PublicProfileManagePage from '@/modules/profile/pages/PublicProfileManagePage.vue'
 import { SECTORS, visibleSectors } from '@/services/sectors'
 import { ACCOUNT_TIER_META, useAccountPlanStore } from '@/stores/AccountPlanStore'
+import { useAccountPrefsStore } from '@/stores/AccountPrefsStore'
+import type { FontSize, NotifPrefs, PrivacyKey, PrivacyLevel } from '@/stores/AccountPrefsStore'
 import { useAuthStore } from '@/stores/AuthStore'
 import { usePersonaStore } from '@/stores/PersonaStore'
 import { usePublicProfileStore } from '@/stores/PublicProfileStore'
@@ -91,10 +93,23 @@ function tabBadge(t: SettingsTab): string | null {
   return null
 }
 
-// General
+const prefs = useAccountPrefsStore()
+
+// General account — «حفظ» يُحدّث جلسة المستخدم فعليًّا (authUser) مع مؤشّر عابر
 const name = ref(authStore.authUser?.name ?? '')
 const email = ref(authStore.authUser?.email ?? '')
 const phone = ref(authStore.authUser?.phone ?? '')
+const accountSaved = ref(false)
+let accountTimer: ReturnType<typeof setTimeout> | undefined
+function saveAccount() {
+  if (!authStore.authUser)
+    return
+  authStore.setAuthUser({ ...authStore.authUser, name: name.value, email: email.value, phone: phone.value })
+  accountSaved.value = true
+  if (accountTimer)
+    clearTimeout(accountTimer)
+  accountTimer = setTimeout(() => (accountSaved.value = false), 1600)
+}
 
 // —— قطاعات اهتمامي — السياق القطاعيّ العابر: يُخصّص العرض/الوصول/البحث/التوصية ——
 // (يخرج من حبس onboarding؛ التحرير هنا يُزامَن فورًا مع PersonaStore ← Laravel)
@@ -107,20 +122,15 @@ function toggleSector(id: string) {
   personaStore.setInterestedSectors(cur.includes(id) ? cur.filter(s => s !== id) : [...cur, id])
 }
 
-// Preferences
-const fontSize = ref('medium')
-const FONT_SIZES = [{ value: 'small', label: 'صغير' }, { value: 'medium', label: 'متوسط' }, { value: 'large', label: 'كبير' }]
+// Preferences — حجم الخط مخزّن الآن عبر AccountPrefsStore
+const FONT_SIZES: { value: FontSize, label: string }[] = [
+  { value: 'small', label: 'صغير' },
+  { value: 'medium', label: 'متوسط' },
+  { value: 'large', label: 'كبير' },
+]
 
-// Notifications
-const notif = ref({
-  endorsements: true,
-  messages: true,
-  opportunities: true,
-  wishes: true,
-  reminders: false,
-  surveys: false,
-})
-const NOTIF_TYPES: { key: keyof typeof notif.value, label: string }[] = [
+// Notifications — الأنواع والوسيلة مخزّنة عبر AccountPrefsStore (تُزامَن سحابيًّا)
+const NOTIF_TYPES: { key: keyof NotifPrefs, label: string }[] = [
   { key: 'opportunities', label: 'فرص جديدة' },
   { key: 'wishes', label: 'رغبات واردة' },
   { key: 'endorsements', label: 'توصيات' },
@@ -128,24 +138,23 @@ const NOTIF_TYPES: { key: keyof typeof notif.value, label: string }[] = [
   { key: 'reminders', label: 'تذكيرات' },
   { key: 'surveys', label: 'استبيانات' },
 ]
-const notifChannel = ref<string[]>(['in_app', 'email'])
 const NOTIF_CHANNELS = [
   { value: 'in_app', label: 'داخل المنصة' },
   { value: 'email', label: 'بريد إلكتروني' },
   { value: 'whatsapp', label: 'واتساب' },
 ]
 
-// Privacy (7 settings)
-const privacy = ref([
-  { label: 'ظهور الملف الشخصي', value: 'public' },
-  { label: 'ظهور التوصيات', value: 'companies' },
-  { label: 'ظهور نتائج الاختبارات', value: 'private' },
-  { label: 'ظهور الرغبات الواردة', value: 'private' },
-  { label: 'ظهور السير الذاتية', value: 'public' },
-  { label: 'إشعارات التواصل', value: 'public' },
-  { label: 'مشاركة البيانات للتحليل', value: 'public' },
-])
-const privacyOptions = [
+// Privacy — مخزّنة عبر AccountPrefsStore
+const PRIVACY_ITEMS: { key: PrivacyKey, label: string }[] = [
+  { key: 'profile', label: 'ظهور الملف الشخصي' },
+  { key: 'testimonials', label: 'ظهور التوصيات' },
+  { key: 'testResults', label: 'ظهور نتائج الاختبارات' },
+  { key: 'incomingWishes', label: 'ظهور الرغبات الواردة' },
+  { key: 'resumes', label: 'ظهور السير الذاتية' },
+  { key: 'contact', label: 'إشعارات التواصل' },
+  { key: 'dataSharing', label: 'مشاركة البيانات للتحليل' },
+]
+const privacyOptions: { value: PrivacyLevel, title: string }[] = [
   { value: 'public', title: 'عام' },
   { value: 'companies', title: 'لأصحاب العمل' },
   { value: 'private', title: 'خاص' },
@@ -227,8 +236,10 @@ function toggleLocale(val: string) {
               <BaseInput label="كلمة المرور الحالية" type="password" />
               <BaseInput label="كلمة المرور الجديدة" type="password" />
             </div>
-            <div class="mt-4 flex justify-end">
-              <BaseButton variant="accent">
+            <p class="mt-1 text-xs text-muted">تغيير كلمة المرور يتطلّب خدمة الحساب — سيُفعّل قريبًا.</p>
+            <div class="mt-4 flex items-center justify-end gap-3">
+              <BaseChip v-if="accountSaved" color="success"><BaseIcon name="mdi-check" :size="14" />تم الحفظ</BaseChip>
+              <BaseButton variant="accent" @click="saveAccount">
                 <BaseIcon name="mdi-content-save" :size="18" />
                 حفظ التغييرات
               </BaseButton>
@@ -304,8 +315,8 @@ function toggleLocale(val: string) {
                   :key="f.value"
                   type="button"
                   class="seg-btn"
-                  :class="{ 'is-active': fontSize === f.value }"
-                  @click="fontSize = f.value"
+                  :class="{ 'is-active': prefs.fontSize === f.value }"
+                  @click="prefs.fontSize = f.value"
                 >{{ f.label }}</button>
               </div>
             </div>
@@ -318,7 +329,7 @@ function toggleLocale(val: string) {
           <BaseSwitch
             v-for="n in NOTIF_TYPES"
             :key="n.key"
-            v-model="notif[n.key]"
+            v-model="prefs.notifications[n.key]"
             :label="n.label"
           />
           <div class="my-4 border-t border-ui" />
@@ -327,7 +338,7 @@ function toggleLocale(val: string) {
             <BaseCheckbox
               v-for="c in NOTIF_CHANNELS"
               :key="c.value"
-              v-model="notifChannel"
+              v-model="prefs.notifChannels"
               :value="c.value"
               :label="c.label"
             />
@@ -338,19 +349,19 @@ function toggleLocale(val: string) {
         <BaseCard v-else-if="tab === 'privacy'">
           <h3 class="mb-4 font-bold text-content">إعدادات الخصوصية</h3>
           <div
-            v-for="(s, i) in privacy"
-            :key="i"
+            v-for="item in PRIVACY_ITEMS"
+            :key="item.key"
             class="flex flex-wrap items-center justify-between gap-2 py-2"
           >
-            <span class="text-sm text-content">{{ s.label }}</span>
+            <span class="text-sm text-content">{{ item.label }}</span>
             <div class="seg">
               <button
                 v-for="opt in privacyOptions"
                 :key="opt.value"
                 type="button"
                 class="seg-btn"
-                :class="{ 'is-active': s.value === opt.value }"
-                @click="s.value = opt.value"
+                :class="{ 'is-active': prefs.privacy[item.key] === opt.value }"
+                @click="prefs.privacy[item.key] = opt.value"
               >{{ opt.title }}</button>
             </div>
           </div>
@@ -367,7 +378,7 @@ function toggleLocale(val: string) {
             >
               <BaseIcon :name="ig.icon" :size="40" class="mb-2 text-content" />
               <div class="mb-2 text-sm font-bold text-content">{{ ig.name }}</div>
-              <BaseButton :variant="ig.connected ? 'outline' : 'brand'" size="sm" block>
+              <BaseButton :variant="ig.connected ? 'outline' : 'brand'" size="sm" block @click="ig.connected = !ig.connected">
                 {{ ig.connected ? 'فصل' : 'ربط' }}
               </BaseButton>
             </div>

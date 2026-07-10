@@ -1,13 +1,14 @@
-import { io } from 'socket.io-client'
-import type { Socket } from 'socket.io-client'
+import Echo from 'laravel-echo'
+import Pusher from 'pusher-js'
 import { USE_REAL_API, api } from '@/services/api'
 import { useAuthStore } from '@/stores/AuthStore'
 
 /**
- * ===== خدمة الرسائل المباشرة — التسليم الحقيقي بين المستخدمين (NestJS) =====
+ * ===== خدمة الرسائل المباشرة — التسليم الحقيقي بين المستخدمين (Laravel + Reverb) =====
  *
- * طبقة علائقية: المرسِل يُدرج صفًّا عبر REST، فيصل المستقبِل لحظيًا عبر
- * Socket.IO (غرفة لكل uuid). بديل Supabase Realtime السابق.
+ * طبقة علائقية: المرسِل يُدرج صفًّا عبر REST، فيبثّ الخادم حدث `message.sent`
+ * على قناة خاصّة `user.{uuid}` عبر Reverb، فيصل المستقبِل لحظيًّا عبر laravel-echo.
+ * التوثيق بتوكن Bearer على `/broadcasting/auth` (حارس Sanctum).
  * في وضع المحاكاة (USE_REAL_API=false) كل الدوال محايدة — يبقى المحلي.
  */
 
@@ -106,24 +107,45 @@ export async function markThreadRead(_uid: string, peerId: string): Promise<void
   catch { /* المحلي كافٍ */ }
 }
 
-function socketBase(): string {
+/** أصل الخادم (بلا لاحقة /api) — قاعدة نقطة توثيق البثّ `/broadcasting/auth`. */
+function serverBase(): string {
   const raw = (import.meta.env.VITE_BASE_API_URL as string) || ''
   return raw.replace(/\/api\/?$/, '') || window.location.origin
 }
 
 /**
- * يشترك في الرسائل الوارِدة لحظيًا عبر Socket.IO — يعيد دالة إلغاء.
- * التوثيق بتوكن JWT في المصافحة؛ الخادم ينضمّ العميل لغرفة uuidه.
+ * يشترك في الرسائل الوارِدة لحظيًّا عبر Reverb (laravel-echo) — يعيد دالة إلغاء.
+ * القناة الخاصّة `user.{uuid}` تُوثَّق بتوكن Bearer على `/broadcasting/auth`،
+ * والحدث `message.sent` يحمل `{ message }` (حمولة DirectMessageResource المُسطّحة).
  */
-export function subscribeInbound(_uid: string, onMessage: (row: DirectMessageRow) => void): () => void {
-  if (!USE_REAL_API)
+export function subscribeInbound(uid: string, onMessage: (row: DirectMessageRow) => void): () => void {
+  if (!USE_REAL_API || !uid)
     return () => {}
+
   const token = useAuthStore().getToken
-  const socket: Socket = io(socketBase(), {
-    auth: { token },
-    transports: ['websocket'],
-    reconnection: true,
+  // laravel-echo (موصّل reverb) يعتمد pusher-js على window
+  ;(window as unknown as { Pusher: typeof Pusher }).Pusher = Pusher
+
+  const scheme = (import.meta.env.VITE_REVERB_SCHEME as string) || 'http'
+  const port = Number(import.meta.env.VITE_REVERB_PORT || 8091)
+
+  const echo = new Echo({
+    broadcaster: 'reverb',
+    key: import.meta.env.VITE_REVERB_APP_KEY as string,
+    wsHost: (import.meta.env.VITE_REVERB_HOST as string) || 'localhost',
+    wsPort: port,
+    wssPort: port,
+    forceTLS: scheme === 'https',
+    enabledTransports: ['ws', 'wss'],
+    authEndpoint: `${serverBase()}/broadcasting/auth`,
+    auth: { headers: { Authorization: `Bearer ${token}` } },
   })
-  socket.on('message', (m: ApiMessage) => onMessage(toRow(m)))
-  return () => { socket.disconnect() }
+
+  echo.private(`user.${uid}`)
+    .listen('.message.sent', (e: { message: ApiMessage }) => onMessage(toRow(e.message)))
+
+  return () => {
+    try { echo.leave(`user.${uid}`) }
+    finally { echo.disconnect() }
+  }
 }

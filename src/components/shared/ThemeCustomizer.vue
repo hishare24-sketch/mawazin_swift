@@ -10,6 +10,9 @@ import BaseChip from '@/components/ui/BaseChip.vue'
 import BaseIcon from '@/components/ui/BaseIcon.vue'
 import BaseInput from '@/components/ui/BaseInput.vue'
 
+// عرض أقصى قابل للتمرير (مركز الإعدادات يمرّر 100% كي يملأ التبويب العريض)
+const props = withDefaults(defineProps<{ maxWidth?: string }>(), { maxWidth: '420px' })
+
 const themeStore = useThemeStore()
 
 const MODES: { value: ThemeMode, label: string, icon: string }[] = [
@@ -44,7 +47,7 @@ function swatchStyle(presetId: string) {
 </script>
 
 <template>
-  <BaseCard class="min-w-[340px] max-w-[420px]">
+  <BaseCard class="w-full" :style="{ maxWidth: props.maxWidth }">
     <div class="mb-4 flex items-center gap-2">
       <BaseIcon name="mdi-palette-outline" :size="22" :style="{ color: 'rgb(var(--v-theme-primary))' }" />
       <h3 class="text-base font-bold text-content">تخصيص المظهر</h3>
