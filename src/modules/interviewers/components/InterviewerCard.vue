@@ -9,15 +9,12 @@ import BaseCard from '@/components/ui/BaseCard.vue'
 import BaseChip from '@/components/ui/BaseChip.vue'
 import BaseIcon from '@/components/ui/BaseIcon.vue'
 import BaseAvatar from '@/components/ui/BaseAvatar.vue'
+import { mapVuetifyColor as mapColor } from '@/utils/vuetifyColor'
 
 defineProps<{ interviewer: Interviewer, match: number }>()
 const emit = defineEmits<{ select: [interviewer: Interviewer] }>()
 const { t } = useI18n()
 
-type BaseColor = 'brand' | 'emerald' | 'accent' | 'success' | 'info' | 'warning' | 'error' | 'neutral'
-function mapColor(c?: string): BaseColor {
-  return (({ primary: 'brand', secondary: 'emerald', 'medium-emphasis': 'neutral', grey: 'neutral', orange: 'warning', amber: 'warning' } as Record<string, BaseColor>)[c ?? ''] ?? c ?? 'brand') as BaseColor
-}
 </script>
 
 <template>

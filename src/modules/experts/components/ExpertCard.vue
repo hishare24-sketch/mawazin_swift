@@ -10,17 +10,14 @@ import BaseButton from '@/components/ui/BaseButton.vue'
 import BaseChip from '@/components/ui/BaseChip.vue'
 import BaseIcon from '@/components/ui/BaseIcon.vue'
 import BaseAvatar from '@/components/ui/BaseAvatar.vue'
+import { type BaseColor, mapVuetifyColor as tierColor } from '@/utils/vuetifyColor'
 
 const props = defineProps<{ expert: MarketExpert }>()
 const emit = defineEmits<{ request: [expert: MarketExpert] }>()
 const { t } = useI18n()
 
-type BaseColor = 'brand' | 'emerald' | 'accent' | 'success' | 'info' | 'warning' | 'error' | 'neutral'
 function roleColor(role: MarketExpertRole): BaseColor {
   return ({ coach: 'brand', trainer: 'info', consultant: 'warning' } as Record<MarketExpertRole, BaseColor>)[role]
-}
-function tierColor(c: string): BaseColor {
-  return (({ primary: 'brand', secondary: 'emerald' } as Record<string, BaseColor>)[c] ?? c) as BaseColor
 }
 const tier = () => EXPERT_TIER_META[expertTier(props.expert.clients)]
 </script>

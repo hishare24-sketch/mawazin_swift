@@ -88,6 +88,17 @@ for (const country of COUNTRIES) {
   }
 }
 
+/**
+ * يستخرج جزء المدينة من سلسلة موقع عرض مُركّبة («الرياض · حضوري وعن بُعد» → «الرياض»).
+ * الفواصل الشائعة: · / , / ، / - . يُستخدم لفلترة أسواق تخزّن المدينة+الترتيب معًا.
+ */
+export function cityPart(location?: string): string | undefined {
+  if (!location)
+    return undefined
+  const first = location.split(/[·،,\-–|]/)[0]?.trim()
+  return first || undefined
+}
+
 /** حلّ سلسلة مدينة حرّة (عربيّ/إنجليزيّ/slug) إلى { المدينة، الدولة } — أو undefined. */
 export function resolveCity(raw?: string): { city: City, country: Country } | undefined {
   if (!raw)

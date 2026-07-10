@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest'
-import { COUNTRIES, allCities, countriesByPriority, countryOfCity, resolveCity } from './locations'
+import { COUNTRIES, allCities, cityPart, countriesByPriority, countryOfCity, resolveCity } from './locations'
 
 describe('locations taxonomy', () => {
   it('has unique country codes/ids/priorities and non-empty cities', () => {
@@ -45,6 +45,15 @@ describe('locations taxonomy', () => {
   it('orders countries and cities by priority (home market first)', () => {
     expect(countriesByPriority()[0].id).toBe('saudi')
     expect(allCities()[0].city.id).toBe('riyadh')
+  })
+
+  it('extracts the city from a compound display location', () => {
+    expect(cityPart('الرياض · حضوري وعن بُعد')).toBe('الرياض')
+    expect(cityPart('الدمام · عن بُعد')).toBe('الدمام')
+    expect(cityPart('جدة')).toBe('جدة')
+    expect(cityPart(undefined)).toBeUndefined()
+    // يُحلّ الجزء المُستخرَج إلى قطاع مكانيّ فعليّ
+    expect(resolveCity(cityPart('الرياض · حضوري'))?.country.id).toBe('saudi')
   })
 
   it('covers every seed city used across markets', () => {

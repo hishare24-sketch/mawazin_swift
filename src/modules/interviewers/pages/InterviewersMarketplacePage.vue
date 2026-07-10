@@ -14,6 +14,7 @@ import { sectorFacet, sectorFromFieldAndSkills } from '@/composables/sectorFacet
 import FacetedList from '@/components/shared/FacetedList.vue'
 import MatchBadge from '@/components/shared/MatchBadge.vue'
 import InterviewerCard from '../components/InterviewerCard.vue'
+import { type BaseColor, mapVuetifyColor as mapColor } from '@/utils/vuetifyColor'
 import type { FacetSpec, SortSpec } from '@/composables/useFacetedList'
 import { ai } from '@/services/ai'
 import type { DayPeriod, TimeSuggestion } from '@/services/ai'
@@ -25,12 +26,6 @@ import BaseAvatar from '@/components/ui/BaseAvatar.vue'
 import BaseModal from '@/components/ui/BaseModal.vue'
 import BaseSnackbar from '@/components/ui/BaseSnackbar.vue'
 import BaseProgressBar from '@/components/ui/BaseProgressBar.vue'
-
-type BaseColor = 'brand' | 'emerald' | 'accent' | 'success' | 'info' | 'warning' | 'error' | 'neutral'
-// خريطة ألوان Vuetify (من metas المخزن) → رموز مكوّنات الأساس
-function mapColor(c: string): BaseColor {
-  return (({ primary: 'brand', secondary: 'emerald', 'medium-emphasis': 'neutral', 'blue-grey': 'neutral' } as Record<string, BaseColor>)[c] ?? c) as BaseColor
-}
 
 const { t } = useI18n()
 const router = useRouter()

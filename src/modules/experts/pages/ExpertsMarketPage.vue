@@ -8,7 +8,10 @@ import { EXPERT_SPECIALTY_META } from '@/services/personas'
 import type { FacetSpec, SortSpec } from '@/composables/useFacetedList'
 import FacetedList from '@/components/shared/FacetedList.vue'
 import ExpertCard from '../components/ExpertCard.vue'
+import { cityFacet, countryFacet } from '@/composables/locationFacet'
+import { cityPart } from '@/services/locations'
 import { uniq } from '@/utils/array'
+import type { BaseColor } from '@/utils/vuetifyColor'
 import type { PeerRequestType } from '@/stores/PeerRequestsStore'
 import { usePeerRequestsStore } from '@/stores/PeerRequestsStore'
 import { useNotificationsStore } from '@/stores/NotificationsStore'
@@ -41,6 +44,8 @@ const facets = computed<FacetSpec<MarketExpert>[]>(() => [
     value: e => e.specialtyKey,
     options: () => uniq(MARKET_EXPERTS.map(e => e.specialtyKey)).map(sp => ({ value: sp, label: EXPERT_SPECIALTY_META[sp].label, icon: EXPERT_SPECIALTY_META[sp].icon })),
   },
+  countryFacet(e => cityPart(e.location), () => MARKET_EXPERTS),
+  cityFacet(e => cityPart(e.location), () => MARKET_EXPERTS),
 ])
 const sorts = computed<SortSpec<MarketExpert>[]>(() => [
   { key: 'rating', label: t('discovery.sortRatingHigh'), cmp: (a, b) => b.rating - a.rating },
@@ -49,7 +54,6 @@ const sorts = computed<SortSpec<MarketExpert>[]>(() => [
 ])
 const expertText = (e: MarketExpert) => `${e.name} ${e.title} ${e.specialty} ${EXPERT_SPECIALTY_META[e.specialtyKey].label}`
 
-type BaseColor = 'brand' | 'emerald' | 'accent' | 'success' | 'info' | 'warning' | 'error' | 'neutral'
 function roleColor(role: MarketExpertRole): BaseColor {
   return ({ coach: 'brand', trainer: 'info', consultant: 'warning' } as Record<MarketExpertRole, BaseColor>)[role]
 }

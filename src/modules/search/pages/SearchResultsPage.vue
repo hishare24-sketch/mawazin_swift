@@ -8,6 +8,7 @@ import { ai } from '@/services/ai'
 import type { SearchScope } from '@/services/ai/types'
 import EmptyState from '@/components/shared/EmptyState.vue'
 import PageHeader from '@/components/shared/PageHeader.vue'
+import { mapVuetifyColor as mapColor } from '@/utils/vuetifyColor'
 import { useSearchPrefsStore } from '@/stores/SearchPrefsStore'
 import BaseCard from '@/components/ui/BaseCard.vue'
 import BaseButton from '@/components/ui/BaseButton.vue'
@@ -26,11 +27,6 @@ const sector = useSectorContext()
 // «ضمن قطاعاتي» — تقييد اختياريّ (لا افتراضيّ: البحث عريض بطبعه). الترتيب الواعي
 // بالقطاع يعمل دائمًا (يرفع نتائج قطاعاتي)، والشريحة تقيّد عند الطلب.
 const onlyMine = ref(false)
-
-type BaseColor = 'brand' | 'emerald' | 'accent' | 'success' | 'info' | 'warning' | 'error' | 'neutral'
-function mapColor(c?: string): BaseColor {
-  return (({ primary: 'brand', secondary: 'emerald', 'medium-emphasis': 'neutral', 'surface-variant': 'neutral', grey: 'neutral', orange: 'warning', amber: 'warning' } as Record<string, BaseColor>)[c ?? ''] ?? c ?? 'brand') as BaseColor
-}
 function toggleStyle(active: boolean, color = 'primary') {
   if (active)
     return { background: `rgb(var(--v-theme-${color}))`, color: `rgb(var(--v-theme-on-${color}))`, borderColor: 'transparent' }
