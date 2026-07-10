@@ -47,6 +47,14 @@ const isWide = useMediaQuery('(min-width: 1024px)')
 // حالة مستقلّة لكل فاسِت باحث (بحث + توسّع) — لا تتقاطع عند وجود فاسِتين قابلين للبحث
 const sheetSearch = ref<Record<string, string>>({})
 const showAllOpts = ref<Record<string, boolean>>({})
+// أقسام الشيت قابلة للطيّ (accordion): القسم الأوّل مفتوح افتراضًا + أي قسم بتصفية نشطة
+const openSections = ref<Record<string, boolean>>({})
+function sectionOpen(key: string, index: number): boolean {
+  return openSections.value[key] ?? (index === 0 || api.isActive(key))
+}
+function toggleSection(key: string, index: number) {
+  openSections.value[key] = !sectionOpen(key, index)
+}
 const PRIMARY_TOPN = 6
 function facetQuery(key: string): string {
   return sheetSearch.value[key] ?? ''
@@ -139,10 +147,10 @@ function pickSort(key: string) {
         v-for="opt in ribbonOptions.slice(0, RIBBON_LIMIT)"
         :key="opt.value"
         type="button"
-        class="chip" :class="ribbonActive(opt.value) ? 'chip-on' : ''"
+        class="chip" :class="[ribbonActive(opt.value) ? 'chip-on' : '', opt.count === 0 ? 'chip-empty' : '']"
         @click="pickRibbon(opt.value)"
       >
-        <BaseIcon v-if="opt.icon" :name="opt.icon" :size="15" /> {{ opt.label }}
+        <BaseIcon v-if="opt.icon" :name="opt.icon" :size="15" /> {{ opt.label }}<span v-if="opt.count != null" class="chip-count">{{ opt.count }}</span>
       </button>
       <button type="button" class="chip" @click="filterOpen = true">
         <BaseIcon name="mdi-dots-horizontal" :size="15" /> {{ t('discovery.more') }}
@@ -231,77 +239,86 @@ function pickSort(key: string) {
           <button class="icon-btn h-8 w-8" :aria-label="t('discovery.close')" @click="filterOpen = false"><BaseIcon name="mdi-close" :size="20" /></button>
         </div>
 
-        <template v-for="f in facets" :key="f.key">
-          <!-- فاسِت متعدّد -->
-          <template v-if="f.kind === 'multi'">
-            <div class="mb-2 mt-4 text-sm font-bold text-content">{{ f.label }}</div>
-            <div v-if="f.searchable" class="relative mb-2">
-              <BaseInput v-model="sheetSearch[f.key]" prefix-icon="mdi-magnify" :placeholder="t('discovery.searchShort')" />
-            </div>
-            <!-- قابل للبحث (تصنيف كبير): أهمّ N صفوف + «عرض الكل» -->
-            <div v-if="f.searchable">
-              <button
-                v-for="opt in displayOptions(f)"
-                :key="opt.value"
-                type="button"
-                class="flex w-full items-center gap-2.5 border-b border-ui py-2.5 text-start"
-                @click="api.toggleMulti(f.key, opt.value)"
-              >
-                <span
-                  class="flex h-5 w-5 shrink-0 items-center justify-center rounded border-ui"
-                  :class="(api.state.sel[f.key] ?? []).includes(opt.value) ? 'bg-brand text-on-brand' : ''"
+        <!-- أقسام قابلة للطيّ (accordion): رأس بعدّاد مُختار + جسم يُطوى -->
+        <div v-for="(f, fi) in facets" :key="f.key" class="border-b border-ui">
+          <button type="button" class="flex w-full items-center gap-2 py-3 text-start" @click="toggleSection(f.key, fi)">
+            <span class="flex-1 text-sm font-bold text-content">{{ f.label }}</span>
+            <span v-if="f.kind === 'multi' && api.activeCount(f.key)" class="rounded-full bg-brand px-1.5 text-xs font-bold text-on-brand">{{ api.activeCount(f.key) }}</span>
+            <span v-else-if="f.kind !== 'multi' && api.isActive(f.key)" class="h-2 w-2 rounded-full bg-brand" />
+            <BaseIcon :name="sectionOpen(f.key, fi) ? 'mdi-chevron-up' : 'mdi-chevron-down'" :size="20" class="text-muted" />
+          </button>
+
+          <div v-show="sectionOpen(f.key, fi)" class="pb-3">
+            <!-- فاسِت متعدّد -->
+            <template v-if="f.kind === 'multi'">
+              <div v-if="f.searchable" class="relative mb-2">
+                <BaseInput v-model="sheetSearch[f.key]" prefix-icon="mdi-magnify" :placeholder="t('discovery.searchShort')" />
+              </div>
+              <!-- قابل للبحث (تصنيف كبير): أهمّ N صفوف + «عرض الكل» -->
+              <div v-if="f.searchable">
+                <button
+                  v-for="opt in displayOptions(f)"
+                  :key="opt.value"
+                  type="button"
+                  class="flex w-full items-center gap-2.5 border-b border-ui py-2.5 text-start"
+                  @click="api.toggleMulti(f.key, opt.value)"
                 >
-                  <BaseIcon v-if="(api.state.sel[f.key] ?? []).includes(opt.value)" name="mdi-check" :size="14" />
-                </span>
-                <BaseIcon v-if="opt.icon" :name="opt.icon" :size="18" class="text-muted" />
-                <span class="flex-1 truncate text-sm">{{ opt.label }}</span>
-              </button>
-              <button
-                v-if="!facetQuery(f.key).trim() && hiddenCount(f) > 0"
-                type="button"
-                class="w-full py-2.5 text-center text-sm font-medium text-brand"
-                @click="showAllOpts[f.key] = !showAllOpts[f.key]"
-              >
-                {{ showAllOpts[f.key] ? t('discovery.showLess') : t('discovery.showAllOf', { label: f.label, count: (f.options?.() ?? []).length }) }}
-              </button>
-            </div>
-            <!-- قائمة قصيرة: رقائق -->
-            <div v-else class="flex flex-wrap gap-2">
-              <button
-                v-for="opt in sheetOptions(f)"
-                :key="opt.value"
-                type="button"
-                class="chip" :class="(api.state.sel[f.key] ?? []).includes(opt.value) ? 'chip-on' : ''"
-                @click="api.toggleMulti(f.key, opt.value)"
-              >{{ opt.label }}</button>
-            </div>
-          </template>
+                  <span
+                    class="flex h-5 w-5 shrink-0 items-center justify-center rounded border-ui"
+                    :class="(api.state.sel[f.key] ?? []).includes(opt.value) ? 'bg-brand text-on-brand' : ''"
+                  >
+                    <BaseIcon v-if="(api.state.sel[f.key] ?? []).includes(opt.value)" name="mdi-check" :size="14" />
+                  </span>
+                  <BaseIcon v-if="opt.icon" :name="opt.icon" :size="18" class="text-muted" />
+                  <span class="flex-1 truncate text-sm" :class="opt.count === 0 ? 'text-muted' : ''">{{ opt.label }}</span>
+                  <span v-if="opt.count != null" class="text-xs text-muted tabular-nums">{{ opt.count }}</span>
+                </button>
+                <button
+                  v-if="!facetQuery(f.key).trim() && hiddenCount(f) > 0"
+                  type="button"
+                  class="w-full py-2.5 text-center text-sm font-medium text-brand"
+                  @click="showAllOpts[f.key] = !showAllOpts[f.key]"
+                >
+                  {{ showAllOpts[f.key] ? t('discovery.showLess') : t('discovery.showAllOf', { label: f.label, count: (f.options?.() ?? []).length }) }}
+                </button>
+              </div>
+              <!-- قائمة قصيرة: رقائق -->
+              <div v-else class="flex flex-wrap gap-2">
+                <button
+                  v-for="opt in sheetOptions(f)"
+                  :key="opt.value"
+                  type="button"
+                  class="chip" :class="(api.state.sel[f.key] ?? []).includes(opt.value) ? 'chip-on' : ''"
+                  @click="api.toggleMulti(f.key, opt.value)"
+                >{{ opt.label }}</button>
+              </div>
+            </template>
 
-          <!-- فاسِت منطقيّ -->
-          <template v-else-if="f.kind === 'bool'">
-            <div class="mb-2 mt-4 text-sm font-bold text-content">{{ f.label }}</div>
-            <button
-              type="button"
-              class="chip" :class="api.state.bools[f.key] ? 'chip-on' : ''"
-              @click="api.setBool(f.key, !api.state.bools[f.key])"
-            >{{ t('discovery.onlyLabel', { label: f.label }) }}</button>
-          </template>
+            <!-- فاسِت منطقيّ -->
+            <template v-else-if="f.kind === 'bool'">
+              <button
+                type="button"
+                class="chip" :class="api.state.bools[f.key] ? 'chip-on' : ''"
+                @click="api.setBool(f.key, !api.state.bools[f.key])"
+              >{{ t('discovery.onlyLabel', { label: f.label }) }}</button>
+            </template>
 
-          <!-- فاسِت مدى (حدّ أدنى أو أقصى) -->
-          <template v-else>
-            <div class="mb-1 mt-4 text-sm font-bold text-content">
-              {{ f.label }} — {{ (api.state.ranges[f.key] ?? (f.range?.mode === 'max' ? f.range?.max : 0) ?? 0).toLocaleString('en-US') }} {{ f.range?.mode === 'max' ? t('discovery.orLess') : t('discovery.orMore') }}
-            </div>
-            <BaseSlider
-              :model-value="api.state.ranges[f.key] ?? (f.range?.mode === 'max' ? (f.range?.max ?? 100) : 0)"
-              :min="f.range?.min ?? 0"
-              :max="f.range?.max ?? 100"
-              :step="f.range?.step ?? 1"
-              color="secondary"
-              @update:model-value="(v: number) => api.setRange(f.key, v)"
-            />
-          </template>
-        </template>
+            <!-- فاسِت مدى (حدّ أدنى أو أقصى) -->
+            <template v-else>
+              <div class="mb-1 text-sm text-muted">
+                {{ (api.state.ranges[f.key] ?? (f.range?.mode === 'max' ? f.range?.max : 0) ?? 0).toLocaleString('en-US') }} {{ f.range?.mode === 'max' ? t('discovery.orLess') : t('discovery.orMore') }}
+              </div>
+              <BaseSlider
+                :model-value="api.state.ranges[f.key] ?? (f.range?.mode === 'max' ? (f.range?.max ?? 100) : 0)"
+                :min="f.range?.min ?? 0"
+                :max="f.range?.max ?? 100"
+                :step="f.range?.step ?? 1"
+                color="secondary"
+                @update:model-value="(v: number) => api.setRange(f.key, v)"
+              />
+            </template>
+          </div>
+        </div>
 
         <div class="sticky bottom-0 mt-4 flex gap-2 bg-surface pt-3">
           <button type="button" class="btn-bar" @click="api.clearAll()">
@@ -360,6 +377,10 @@ function pickSort(key: string) {
 }
 .chip:hover { background: rgba(var(--v-theme-on-surface), 0.05); }
 .chip:active { transform: scale(0.96); }
+/* عدّاد النتائج داخل الرقاقة + تخفيف الرقائق الفارغة (تبقى مرئيّة لكن ثانويّة) */
+.chip-count { margin-inline-start: 5px; font-size: 11.5px; opacity: 0.6; font-variant-numeric: tabular-nums; }
+.chip-empty { opacity: 0.5; }
+.chip-empty.chip-on { opacity: 1; }
 .chip-on {
   background: rgb(var(--v-theme-primary));
   border-color: rgb(var(--v-theme-primary));

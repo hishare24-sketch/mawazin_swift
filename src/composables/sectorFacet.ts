@@ -7,10 +7,10 @@ import { i18n } from '@/plugins/i18n'
 import type { FacetSpec } from '@/composables/useFacetedList'
 
 /**
- * الفاسِت المحوريّ للقطاع. الخيارات = القطاعات **الحاضرة فعلًا في البيانات**
- * (مرتّبة بأولويّة التصنيف، بأيقونات/تسميات التصنيف) — كي لا يعرض الشريط المحوريّ
- * قطاعات بلا نتائج (أخطر خلل مظهريّ حين تغطّي البيانات جزءًا من التصنيف).
- * يُمرَّر `items` كامل مجموعة السوق (لا المصفّاة) كي لا تختفي الخيارات مع التصفية.
+ * الفاسِت المحوريّ للقطاع. الخيارات = **كامل القطاعات المرئيّة الـ20** مرتّبة
+ * بأولويّة التصنيف (قرار خطة التوحيد المعتمد #1: «الـ21 كاملةً — لا مجموعة جزئية
+ * — عبر الأولويّة لا البتر»). لكل خيار **عدّاد نتائج** كي لا تبدو القطاعات الفارغة
+ * مكسورة. يُمرَّر `items` كامل مجموعة السوق (لا المصفّاة) فيثبت العدّاد مع التصفية.
  */
 export function sectorFacet<T>(
   value: (t: T) => string | string[] | undefined,
@@ -24,18 +24,21 @@ export function sectorFacet<T>(
     searchable: true,
     value,
     options: () => {
-      const present = new Set<string>()
+      const counts = new Map<string, number>()
       for (const it of items()) {
         const v = value(it)
-        if (Array.isArray(v))
-          v.forEach(x => x && present.add(x))
-        else if (v)
-          present.add(v)
+        // إزالة التكرار داخل العنصر (حقل + عدّة مهارات لنفس القطاع) فيُعدّ العنصر مرّة واحدة لكل قطاع
+        const ids = new Set(Array.isArray(v) ? v : v ? [v] : [])
+        for (const id of ids)
+          counts.set(id, (counts.get(id) ?? 0) + 1)
       }
       const en = i18n.global.locale.value === 'en'
-      return visibleSectors()
-        .filter(s => present.has(s.id))
-        .map(s => ({ value: s.id, label: en ? s.en : s.label, icon: s.icon }))
+      return visibleSectors().map(s => ({
+        value: s.id,
+        label: en ? s.en : s.label,
+        icon: s.icon,
+        count: counts.get(s.id) ?? 0,
+      }))
     },
   }
 }

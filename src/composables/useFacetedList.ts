@@ -13,6 +13,8 @@ export interface FacetOption {
   value: string
   label: string
   icon?: string
+  /** عدد النتائج المطابقة لهذا الخيار (اختياريّ) — يُعرض بجانب التسمية كي لا تبدو الخيارات الفارغة مكسورة */
+  count?: number
 }
 
 /**
