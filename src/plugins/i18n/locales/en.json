@@ -442,7 +442,22 @@
       "permission": "Permission",
       "superAdminNote": "Super admin always holds all permissions.",
       "saveChanges": "Save changes",
-      "usersCount": "{n} users"
+      "usersCount": "{n} users",
+      "newRole": "New role",
+      "create": "Create",
+      "created": "Role created",
+      "delete": "Delete",
+      "statRoles": "Roles",
+      "statAdmins": "Admin accounts",
+      "statCustom": "Custom roles",
+      "holdersByRole": "Holders by role",
+      "noHolders": "No holders",
+      "permsByRole": "Permissions by role",
+      "fieldName": "Role name",
+      "nameHint": "Lowercase latin + underscore only (e.g. moderator)",
+      "toggleGroup": "Toggle group",
+      "confirmDeleteTitle": "Delete role?",
+      "confirmDeleteMsg": "Role \"{name}\" will be removed (blocked for system or populated roles)."
     },
     "opportunities": {
       "title": "Opportunities",

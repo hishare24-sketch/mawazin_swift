@@ -5,11 +5,14 @@ namespace Modules\Admin\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 use Modules\Admin\Enums\PermissionEnum;
 use Spatie\Permission\Models\Role;
 
 class RoleController extends Controller
 {
+    /** الأدوار النظاميّة المحميّة من الحذف/التعديل الهيكليّ. */
+    private const SYSTEM_ROLES = ['super_admin', 'admin', 'governance'];
     /** قائمة أدوار لوحة الأدمن مع صلاحيّاتها + كل الصلاحيّات المتاحة (مصفوفة الصلاحيّات). */
     public function index()
     {
@@ -35,6 +38,80 @@ class RoleController extends Controller
             'roles' => $roles,
             'permissions' => PermissionEnum::permissions(),
         ]);
+    }
+
+    /** إحصاءات الأدوار — عدّادات + الحاملون لكلّ دور + عدد الصلاحيّات لكلّ دور. */
+    public function stats()
+    {
+        $this->authorize('view_roles');
+
+        $counts = DB::table('model_has_roles')
+            ->selectRaw('role_id, COUNT(DISTINCT model_id) as c')
+            ->groupBy('role_id')
+            ->pluck('c', 'role_id');
+
+        $roles = Role::where('guard_name', 'admin')->withCount('permissions')->orderBy('id')->get();
+
+        // إجمالي حسابات الأدمن المميّزة (أيّ دور على guard admin)
+        $adminUsers = (int) DB::table('model_has_roles')
+            ->whereIn('role_id', $roles->pluck('id'))
+            ->distinct('model_id')
+            ->count('model_id');
+
+        return $this->dataResponse([
+            'totalRoles' => $roles->count(),
+            'systemRoles' => $roles->whereIn('name', self::SYSTEM_ROLES)->count(),
+            'customRoles' => $roles->whereNotIn('name', self::SYSTEM_ROLES)->count(),
+            'adminUsers' => $adminUsers,
+            'holders' => $roles->map(fn (Role $r) => ['label' => $r->name, 'value' => (int) ($counts[$r->id] ?? 0)])->values(),
+            'permissionCounts' => $roles->map(fn (Role $r) => ['label' => $r->name, 'value' => (int) $r->permissions_count])->values(),
+        ]);
+    }
+
+    /** إنشاء دور جديد على guard admin (اسم فريد + صلاحيّات اختياريّة). */
+    public function store(Request $request)
+    {
+        $this->authorize('create_roles');
+
+        $data = $request->validate([
+            'name' => ['required', 'string', 'max:40', 'regex:/^[a-z][a-z0-9_]*$/', Rule::unique('roles', 'name')->where('guard_name', 'admin')],
+            'permissions' => ['nullable', 'array'],
+            'permissions.*' => ['string'],
+        ]);
+
+        // إنشاء الدور على guard admin ثمّ إسناد الصلاحيّات المعروفة فقط
+        $role = Role::create(['name' => $data['name'], 'guard_name' => 'admin']);
+        $allowed = array_values(array_intersect($data['permissions'] ?? [], PermissionEnum::permissions()));
+        if ($allowed) {
+            $role->syncPermissions($allowed);
+        }
+
+        return $this->createdResponse([
+            'name' => $role->name,
+            'usersCount' => 0,
+            'permissions' => $allowed,
+        ]);
+    }
+
+    /** حذف دور — الأدوار النظاميّة محميّة، والأدوار المأهولة لا تُحذف. */
+    public function destroy(string $role)
+    {
+        $this->authorize('delete_roles');
+
+        if (in_array($role, self::SYSTEM_ROLES, true)) {
+            return $this->forbiddenResponse(__('System roles cannot be deleted.'));
+        }
+
+        $target = Role::where(['name' => $role, 'guard_name' => 'admin'])->firstOrFail();
+
+        $holders = DB::table('model_has_roles')->where('role_id', $target->id)->count();
+        if ($holders > 0) {
+            return $this->forbiddenResponse(__('Cannot delete a role that is still assigned to users.'));
+        }
+
+        $target->delete();
+
+        return $this->updatedResponse(null, __('Deleted successfully'));
     }
 
     /**

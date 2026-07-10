@@ -20,5 +20,8 @@ Route::post('users/{user}/activate', [AdminUserController::class, 'activate']);
 Route::put('users/{user}/admin-role', [AdminUserController::class, 'setAdminRole']);
 
 // الأدوار والصلاحيّات
+Route::get('roles/stats', [RoleController::class, 'stats']);
 Route::get('roles', [RoleController::class, 'index']);
+Route::post('roles', [RoleController::class, 'store']);
 Route::put('roles/{role}/permissions', [RoleController::class, 'updatePermissions']);
+Route::delete('roles/{role}', [RoleController::class, 'destroy']);

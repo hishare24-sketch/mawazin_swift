@@ -442,7 +442,22 @@
       "permission": "الصلاحية",
       "superAdminNote": "المدير الأعلى يملك كل الصلاحيّات دائمًا.",
       "saveChanges": "حفظ التغييرات",
-      "usersCount": "{n} مستخدم"
+      "usersCount": "{n} مستخدم",
+      "newRole": "دور جديد",
+      "create": "إنشاء",
+      "created": "أُنشئ الدور",
+      "delete": "حذف",
+      "statRoles": "الأدوار",
+      "statAdmins": "حسابات الأدمن",
+      "statCustom": "أدوار مخصّصة",
+      "holdersByRole": "الحاملون حسب الدور",
+      "noHolders": "لا حاملين",
+      "permsByRole": "الصلاحيّات حسب الدور",
+      "fieldName": "اسم الدور",
+      "nameHint": "أحرف إنجليزيّة صغيرة وشرطة سفليّة فقط (مثل: moderator)",
+      "toggleGroup": "تبديل المجموعة",
+      "confirmDeleteTitle": "حذف الدور؟",
+      "confirmDeleteMsg": "سيُزال الدور «{name}» (يُمنع للأدوار النظاميّة أو المأهولة)."
     },
     "opportunities": {
       "title": "الفرص",

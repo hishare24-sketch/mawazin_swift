@@ -116,6 +116,8 @@ export const API_PATHS = {
     activate: (id: number) => `/admin/users/${id}/activate`,
     adminRole: (id: number) => `/admin/users/${id}/admin-role`,
     roles: '/admin/roles',
+    rolesStats: '/admin/roles/stats',
+    role: (role: string) => `/admin/roles/${role}`,
     rolePermissions: (role: string) => `/admin/roles/${role}/permissions`,
     opportunities: '/admin/opportunities',
     opportunity: (id: number) => `/admin/opportunities/${id}`,
@@ -233,6 +235,7 @@ export interface AdminStats {
 }
 export interface AdminRole { name: string, usersCount: number, permissions: string[] }
 export interface AdminRolesResponse { roles: AdminRole[], permissions: string[] }
+export interface AdminRolesStats { totalRoles: number, systemRoles: number, customRoles: number, adminUsers: number, holders: { label: string, value: number }[], permissionCounts: { label: string, value: number }[] }
 export interface AdminUserQuery { page?: number, perPage?: number, sort?: string, q?: string, role?: string, tier?: string, kind?: string, status?: string }
 export type AdminUserPatch = Partial<Pick<AdminUser, 'name' | 'email' | 'role' | 'tier' | 'kind'>> & { phone?: string | null }
 /** تفصيل مستخدم مُثرًى للاستعراض العميق */
@@ -332,6 +335,9 @@ export const api = {
     activateUser: (id: number) => post<AdminUser>(API_PATHS.admin.activate(id)),
     setAdminRole: (id: number, role: string | null) => put<AdminUser>(API_PATHS.admin.adminRole(id), { role }),
     roles: () => get<AdminRolesResponse>(API_PATHS.admin.roles),
+    rolesStats: () => get<AdminRolesStats>(API_PATHS.admin.rolesStats),
+    createRole: (name: string, permissions: string[]) => post<AdminRole>(API_PATHS.admin.roles, { name, permissions }),
+    deleteRole: (role: string) => del(API_PATHS.admin.role(role)),
     updateRolePermissions: (role: string, permissions: string[]) => put(API_PATHS.admin.rolePermissions(role), { permissions }),
     opportunities: (params?: AdminMarketQuery) => getPage<AdminOpportunity>(API_PATHS.admin.opportunities, params as Record<string, unknown>),
     deleteOpportunity: (id: number) => del(API_PATHS.admin.opportunity(id)),
