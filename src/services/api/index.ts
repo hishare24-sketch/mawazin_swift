@@ -127,7 +127,13 @@ export const API_PATHS = {
     survey: (id: number) => `/admin/surveys/${id}`,
     surveyClose: (id: number) => `/admin/surveys/${id}/close`,
     wallets: '/admin/wallets',
+    walletsStats: '/admin/wallets/stats',
     walletAdjust: (id: number) => `/admin/wallets/${id}/adjust`,
+    platformAccounts: '/admin/platform-accounts',
+    platformAccountsStats: '/admin/platform-accounts/stats',
+    platformAccount: (id: number) => `/admin/platform-accounts/${id}`,
+    platformAccountTxns: (id: number) => `/admin/platform-accounts/${id}/transactions`,
+    platformAccountAdjust: (id: number) => `/admin/platform-accounts/${id}/adjust`,
     interviewers: '/admin/interviewers',
     interviewer: (id: number) => `/admin/interviewers/${id}`,
     interviewerApprove: (id: number) => `/admin/interviewers/${id}/approve`,
@@ -245,6 +251,11 @@ export interface AdminMarketRequest { id: number, type: string, title: string, o
 export interface AdminMarketQuery { page?: number, perPage?: number, sort?: string, q?: string, category?: string, type?: string, state?: string, status?: string, specialty?: string }
 export interface AdminSurvey { id: number, title: string, state: string, points_pool: number, responses: number, owner: string | null, createdAt?: string }
 export interface AdminWallet { id: number, userId: number, userName: string | null, userEmail: string | null, balance: number, transactions: number, updatedAt?: string }
+export interface AdminWalletsStats { totalBalance: number, wallets: number, avgBalance: number, topHolders: { label: string, value: number }[] }
+export interface AdminPlatformAccount { id: number, name: string, type: string, bank_name: string | null, account_no_masked: string | null, currency: string, balance: number, is_default: boolean, active: boolean, notes: string | null, transactions: number, updatedAt?: string }
+export interface AdminPlatformAccountCreate { name: string, type: string, bank_name?: string, account_no_masked?: string, currency?: string, notes?: string, active?: boolean }
+export interface AdminPlatformTxn { id: number, amount: number, type: string, reference: string | null, note: string | null, at?: string }
+export interface AdminTreasuryStats { treasury: number, revenue: number, inflow: number, outflow: number, accounts: number, distribution: { label: string, value: number }[], revenueSeries: { date: string, value: number }[] }
 export interface AdminInterviewer { id: number, name: string, specialty: string, status: string, rating: number, price_from: number, account: string | null, createdAt?: string }
 export interface AdminPlan { id: number, key: string, name: string, price: number, survey_limit: number | null, features: string[], active: boolean, sort: number, subscribers: number }
 export interface AdminPlanPatch { name?: string, price?: number, survey_limit?: number | null, features?: string[], active?: boolean }
@@ -347,7 +358,15 @@ export const api = {
     closeSurvey: (id: number) => post(API_PATHS.admin.surveyClose(id)),
     deleteSurvey: (id: number) => del(API_PATHS.admin.survey(id)),
     wallets: (params?: AdminMarketQuery) => getPage<AdminWallet>(API_PATHS.admin.wallets, params as Record<string, unknown>),
+    walletsStats: () => get<AdminWalletsStats>(API_PATHS.admin.walletsStats),
     adjustWallet: (id: number, amount: number, note?: string) => post<AdminWallet>(API_PATHS.admin.walletAdjust(id), { amount, note }),
+    platformAccounts: (params?: AdminMarketQuery) => getPage<AdminPlatformAccount>(API_PATHS.admin.platformAccounts, params as Record<string, unknown>),
+    treasuryStats: () => get<AdminTreasuryStats>(API_PATHS.admin.platformAccountsStats),
+    createPlatformAccount: (body: AdminPlatformAccountCreate) => post<AdminPlatformAccount>(API_PATHS.admin.platformAccounts, body),
+    updatePlatformAccount: (id: number, body: Partial<AdminPlatformAccountCreate>) => put<AdminPlatformAccount>(API_PATHS.admin.platformAccount(id), body),
+    deletePlatformAccount: (id: number) => del(API_PATHS.admin.platformAccount(id)),
+    platformAccountTxns: (id: number, params?: AdminMarketQuery) => getPage<AdminPlatformTxn>(API_PATHS.admin.platformAccountTxns(id), params as Record<string, unknown>),
+    adjustPlatformAccount: (id: number, amount: number, type?: string, note?: string) => post<AdminPlatformAccount>(API_PATHS.admin.platformAccountAdjust(id), { amount, type, note }),
     interviewers: (params?: AdminMarketQuery) => getPage<AdminInterviewer>(API_PATHS.admin.interviewers, params as Record<string, unknown>),
     approveInterviewer: (id: number) => post<AdminInterviewer>(API_PATHS.admin.interviewerApprove(id)),
     rejectInterviewer: (id: number) => post<AdminInterviewer>(API_PATHS.admin.interviewerReject(id)),

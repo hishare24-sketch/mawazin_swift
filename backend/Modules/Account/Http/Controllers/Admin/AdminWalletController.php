@@ -36,6 +36,26 @@ class AdminWalletController extends Controller
         return $this->dashboardResponse($items);
     }
 
+    /** إحصاءات محافظ المستخدمين — الإجمالي/المتوسّط/العدد + أعلى الحائزين. */
+    public function stats()
+    {
+        $this->authorize('view_wallets');
+
+        $total = (float) Wallet::sum('balance');
+        $count = (int) Wallet::count();
+
+        $top = Wallet::with('user')->orderByDesc('balance')->limit(5)->get()
+            ->map(fn (Wallet $w) => ['label' => optional($w->user)->name ?? '—', 'value' => round((float) $w->balance, 2)])
+            ->values();
+
+        return $this->dataResponse([
+            'totalBalance' => round($total, 2),
+            'wallets' => $count,
+            'avgBalance' => $count > 0 ? round($total / $count, 2) : 0,
+            'topHolders' => $top,
+        ]);
+    }
+
     /** تعديل الرصيد يدويًّا (إضافة موجبة أو خصم سالب) — يُسجَّل كحركة. */
     public function adjust(Request $request, Wallet $wallet)
     {

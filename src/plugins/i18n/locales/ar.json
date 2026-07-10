@@ -366,7 +366,8 @@
       "wallets": "المحافظ",
       "groupQuality": "الجودة والاعتماد",
       "interviewers": "المقيّمون",
-      "plans": "الباقات"
+      "plans": "الباقات",
+      "treasury": "الخزينة"
     },
     "groups": {
       "users": "المستخدمون والأدوار",
@@ -529,7 +530,12 @@
       "credit": "إضافة",
       "debit": "خصم",
       "current": "الرصيد الحاليّ",
-      "apply": "تطبيق"
+      "apply": "تطبيق",
+      "statTotal": "إجمالي الأرصدة",
+      "statCount": "عدد المحافظ",
+      "statAvg": "متوسّط الرصيد",
+      "topHolders": "أعلى الحائزين",
+      "noData": "لا بيانات"
     },
     "toast": {
       "updated": "تم الحفظ",
@@ -601,6 +607,52 @@
       "fieldKey": "المفتاح (إنجليزيّ فريد)",
       "confirmDeleteTitle": "حذف الباقة؟",
       "confirmDeleteMsg": "سيُزال «{name}» نهائيًّا (يُمنع إن كان لها مشتركون)."
+    },
+    "treasury": {
+      "title": "خزينة المنصّة",
+      "subtitle": "الحسابات البنكيّة ودفتر الإيرادات",
+      "searchPlaceholder": "بحث باسم الحساب أو البنك...",
+      "statTreasury": "إجمالي الخزينة",
+      "statRevenue": "الإيراد",
+      "statInflow": "الوارد",
+      "statOutflow": "الصادر",
+      "revenueTrend": "اتّجاه الإيراد",
+      "balanceByAccount": "الرصيد حسب الحساب",
+      "noBalance": "لا أرصدة",
+      "colName": "الحساب",
+      "colType": "النوع",
+      "colBank": "البنك",
+      "colBalance": "الرصيد",
+      "colTxns": "الحركات",
+      "colActive": "الحالة",
+      "typeBank": "بنكيّ",
+      "typeCash": "نقديّ",
+      "typeGateway": "بوّابة دفع",
+      "default": "افتراضيّ",
+      "statusActive": "مفعّل",
+      "statusInactive": "معطّل",
+      "newAccount": "حساب جديد",
+      "create": "إنشاء",
+      "created": "أُنشئ الحساب",
+      "adjust": "إيداع/سحب",
+      "ledger": "دفتر الحركات",
+      "delete": "حذف",
+      "fieldName": "اسم الحساب",
+      "fieldType": "النوع",
+      "fieldBank": "اسم البنك",
+      "fieldAccountNo": "رقم الحساب (مقنّع)",
+      "fieldNotes": "ملاحظات",
+      "fieldActive": "مفعّل",
+      "adjustTitle": "إيداع/سحب — {name}",
+      "current": "الرصيد الحاليّ",
+      "deposit": "إيداع",
+      "withdraw": "سحب",
+      "amount": "المبلغ",
+      "note": "ملاحظة",
+      "apply": "تطبيق",
+      "noTxns": "لا حركات بعد",
+      "confirmDeleteTitle": "حذف الحساب؟",
+      "confirmDeleteMsg": "سيُزال «{name}» (يُمنع للافتراضيّ أو ذي الرصيد/الحركات)."
     }
   }
 }

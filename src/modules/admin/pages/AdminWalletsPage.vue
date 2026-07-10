@@ -1,21 +1,28 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue'
+import { computed, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import PageHeader from '@/components/shared/PageHeader.vue'
+import StatCard from '@/components/shared/StatCard.vue'
+import BaseCard from '@/components/ui/BaseCard.vue'
 import BaseIcon from '@/components/ui/BaseIcon.vue'
 import BaseButton from '@/components/ui/BaseButton.vue'
 import BaseInput from '@/components/ui/BaseInput.vue'
 import BaseModal from '@/components/ui/BaseModal.vue'
 import BaseSnackbar from '@/components/ui/BaseSnackbar.vue'
 import BaseTooltip from '@/components/ui/BaseTooltip.vue'
+import BarChart from '@/components/charts/BarChart.vue'
 import ResourceScaffold from '@/modules/admin/components/ResourceScaffold.vue'
 import type { TableColumn } from '@/components/ui/BaseTable.vue'
 import { useAdminResource } from '@/modules/admin/composables/useAdminResource'
-import { type AdminWallet, api } from '@/services/api'
+import { type AdminWallet, type AdminWalletsStats, api } from '@/services/api'
 
 const { t } = useI18n()
 const r = useAdminResource<AdminWallet>({ fetcher: params => api.admin.wallets(params), initialSort: '-balance' })
 const { items, meta, loading, sortKey, search } = r
+
+const stats = ref<AdminWalletsStats | null>(null)
+async function loadStats() { try { stats.value = await api.admin.walletsStats() } catch { /* تجاهل */ } }
+onMounted(loadStats)
 
 const columns: TableColumn[] = [
   { key: 'userName', label: t('admin.wallets.colUser') },
@@ -62,6 +69,23 @@ async function applyAdjust() {
 <template>
   <div>
     <PageHeader :title="t('admin.wallets.title')" :subtitle="t('admin.wallets.subtitle')" icon="mdi-wallet-outline" />
+
+    <!-- شريط الإحصاءات -->
+    <div class="mb-5 grid grid-cols-1 gap-4 lg:grid-cols-3">
+      <div class="grid grid-cols-3 gap-3">
+        <StatCard icon="mdi-cash-multiple" :value="`${(stats?.totalBalance ?? 0).toLocaleString()}`" :title="t('admin.wallets.statTotal')" color="primary" />
+        <StatCard icon="mdi-wallet-outline" :value="stats?.wallets ?? 0" :title="t('admin.wallets.statCount')" color="info" />
+        <StatCard icon="mdi-scale-balance" :value="`${(stats?.avgBalance ?? 0).toLocaleString()}`" :title="t('admin.wallets.statAvg')" color="accent" />
+      </div>
+      <BaseCard class="lg:col-span-2">
+        <div class="mb-3 flex items-center gap-2">
+          <BaseIcon name="mdi-chart-bar" :size="20" class="text-brand" />
+          <h2 class="text-base font-bold text-content">{{ t('admin.wallets.topHolders') }}</h2>
+        </div>
+        <BarChart v-if="stats?.topHolders?.some(h => h.value)" :data="stats.topHolders.filter(h => h.value)" color="secondary" :height="160" />
+        <p v-else class="py-6 text-center text-xs text-muted">{{ t('admin.wallets.noData') }}</p>
+      </BaseCard>
+    </div>
 
     <ResourceScaffold
       :columns="columns"

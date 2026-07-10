@@ -335,6 +335,12 @@ export const routes: RouteRecordRaw[] = [
     meta: { layout: 'admin', roles: ['admin'], permission: 'view_wallets', title: 'admin.nav.wallets' },
   },
   {
+    path: '/admin/platform-accounts',
+    name: 'admin-platform-accounts',
+    component: () => import('@/modules/admin/pages/AdminPlatformAccountsPage.vue'),
+    meta: { layout: 'admin', roles: ['admin'], permission: 'view_platform_accounts', title: 'admin.nav.treasury' },
+  },
+  {
     path: '/admin/interviewers',
     name: 'admin-interviewers',
     component: () => import('@/modules/admin/pages/AdminInterviewersPage.vue'),

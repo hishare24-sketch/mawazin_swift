@@ -4,6 +4,7 @@ namespace Modules\Account\Services;
 
 use Illuminate\Support\Carbon;
 use Modules\Account\Entities\Plan;
+use Modules\Account\Entities\PlatformAccount;
 use Modules\Account\Entities\Wallet;
 use Modules\User\Entities\User;
 
@@ -65,6 +66,15 @@ class AccountService
             $wallet->balance = $wallet->balance - $cost;
             $wallet->transactions = $transactions;
             $wallet->save();
+
+            // طرف مقابل: يُرصَّد إيراد الترقية في خزينة المنصّة إن وُجد حساب افتراضيّ
+            // (إضافيّ آمن — لا يغيّر ما يدفعه المستخدم؛ يُتجاهَل بلا خزينة مبذورة).
+            PlatformAccount::default()?->post(
+                $cost,
+                'revenue',
+                __('Plan upgrade to :tier', ['tier' => $tier]),
+                'user:'.$userId,
+            );
         }
 
         $user->tier = $tier;

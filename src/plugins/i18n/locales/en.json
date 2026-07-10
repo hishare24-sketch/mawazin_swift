@@ -366,7 +366,8 @@
       "wallets": "Wallets",
       "groupQuality": "Quality & Accreditation",
       "interviewers": "Interviewers",
-      "plans": "Plans"
+      "plans": "Plans",
+      "treasury": "Treasury"
     },
     "groups": {
       "users": "Users & Roles",
@@ -529,7 +530,12 @@
       "credit": "Credit",
       "debit": "Debit",
       "current": "Current balance",
-      "apply": "Apply"
+      "apply": "Apply",
+      "statTotal": "Total balances",
+      "statCount": "Wallets",
+      "statAvg": "Avg balance",
+      "topHolders": "Top holders",
+      "noData": "No data"
     },
     "toast": {
       "updated": "Saved",
@@ -601,6 +607,52 @@
       "fieldKey": "Key (unique, latin)",
       "confirmDeleteTitle": "Delete plan?",
       "confirmDeleteMsg": "\"{name}\" will be permanently removed (blocked if it has subscribers)."
+    },
+    "treasury": {
+      "title": "Platform treasury",
+      "subtitle": "Bank accounts and revenue ledger",
+      "searchPlaceholder": "Search by account or bank...",
+      "statTreasury": "Total treasury",
+      "statRevenue": "Revenue",
+      "statInflow": "Inflow",
+      "statOutflow": "Outflow",
+      "revenueTrend": "Revenue trend",
+      "balanceByAccount": "Balance by account",
+      "noBalance": "No balances",
+      "colName": "Account",
+      "colType": "Type",
+      "colBank": "Bank",
+      "colBalance": "Balance",
+      "colTxns": "Txns",
+      "colActive": "Status",
+      "typeBank": "Bank",
+      "typeCash": "Cash",
+      "typeGateway": "Gateway",
+      "default": "Default",
+      "statusActive": "Active",
+      "statusInactive": "Inactive",
+      "newAccount": "New account",
+      "create": "Create",
+      "created": "Account created",
+      "adjust": "Deposit/Withdraw",
+      "ledger": "Ledger",
+      "delete": "Delete",
+      "fieldName": "Account name",
+      "fieldType": "Type",
+      "fieldBank": "Bank name",
+      "fieldAccountNo": "Account no. (masked)",
+      "fieldNotes": "Notes",
+      "fieldActive": "Active",
+      "adjustTitle": "Deposit/Withdraw — {name}",
+      "current": "Current balance",
+      "deposit": "Deposit",
+      "withdraw": "Withdraw",
+      "amount": "Amount",
+      "note": "Note",
+      "apply": "Apply",
+      "noTxns": "No transactions yet",
+      "confirmDeleteTitle": "Delete account?",
+      "confirmDeleteMsg": "\"{name}\" will be removed (blocked for default or with balance/history)."
     }
   }
 }
