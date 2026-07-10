@@ -1,11 +1,13 @@
 <script setup lang="ts">
 import { computed, nextTick, onBeforeUnmount, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
+import { useI18n } from 'vue-i18n'
 import { ai } from '@/services/ai'
 import { TAXONOMY } from '@/services/taxonomy'
 import type { SearchScope } from '@/services/ai/types'
 import { useSearchPrefsStore } from '@/stores/SearchPrefsStore'
 
+const { t } = useI18n()
 const router = useRouter()
 const prefs = useSearchPrefsStore()
 
@@ -43,14 +45,14 @@ function onFocus() {
 onMounted(() => window.addEventListener('resize', updateDropdownPos))
 onBeforeUnmount(() => window.removeEventListener('resize', updateDropdownPos))
 
-const scopes: { value: SearchScope, title: string }[] = [
-  { value: 'all', title: 'الكل' },
-  { value: 'requests', title: 'الطلبات' },
-  { value: 'opportunities', title: 'الفرص' },
-  { value: 'interviewers', title: 'المقيّمون' },
-  { value: 'users', title: 'المستخدمون' },
-  { value: 'companies', title: 'الشركات' },
-]
+const scopes = computed<{ value: SearchScope, title: string }[]>(() => [
+  { value: 'all', title: t('search.scopes.all') },
+  { value: 'requests', title: t('search.scopes.requests') },
+  { value: 'opportunities', title: t('search.scopes.opportunities') },
+  { value: 'interviewers', title: t('search.scopes.interviewers') },
+  { value: 'users', title: t('search.scopes.users') },
+  { value: 'companies', title: t('search.scopes.companies') },
+])
 
 function go(extra: Record<string, string> = {}) {
   focused.value = false
@@ -78,12 +80,12 @@ const advCategory = ref<string | null>(null)
 const advRating = ref(0)
 const advDate = ref<string | null>(null)
 const categoryOptions = TAXONOMY.map(c => ({ value: c.id, title: c.label }))
-const dateOptions = [
-  { value: 'day', title: 'آخر يوم' },
-  { value: 'week', title: 'آخر أسبوع' },
-  { value: 'month', title: 'آخر شهر' },
-  { value: 'year', title: 'آخر سنة' },
-]
+const dateOptions = computed(() => [
+  { value: 'day', title: t('search.dates.day') },
+  { value: 'week', title: t('search.dates.week') },
+  { value: 'month', title: t('search.dates.month') },
+  { value: 'year', title: t('search.dates.year') },
+])
 function applyAdvanced() {
   const q: Record<string, string> = { q: (advKeywords.value || query.value).trim(), scope: advScope.value }
   if (advCategory.value)
@@ -122,7 +124,7 @@ function startVoice() {
   <div ref="wrapEl" class="global-search position-relative flex-grow-1" style="max-width: 560px">
     <VTextField
       v-model="query"
-      placeholder="ابحث في المنصة كاملة: طلبات، فرص، مقيّمون، مهارات..."
+      :placeholder="t('search.placeholder')"
       prepend-inner-icon="mdi-magnify"
       variant="solo"
       density="compact"
@@ -135,12 +137,12 @@ function startVoice() {
       @keydown.enter="go()"
     >
       <template #append-inner>
-        <VTooltip :text="voiceSupported ? 'بحث صوتي' : 'البحث الصوتي غير مدعوم في متصفحك'" location="bottom">
+        <VTooltip :text="voiceSupported ? t('search.voice') : t('search.voiceUnsupported')" location="bottom">
           <template #activator="{ props }">
             <VBtn v-bind="props" :icon="listening ? 'mdi-microphone' : 'mdi-microphone-outline'" :color="listening ? 'error' : undefined" variant="text" size="small" :disabled="!voiceSupported" @click.stop="startVoice" />
           </template>
         </VTooltip>
-        <VTooltip text="بحث متقدم" location="bottom">
+        <VTooltip :text="t('search.advanced')" location="bottom">
           <template #activator="{ props }">
             <VBtn v-bind="props" icon="mdi-tune-variant" variant="text" size="small" @click.stop="advDialog = true" />
           </template>
@@ -154,16 +156,16 @@ function startVoice() {
         <VCard v-if="showDropdown" class="global-search__menu" :style="dropdownStyle" elevation="8" rounded="lg">
           <VList density="compact">
             <template v-if="savedSearches.length">
-              <VListSubheader class="text-caption"><VIcon icon="mdi-bookmark-outline" size="14" class="me-1" /> عمليات بحث محفوظة</VListSubheader>
+              <VListSubheader class="text-caption"><VIcon icon="mdi-bookmark-outline" size="14" class="me-1" /> {{ t('search.savedSearches') }}</VListSubheader>
               <VListItem v-for="s in savedSearches" :key="`sav-${s.id}`" prepend-icon="mdi-bookmark" :title="s.q" @mousedown="runSaved(s)" />
             </template>
             <template v-if="recent.length">
-              <VListSubheader class="text-caption"><VIcon icon="mdi-history" size="14" class="me-1" /> عمليات بحث أخيرة</VListSubheader>
+              <VListSubheader class="text-caption"><VIcon icon="mdi-history" size="14" class="me-1" /> {{ t('search.recentSearches') }}</VListSubheader>
               <VListItem v-for="r in recent" :key="`rec-${r}`" prepend-icon="mdi-clock-outline" :title="r" @mousedown="pick(r)" />
             </template>
-            <VListSubheader v-if="alternatives.length" class="text-caption">هل تقصد</VListSubheader>
+            <VListSubheader v-if="alternatives.length" class="text-caption">{{ t('search.didYouMean') }}</VListSubheader>
             <VListItem v-for="alt in alternatives" :key="`alt-${alt}`" prepend-icon="mdi-lightbulb-on-outline" :title="alt" @mousedown="pick(alt)" />
-            <VListSubheader class="text-caption"><VIcon icon="mdi-robot-happy-outline" size="14" class="me-1" /> اقتراحات ذكية</VListSubheader>
+            <VListSubheader class="text-caption"><VIcon icon="mdi-robot-happy-outline" size="14" class="me-1" /> {{ t('search.smartSuggestions') }}</VListSubheader>
             <VListItem v-for="(s, i) in suggestions" :key="i" prepend-icon="mdi-magnify" :title="s" @mousedown="pick(s)" />
           </VList>
         </VCard>
@@ -173,18 +175,18 @@ function startVoice() {
     <!-- Advanced search dialog (teleported by VDialog itself) -->
     <VDialog v-model="advDialog" max-width="520">
       <VCard class="pa-2">
-        <VCardTitle class="d-flex align-center ga-2"><VIcon icon="mdi-tune-variant" /> بحث متقدم</VCardTitle>
+        <VCardTitle class="d-flex align-center ga-2"><VIcon icon="mdi-tune-variant" /> {{ t('search.advanced') }}</VCardTitle>
         <VCardText>
-          <VSelect v-model="advScope" :items="scopes" label="نطاق البحث" class="mb-3" hide-details />
-          <VTextField v-model="advKeywords" label="كلمات مفتاحية" placeholder="مثال: Laravel، الرياض" class="mb-3" hide-details />
-          <VSelect v-model="advCategory" :items="categoryOptions" label="المجال" clearable class="mb-3" hide-details />
-          <div class="text-caption font-weight-bold mb-1">أدنى تقييم ({{ advRating }}★)</div>
+          <VSelect v-model="advScope" :items="scopes" :label="t('search.scopeLabel')" class="mb-3" hide-details />
+          <VTextField v-model="advKeywords" :label="t('search.keywords')" :placeholder="t('search.keywordsPlaceholder')" class="mb-3" hide-details />
+          <VSelect v-model="advCategory" :items="categoryOptions" :label="t('search.field')" clearable class="mb-3" hide-details />
+          <div class="text-caption font-weight-bold mb-1">{{ t('search.minRating', { rating: advRating }) }}</div>
           <VSlider v-model="advRating" :min="0" :max="5" :step="0.5" color="warning" hide-details class="mb-3" />
-          <VSelect v-model="advDate" :items="dateOptions" label="تاريخ النشر" clearable hide-details />
+          <VSelect v-model="advDate" :items="dateOptions" :label="t('search.postDate')" clearable hide-details />
         </VCardText>
         <VCardActions class="justify-end">
-          <VBtn variant="text" @click="advDialog = false">إلغاء</VBtn>
-          <VBtn color="accent" prepend-icon="mdi-magnify" @click="applyAdvanced">بحث</VBtn>
+          <VBtn variant="text" @click="advDialog = false">{{ t('search.cancel') }}</VBtn>
+          <VBtn color="accent" prepend-icon="mdi-magnify" @click="applyAdvanced">{{ t('search.searchBtn') }}</VBtn>
         </VCardActions>
       </VCard>
     </VDialog>

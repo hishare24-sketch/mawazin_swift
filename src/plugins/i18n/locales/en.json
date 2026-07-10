@@ -1,4 +1,24 @@
 {
+  "search": {
+    "placeholder": "Search the whole platform: requests, opportunities, interviewers, skills...",
+    "voice": "Voice search",
+    "voiceUnsupported": "Voice search is not supported in your browser",
+    "advanced": "Advanced search",
+    "savedSearches": "Saved searches",
+    "recentSearches": "Recent searches",
+    "didYouMean": "Did you mean",
+    "smartSuggestions": "Smart suggestions",
+    "scopeLabel": "Search scope",
+    "keywords": "Keywords",
+    "keywordsPlaceholder": "e.g. Laravel, Riyadh",
+    "field": "Field",
+    "minRating": "Min rating ({rating}★)",
+    "postDate": "Post date",
+    "cancel": "Cancel",
+    "searchBtn": "Search",
+    "scopes": { "all": "All", "requests": "Requests", "opportunities": "Opportunities", "interviewers": "Interviewers", "users": "Users", "companies": "Companies" },
+    "dates": { "day": "Last day", "week": "Last week", "month": "Last month", "year": "Last year" }
+  },
   "app": {
     "name": "Smart Recruitment System",
     "tagline": "An intelligent, sustainable career journey"
@@ -128,6 +148,10 @@
     "surveys": "Surveys",
     "surveysParticipate": "Surveys to Join",
     "wallet": "My Wallet",
+    "bottomPeople": "People",
+    "bottomHub": "Your hub",
+    "bottomMenu": "Menu",
+    "backToTop": "Back to top",
     "coachHome": "Coach Board",
     "trainerHome": "Trainer Board",
     "consultantHome": "Consultant Board",

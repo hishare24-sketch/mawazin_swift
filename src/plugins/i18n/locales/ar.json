@@ -1,4 +1,24 @@
 {
+  "search": {
+    "placeholder": "ابحث في المنصة كاملة: طلبات، فرص، مقيّمون، مهارات...",
+    "voice": "بحث صوتي",
+    "voiceUnsupported": "البحث الصوتي غير مدعوم في متصفحك",
+    "advanced": "بحث متقدم",
+    "savedSearches": "عمليات بحث محفوظة",
+    "recentSearches": "عمليات بحث أخيرة",
+    "didYouMean": "هل تقصد",
+    "smartSuggestions": "اقتراحات ذكية",
+    "scopeLabel": "نطاق البحث",
+    "keywords": "كلمات مفتاحية",
+    "keywordsPlaceholder": "مثال: Laravel، الرياض",
+    "field": "المجال",
+    "minRating": "أدنى تقييم ({rating}★)",
+    "postDate": "تاريخ النشر",
+    "cancel": "إلغاء",
+    "searchBtn": "بحث",
+    "scopes": { "all": "الكل", "requests": "الطلبات", "opportunities": "الفرص", "interviewers": "المقيّمون", "users": "المستخدمون", "companies": "الشركات" },
+    "dates": { "day": "آخر يوم", "week": "آخر أسبوع", "month": "آخر شهر", "year": "آخر سنة" }
+  },
   "app": {
     "name": "منظومة التوظيف الذكية",
     "tagline": "رحلة حياة مهنية ذكية ومستدامة"
@@ -128,6 +148,10 @@
     "surveys": "الاستبيانات",
     "surveysParticipate": "استبيانات للمشاركة",
     "wallet": "محفظتي",
+    "bottomPeople": "الناس",
+    "bottomHub": "مركزك",
+    "bottomMenu": "القائمة",
+    "backToTop": "العودة للأعلى",
     "coachHome": "لوحة المرشد",
     "trainerHome": "لوحة المدرب",
     "consultantHome": "لوحة المستشار",

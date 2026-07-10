@@ -514,25 +514,25 @@ onBeforeUnmount(() => window.removeEventListener('scroll', onScroll))
     >
       <RouterLink class="flex flex-1 flex-col items-center justify-center gap-0.5 text-xs" :to="{ name: 'opportunities' }">
         <BaseIcon name="mdi-briefcase-search-outline" :size="22" />
-        <span>الفرص</span>
+        <span>{{ t('nav.opportunities') }}</span>
       </RouterLink>
       <RouterLink class="flex flex-1 flex-col items-center justify-center gap-0.5 text-xs" :to="{ name: 'people-explorer' }">
         <BaseIcon name="mdi-account-group-outline" :size="22" />
-        <span>الناس</span>
+        <span>{{ t('nav.bottomPeople') }}</span>
       </RouterLink>
       <RouterLink class="flex flex-1 flex-col items-center justify-center gap-0.5 text-xs" :to="{ name: 'unified-hub' }">
         <BaseIcon name="mdi-view-dashboard-variant-outline" :size="22" />
-        <span>مركزك</span>
+        <span>{{ t('nav.bottomHub') }}</span>
       </RouterLink>
       <RouterLink class="flex flex-1 flex-col items-center justify-center gap-0.5 text-xs" :to="{ name: 'wallet' }">
         <BaseIcon name="mdi-wallet-outline" :size="22" />
-        <span>محفظتي</span>
+        <span>{{ t('nav.wallet') }}</span>
       </RouterLink>
       <button class="flex flex-1 flex-col items-center justify-center gap-0.5 text-xs" @click="drawer = !drawer">
         <BaseBadge :show="peerRequests.pendingIncoming > 0" dot color="error">
           <BaseIcon name="mdi-menu" :size="22" />
         </BaseBadge>
-        <span>القائمة</span>
+        <span>{{ t('nav.bottomMenu') }}</span>
       </button>
     </nav>
   </div>
@@ -589,7 +589,7 @@ onBeforeUnmount(() => window.removeEventListener('scroll', onScroll))
     <button
       v-show="showTop"
       class="fixed bottom-6 start-6 z-[45] flex h-11 w-11 items-center justify-center rounded-full bg-brand text-on-brand shadow-lg shadow-black/30"
-      aria-label="العودة للأعلى"
+      :aria-label="t('nav.backToTop')"
       @click="scrollTop"
     >
       <BaseIcon name="mdi-chevron-up" :size="24" />
