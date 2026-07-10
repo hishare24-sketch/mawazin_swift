@@ -108,7 +108,7 @@ const canJoin = computed(() => !!authStore.authUser)
     <PageHeader
       title="سوق الخبراء"
       subtitle="اكتشف المرشدين والمدربين والمستشارين المعتمدين واطلب خدمتهم مباشرة"
-      icon="mdi-storefront-outline"
+      icon="mdi-account-tie-outline"
     />
 
     <FacetedList
@@ -143,7 +143,7 @@ const canJoin = computed(() => !!authStore.authUser)
         <div class="mb-3 text-sm">{{ e.specialty }}</div>
 
         <div class="mb-3 mt-auto flex items-center gap-3 text-xs text-muted">
-          <span class="flex items-center gap-1"><BaseIcon name="mdi-star" :size="14" style="color: #f59e0b" /> {{ e.rating }}</span>
+          <span class="flex items-center gap-1"><BaseIcon name="mdi-star" :size="14" style="color: rgb(var(--v-theme-warning))" /> {{ e.rating }}</span>
           <span class="flex items-center gap-1"><BaseIcon name="mdi-account-group-outline" :size="14" /> {{ e.clients }} عميلًا</span>
           <span class="ms-auto font-bold" style="color: rgb(var(--v-theme-primary))">من {{ e.priceFrom }} ﷼ {{ e.priceUnit }}</span>
         </div>

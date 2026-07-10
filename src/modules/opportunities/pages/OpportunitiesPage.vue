@@ -54,7 +54,7 @@ function oppSector(o: Opportunity): string | undefined {
 
 // —— العقد الموحّد: spec الفاسِتات + الفرز (القطاع محوريّ، مُنتقٍ باحث) ——
 const facets = computed<FacetSpec<Opportunity>[]>(() => [
-  sectorFacet(sectorFromFieldAndSkills(oppSector, o => o.skills)),
+  sectorFacet(sectorFromFieldAndSkills(oppSector, o => o.skills), () => mockOpportunities),
   {
     key: 'city', label: 'المدينة', kind: 'multi', value: o => o.city,
     options: () => uniq(mockOpportunities.map(o => o.city)).map(c => ({ value: c, label: c })),

@@ -9,6 +9,7 @@ import { useProfileStore } from '@/stores/ProfileStore'
 import { matchScore } from '@/services/matching'
 import { opportunityMatchProfile, seekerMatchProfile } from '@/services/matchProfile'
 import { useSectorContext } from '@/composables/useSectorContext'
+import { matchColor } from '@/utils/match'
 import BaseCard from '@/components/ui/BaseCard.vue'
 import BaseButton from '@/components/ui/BaseButton.vue'
 import BaseChip from '@/components/ui/BaseChip.vue'
@@ -37,15 +38,6 @@ const matchRate = computed(() => matchScore(
   }),
   opportunityMatchProfile(props.opportunity),
 ).score)
-
-// لون التطابق كرمز ثيم Vuetify (success/secondary/warning)
-function matchColor(rate: number) {
-  if (rate >= 85)
-    return 'success'
-  if (rate >= 70)
-    return 'secondary'
-  return 'warning'
-}
 
 function openDetails() {
   router.push({ name: 'opportunity-details', params: { id: props.opportunity.id } })

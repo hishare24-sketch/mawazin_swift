@@ -336,6 +336,11 @@ function pickSort(key: string) {
 .hbar { scrollbar-width: none; -ms-overflow-style: none; }
 .hbar::-webkit-scrollbar { display: none; }
 
+/* أهداف لمس مريحة (≥44px) على الأجهزة اللمسيّة فقط — يبقى الديسكتوب مضغوطًا */
+@media (pointer: coarse) {
+  .chip, .btn-bar { min-height: 44px; }
+}
+
 .chip {
   display: inline-flex;
   flex: 0 0 auto;

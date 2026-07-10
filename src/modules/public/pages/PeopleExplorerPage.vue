@@ -52,17 +52,17 @@ const people = computed<PersonCard[]>(() => [
     live: true,
   },
   { slug: 'reem-alqahtani', name: 'د. ريم القحطاني', initial: 'ر', headline: 'مستشارة قيادة وموارد بشرية · PMP', location: 'الرياض', roles: ['مستشارة', 'مقيّمة معتمدة'], skills: ['القيادة', 'الإدارة', 'التخطيط'], credibility: 91, followers: 482, rating: 4.8 },
-  { slug: 'hind-alzahrani', name: 'أ. هند الزهراني', initial: 'ه', headline: 'مرشدة مسارات تقنية — التحول الوظيفي', location: 'جدة', roles: ['مرشدة مهنية'], skills: ['الإرشاد المهني', 'السير الذاتية'], credibility: 84, followers: 356, rating: 4.9 },
+  { slug: 'hind-alzahrani', name: 'أ. هند الزهراني', initial: 'ه', headline: 'مرشدة مسارات تقنية — التحول الوظيفي', location: 'جدة', roles: ['مرشدة مهنية'], skills: ['الإرشاد المهني', 'السير الذاتية', 'القيادة'], credibility: 84, followers: 356, rating: 4.9 },
   { slug: 'omar-bawazir', name: 'م. عمر باوزير', initial: 'ع', headline: 'مهندس بيانات أول · مستشار سوق البيانات', location: 'الظهران', roles: ['مستشار', 'مقيّم معتمد'], skills: ['هندسة البيانات', 'Python', 'SQL'], credibility: 88, followers: 267, rating: 4.5 },
   { slug: 'nouf-alshehri', name: 'م. نوف الشهري', initial: 'ن', headline: 'مدربة TypeScript معتمدة — ورش عملية', location: 'الرياض', roles: ['مدربة تقنية'], skills: ['TypeScript', 'Vue.js', 'الاختبارات'], credibility: 82, followers: 391, rating: 4.8 },
   { slug: 'sara-alotaibi', name: 'سارة العتيبي', initial: 'س', headline: 'مهندسة برمجيات — واجهات عالية الأداء', location: 'الرياض', roles: ['باحثة عن عمل'], skills: ['React', 'الأداء', 'إمكانية الوصول'], credibility: 73, followers: 128, rating: 4.4 },
-  { slug: 'future-tech', name: 'شركة تقنية المستقبل', initial: 'ت', headline: 'نبني منتجات رقمية تخدم الملايين — نوظّف باستمرار', location: 'الرياض', roles: ['جهة توظيف'], skills: ['تقنية', 'منتجات رقمية'], credibility: 95, followers: 1240, rating: 4.6 },
+  { slug: 'future-tech', name: 'شركة تقنية المستقبل', initial: 'ت', headline: 'نبني منتجات رقمية تخدم الملايين — نوظّف باستمرار', location: 'الرياض', roles: ['جهة توظيف'], skills: ['منتجات رقمية', 'React', 'Node.js'], credibility: 95, followers: 1240, rating: 4.6 },
   { slug: 'khalid-alharbi', name: 'خالد الحربي', initial: 'خ', headline: 'مطوّر ويب — شغوف بجودة الكود', location: 'مكة المكرمة', roles: ['باحث عن عمل'], skills: ['JavaScript', 'Node.js'], credibility: 61, followers: 54, rating: 4.1 },
 ])
 
 // —— العقد الموحّد: القطاع (مشتقّ) + الدور + المدينة فاسِتات ——
 const facets = computed<FacetSpec<PersonCard>[]>(() => [
-  sectorFacet(p => personSector(p.skills)),
+  sectorFacet(p => personSector(p.skills), () => people.value),
   {
     key: 'role', label: 'الدور', kind: 'multi', value: p => p.roles,
     options: () => uniq(people.value.flatMap(p => p.roles)).map(r => ({ value: r, label: r })),
@@ -110,7 +110,12 @@ function open(p: PersonCard) {
       search-placeholder="ابحث بالاسم أو التخصص أو المهارة…"
     >
       <template #item="{ item }">
-        <VCard class="pa-4 h-100 d-flex flex-column person-card" @click="open(item as PersonCard)">
+        <VCard
+          class="pa-4 h-100 d-flex flex-column person-card" role="button" tabindex="0"
+          @click="open(item as PersonCard)"
+          @keydown.enter="open(item as PersonCard)"
+          @keydown.space.prevent="open(item as PersonCard)"
+        >
           <template v-for="p in [item as PersonCard]" :key="p.slug">
           <div class="d-flex align-center ga-3 mb-2">
             <VAvatar color="primary" variant="tonal" size="48">

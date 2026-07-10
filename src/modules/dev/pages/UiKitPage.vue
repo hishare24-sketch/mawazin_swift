@@ -33,7 +33,7 @@ const demoRange = ref(40)
 // نعرضها بجانب VBtn من Vuetify للتأكد من تطابق الثيم والتعايش.
 const theme = useTheme()
 function toggle() {
-  theme.global.name.value = theme.global.current.value.dark ? 'lightTheme' : 'darkTheme'
+  theme.change(theme.global.current.value.dark ? 'lightTheme' : 'darkTheme')
 }
 </script>
 

@@ -10,6 +10,7 @@ import { ALL_SKILLS } from '@/services/taxonomy'
 import { sectorForField } from '@/services/sectors'
 import { useSectorContext } from '@/composables/useSectorContext'
 import { sectorFacet, sectorFromFieldAndSkills } from '@/composables/sectorFacet'
+import { matchChipColor } from '@/utils/match'
 import FacetedList from '@/components/shared/FacetedList.vue'
 import type { FacetSpec, SortSpec } from '@/composables/useFacetedList'
 import { ai } from '@/services/ai'
@@ -110,7 +111,7 @@ function matchOf(id: number) {
 }
 
 const facets = computed<FacetSpec<Interviewer>[]>(() => [
-  sectorFacet(sectorFromFieldAndSkills(ivSector, iv => iv.specialties)),
+  sectorFacet(sectorFromFieldAndSkills(ivSector, iv => iv.specialties), () => store.interviewers),
   {
     key: 'type', label: 'التخصص', kind: 'multi', value: iv => iv.type,
     options: () => types.map(t => ({ value: t, label: INTERVIEWER_TYPE_META[t].label, icon: INTERVIEWER_TYPE_META[t].icon })),
@@ -196,7 +197,7 @@ function chipStyle(vColor: string, active: boolean) {
               <div class="text-sm font-bold text-content">{{ r.interviewer.name }}</div>
               <div class="text-xs text-muted">{{ INTERVIEWER_TYPE_META[r.interviewer.type].label }}</div>
             </div>
-            <BaseChip color="success">{{ r.match }}%</BaseChip>
+            <BaseChip :color="matchChipColor(r.match)" :aria-label="`نسبة التطابق ${r.match}%`">{{ r.match }}%</BaseChip>
           </div>
           <p class="text-xs text-muted">{{ r.reason }}</p>
         </button>
@@ -244,7 +245,12 @@ function chipStyle(vColor: string, active: boolean) {
 
       <template #item="{ item }">
         <template v-for="iv in [item as Interviewer]" :key="iv.id">
-          <BaseCard hover class="flex cursor-pointer flex-col" @click="open(iv.id)">
+          <BaseCard
+            hover class="flex cursor-pointer flex-col" role="button" tabindex="0"
+            @click="open(iv.id)"
+            @keydown.enter="open(iv.id)"
+            @keydown.space.prevent="open(iv.id)"
+          >
             <div class="mb-2 flex items-start gap-3">
               <BaseAvatar :color="mapColor(INTERVIEWER_TYPE_META[iv.type].color)" :size="52">
                 <span class="text-lg font-bold">{{ iv.initial }}</span>
@@ -256,7 +262,7 @@ function chipStyle(vColor: string, active: boolean) {
                 </div>
                 <div class="text-xs text-muted">{{ iv.title }}</div>
               </div>
-              <BaseChip color="success">{{ matchOf(iv.id) }}%</BaseChip>
+              <BaseChip :color="matchChipColor(matchOf(iv.id))" :aria-label="`نسبة التطابق ${matchOf(iv.id)}%`">{{ matchOf(iv.id) }}%</BaseChip>
             </div>
 
             <div class="mb-2 flex flex-wrap items-center gap-2">

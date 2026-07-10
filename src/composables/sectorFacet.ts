@@ -5,8 +5,16 @@ import { categorizeSkill } from '@/services/taxonomy'
 import { visibleSectors } from '@/services/sectors'
 import type { FacetSpec } from '@/composables/useFacetedList'
 
-/** الفاسِت المحوريّ للقطاع: خيارات = كامل التصنيف المرئيّ (مرتّب بالأولويّة، يُخفي «أخرى») */
-export function sectorFacet<T>(value: (t: T) => string | string[] | undefined): FacetSpec<T> {
+/**
+ * الفاسِت المحوريّ للقطاع. الخيارات = القطاعات **الحاضرة فعلًا في البيانات**
+ * (مرتّبة بأولويّة التصنيف، بأيقونات/تسميات التصنيف) — كي لا يعرض الشريط المحوريّ
+ * قطاعات بلا نتائج (أخطر خلل مظهريّ حين تغطّي البيانات جزءًا من التصنيف).
+ * يُمرَّر `items` كامل مجموعة السوق (لا المصفّاة) كي لا تختفي الخيارات مع التصفية.
+ */
+export function sectorFacet<T>(
+  value: (t: T) => string | string[] | undefined,
+  items: () => T[],
+): FacetSpec<T> {
   return {
     key: 'sector',
     label: 'القطاعات',
@@ -14,7 +22,19 @@ export function sectorFacet<T>(value: (t: T) => string | string[] | undefined): 
     primary: true,
     searchable: true,
     value,
-    options: () => visibleSectors().map(s => ({ value: s.id, label: s.label, icon: s.icon })),
+    options: () => {
+      const present = new Set<string>()
+      for (const it of items()) {
+        const v = value(it)
+        if (Array.isArray(v))
+          v.forEach(x => x && present.add(x))
+        else if (v)
+          present.add(v)
+      }
+      return visibleSectors()
+        .filter(s => present.has(s.id))
+        .map(s => ({ value: s.id, label: s.label, icon: s.icon }))
+    },
   }
 }
 

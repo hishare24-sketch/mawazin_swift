@@ -81,7 +81,7 @@ export const useThemeStore = defineStore('theme', () => {
         'surface-variant': palette['surface-variant'],
       })
     }
-    themeApi.global.name.value = activeThemeName.value
+    themeApi.change(activeThemeName.value) // Vuetify 3.7+: بديل تعيين global.name.value المهجور
     // تدرج العلامة وتوهجها يتبعان الهوية المختارة
     const root = document.documentElement
     root.style.setProperty('--brand-gradient', `linear-gradient(135deg, ${p.gradient[0]} 0%, ${p.gradient[1]} 55%, ${p.gradient[2]} 100%)`)

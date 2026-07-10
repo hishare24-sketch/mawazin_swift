@@ -6,6 +6,7 @@ import { useSectorContext } from '@/composables/useSectorContext'
 import { ai } from '@/services/ai'
 import type { SearchScope } from '@/services/ai/types'
 import EmptyState from '@/components/shared/EmptyState.vue'
+import PageHeader from '@/components/shared/PageHeader.vue'
 import { useSearchPrefsStore } from '@/stores/SearchPrefsStore'
 import BaseCard from '@/components/ui/BaseCard.vue'
 import BaseButton from '@/components/ui/BaseButton.vue'
@@ -93,18 +94,22 @@ function searchAlt(alt: string) {
 
 <template>
   <div>
-    <div class="mb-1 flex flex-wrap items-center justify-between gap-2">
-      <h1 class="text-xl font-bold text-content">اكتشف</h1>
-      <BaseButton
-        v-if="query"
-        size="sm"
-        :variant="savedNow ? 'tonal-accent' : 'outline'"
-        @click="toggleSave"
-      >
-        <BaseIcon :name="savedNow ? 'mdi-bookmark' : 'mdi-bookmark-outline'" :size="16" />{{ savedNow ? 'محفوظ' : 'حفظ البحث' }}
-      </BaseButton>
-    </div>
-    <p class="mb-3 text-sm text-muted">ابحث واستكشف عبر كل الأسواق معًا — فرص، طلبات، أشخاص، خبراء، ومقيّمون.</p>
+    <PageHeader
+      title="اكتشف"
+      subtitle="ابحث واستكشف عبر كل الأسواق معًا — فرص، طلبات، أشخاص، خبراء، ومقيّمون."
+      icon="mdi-telescope"
+    >
+      <template #actions>
+        <BaseButton
+          v-if="query"
+          size="sm"
+          :variant="savedNow ? 'tonal-accent' : 'outline'"
+          @click="toggleSave"
+        >
+          <BaseIcon :name="savedNow ? 'mdi-bookmark' : 'mdi-bookmark-outline'" :size="16" />{{ savedNow ? 'محفوظ' : 'حفظ البحث' }}
+        </BaseButton>
+      </template>
+    </PageHeader>
 
     <!-- ① البحث البطل (عابر للأسواق) -->
     <div class="mb-4">

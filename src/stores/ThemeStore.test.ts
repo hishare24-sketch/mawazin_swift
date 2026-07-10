@@ -5,9 +5,12 @@ import { useThemeStore } from './ThemeStore'
 import { THEME_PRESETS, luminance, onColorFor } from '@/services/themePresets'
 
 function fakeThemeApi() {
+  const global = { name: { value: '' } }
   return {
     themes: { value: { darkTheme: { colors: {} as Record<string, string> }, lightTheme: { colors: {} as Record<string, string> } } },
-    global: { name: { value: '' } },
+    global,
+    // يحاكي Vuetify 3.7+: change يكتب اسم الثيم النشط في global.name
+    change: (name: string) => { global.name.value = name },
   } as unknown as ThemeInstance
 }
 

@@ -14,6 +14,7 @@ import { sectorForField } from '@/services/sectors'
 import type { FacetSpec, SortSpec } from '@/composables/useFacetedList'
 import FacetedList from '@/components/shared/FacetedList.vue'
 import { uniq } from '@/utils/array'
+import { matchColor } from '@/utils/match'
 import BaseCard from '@/components/ui/BaseCard.vue'
 import BaseButton from '@/components/ui/BaseButton.vue'
 import BaseChip from '@/components/ui/BaseChip.vue'
@@ -50,16 +51,13 @@ function liveMatch(r: MarketRequest): number {
   return matchScore(seekerProfile.value, requestMatchProfile({ field: r.field, skills: r.skills, city: r.city, remote: r.remote })).score
 }
 const topMatch = computed(() => [...store.requests].sort((a, b) => liveMatch(b) - liveMatch(a))[0])
-function matchColor(v: number) {
-  return v >= 85 ? 'success' : v >= 70 ? 'accent' : 'warning'
-}
 function reqSector(r: MarketRequest): string | undefined {
   return sectorForField(r.field)?.id
 }
 const kinds = Object.keys(KIND_META) as RequestKind[]
 
 const facets = computed<FacetSpec<MarketRequest>[]>(() => [
-  sectorFacet(sectorFromFieldAndSkills(reqSector, r => r.skills)),
+  sectorFacet(sectorFromFieldAndSkills(reqSector, r => r.skills), () => store.requests),
   {
     key: 'field', label: 'المجال', kind: 'multi', searchable: true, value: r => r.field,
     options: () => store.fields.map(f => ({ value: f, label: f })),
@@ -160,7 +158,12 @@ function open(id: number) {
       </template>
 
       <template #item="{ item }">
-        <BaseCard hover class="cursor-pointer" @click="open((item as MarketRequest).id)">
+        <BaseCard
+          hover class="cursor-pointer" role="button" tabindex="0"
+          @click="open((item as MarketRequest).id)"
+          @keydown.enter="open((item as MarketRequest).id)"
+          @keydown.space.prevent="open((item as MarketRequest).id)"
+        >
           <div class="flex flex-wrap items-center gap-4 sm:flex-nowrap">
             <BaseAvatar :color="mapColor(KIND_META[(item as MarketRequest).kind].color)" :size="56" square>
               <span class="text-lg font-bold">{{ (item as MarketRequest).orgInitial }}</span>
@@ -173,7 +176,7 @@ function open(id: number) {
               <div class="mb-1 font-bold">{{ (item as MarketRequest).title }}</div>
               <div class="mb-2 flex flex-wrap items-center gap-2 text-xs text-muted">
                 <span class="font-bold">{{ (item as MarketRequest).org }}</span>
-                <span class="flex items-center gap-1"><BaseIcon name="mdi-star" :size="14" style="color: #f59e0b" />{{ (item as MarketRequest).orgRating }} ({{ (item as MarketRequest).orgReviews }})</span>
+                <span class="flex items-center gap-1"><BaseIcon name="mdi-star" :size="14" style="color: rgb(var(--v-theme-warning))" />{{ (item as MarketRequest).orgRating }} ({{ (item as MarketRequest).orgReviews }})</span>
                 <span>· {{ (item as MarketRequest).field }}</span>
               </div>
               <div class="flex flex-wrap gap-1">
