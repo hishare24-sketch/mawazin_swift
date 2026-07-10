@@ -1,7 +1,10 @@
 @import url('https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700;800&display=swap');
 
 :root {
-  --app-font: 'Tajawal', 'Segoe UI', 'Tahoma', 'Noto Sans Arabic', system-ui, sans-serif;
+  // خطّ واجهة النظام النظيف (يطابق مظهر النموذج): كلّ جهاز يعرض خطّه العربيّ
+  // المحليّ الأنيق (Segoe UI على ويندوز · SF Arabic على أبل · Noto على أندرويد)
+  // — محايد وسريع بلا تحميل خطّ. Tajawal يبقى متاحًا لصفحات الملف العام والكانفس.
+  --app-font: system-ui, -apple-system, 'Segoe UI', 'SF Arabic', 'Noto Sans Arabic', 'Helvetica Neue', 'Tahoma', sans-serif;
   // «LittleBee» hero gradient — deep green with a lime edge (readable with light text)
   --brand-gradient: linear-gradient(135deg, #14532d 0%, #0f2e1c 55%, #1a3a24 100%);
   --lime-glow: radial-gradient(circle at 60% 30%, rgba(163, 230, 53, 0.22), transparent 60%);
