@@ -111,6 +111,7 @@ const canJoin = computed(() => !!authStore.authUser)
       :sorts="sorts"
       :text="expertText"
       :item-key="(e: MarketExpert) => e.id"
+      surface="experts"
       view="grid"
       :noun="t('discovery.experts.noun')"
       :search-placeholder="t('discovery.experts.search')"

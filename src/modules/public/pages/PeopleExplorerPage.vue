@@ -96,6 +96,7 @@ function open(p: Person) {
       :sorts="sorts"
       :text="personText"
       :item-key="(p: Person) => p.slug"
+      surface="people"
       view="grid"
       :primary-preset="primaryPreset"
       :noun="t('discovery.people.noun')"

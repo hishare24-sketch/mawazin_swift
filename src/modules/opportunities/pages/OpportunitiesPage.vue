@@ -134,6 +134,7 @@ const oppText = (o: Opportunity) => `${o.title} ${o.company} ${o.skills.join(' '
       :sorts="sorts"
       :text="oppText"
       :item-key="(o: Opportunity) => o.id"
+      surface="opportunities"
       :view="view"
       :primary-preset="primaryPreset"
       :noun="t('discovery.opportunities.noun')"

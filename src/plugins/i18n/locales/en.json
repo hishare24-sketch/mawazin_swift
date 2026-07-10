@@ -178,6 +178,8 @@
     "sortBy": "Sort by",
     "clearAll": "Clear all",
     "yourViews": "Your views:",
+    "saveView": "Save view",
+    "savedView": "View",
     "reset": "Reset",
     "noResults": "No matching results",
     "noResultsHint": "Try widening the filters or adjusting your search",

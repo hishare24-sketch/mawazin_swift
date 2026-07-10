@@ -4,6 +4,7 @@ import { useI18n } from 'vue-i18n'
 import type { FacetSpec, SortSpec } from '@/composables/useFacetedList'
 import { useFacetedList } from '@/composables/useFacetedList'
 import { useMediaQuery } from '@/composables/useMediaQuery'
+import { useFilterViewsStore } from '@/stores/FilterViewsStore'
 import BaseIcon from '@/components/ui/BaseIcon.vue'
 import BaseInput from '@/components/ui/BaseInput.vue'
 import BaseSlider from '@/components/ui/BaseSlider.vue'
@@ -24,6 +25,8 @@ const props = withDefaults(defineProps<{
   /** بذرة «لك» على الفاسِت المحوريّ (قطاعات المستخدم) */
   primaryPreset?: { label: string, icon?: string, values: string[] }
   savedViews?: SavedView[]
+  /** مفتاح السطح (سوق) لحفظ/استرجاع توليفات الفلاتر عبر FilterViewsStore */
+  surface?: string
 }>(), { noun: 'نتيجة', searchPlaceholder: 'ابحث بالاسم أو المهارة…', view: 'grid' })
 
 const { t } = useI18n()
@@ -34,6 +37,24 @@ const api = useFacetedList<T>({
   sorts: props.sorts,
   text: props.text,
 })
+
+// العروض المحفوظة (توليفة فلاتر كاملة) — مربوطة بـFilterViewsStore عند تمرير surface
+const viewsStore = useFilterViewsStore()
+const storeViews = computed(() => (props.surface ? viewsStore.forSurface(props.surface) : []))
+// يُظهر زرّ الحفظ حين يوجد ما يُحفَظ (فاسِت مطبّق أو بحث)
+const canSaveView = computed(() => !!props.surface && (api.hasActiveFacets.value || !!api.state.q.trim()))
+function currentViewLabel(): string {
+  const chips = api.appliedChips.value.map(c => c.label)
+  if (chips.length)
+    return chips.slice(0, 3).join(' · ')
+  if (api.state.q.trim())
+    return `«${api.state.q.trim()}»`
+  return `${t('discovery.savedView')} ${storeViews.value.length + 1}`
+}
+function saveCurrentView() {
+  if (props.surface)
+    viewsStore.saveView(props.surface, currentViewLabel(), api.snapshot())
+}
 
 const primaryFacet = computed(() => props.facets.find(f => f.primary))
 const otherFacets = computed(() => props.facets.filter(f => !f.primary))
@@ -177,6 +198,9 @@ function pickSort(key: string) {
       <button type="button" class="btn-bar whitespace-nowrap" @click="sortOpen = true">
         <BaseIcon name="mdi-sort" :size="16" /> {{ activeSort?.label }}
       </button>
+      <button v-if="canSaveView" type="button" class="btn-bar whitespace-nowrap" @click="saveCurrentView">
+        <BaseIcon name="mdi-bookmark-plus-outline" :size="16" /> {{ t('discovery.saveView') }}
+      </button>
       <slot name="toolbar" />
     </div>
 
@@ -199,18 +223,30 @@ function pickSort(key: string) {
       </button>
     </div>
 
-    <!-- ⑤ العروض المحفوظة -->
-    <div v-if="savedViews && savedViews.length" class="hbar mb-3 flex items-center gap-2.5 overflow-x-auto pb-1">
+    <!-- ⑤ العروض المحفوظة (تمريرة الصفحة القديمة + المخزَّنة عبر surface) -->
+    <div v-if="(savedViews && savedViews.length) || storeViews.length" class="hbar mb-3 flex items-center gap-2.5 overflow-x-auto pb-1">
       <span class="whitespace-nowrap text-xs text-muted">{{ t('discovery.yourViews') }}</span>
       <button
         v-for="(v, i) in savedViews"
-        :key="i"
+        :key="`legacy-${i}`"
         type="button"
         class="chip whitespace-nowrap"
         @click="v.apply()"
       >
         <BaseIcon v-if="v.icon" :name="v.icon" :size="14" /> {{ v.label }}
       </button>
+      <span
+        v-for="v in storeViews"
+        :key="`store-${v.id}`"
+        class="chip whitespace-nowrap"
+      >
+        <button type="button" class="inline-flex items-center gap-1" @click="api.applyState(v.state)">
+          <BaseIcon name="mdi-bookmark-outline" :size="14" /> {{ v.label }}
+        </button>
+        <button type="button" class="ms-1 leading-none opacity-60" :aria-label="t('common.delete')" @click.stop="viewsStore.removeView(v.id)">
+          <BaseIcon name="mdi-close" :size="13" />
+        </button>
+      </span>
     </div>
 
     <!-- ⑥ البانر (اختياريّ) + النتائج -->

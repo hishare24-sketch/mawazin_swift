@@ -137,6 +137,7 @@ function open(id: number) {
       :sorts="sorts"
       :text="reqText"
       :item-key="(r: MarketRequest) => r.id"
+      surface="requests"
       view="list"
       :primary-preset="primaryPreset"
       :noun="t('discovery.requests.noun')"

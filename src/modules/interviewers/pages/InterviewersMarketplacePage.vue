@@ -230,6 +230,7 @@ function chipStyle(vColor: string, active: boolean) {
       :sorts="sorts"
       :text="ivText"
       :item-key="(iv: Interviewer) => iv.id"
+      surface="interviewers"
       :view="view"
       :primary-preset="primaryPreset"
       :noun="t('discovery.interviewers.noun')"

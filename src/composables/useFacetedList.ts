@@ -205,6 +205,25 @@ export function useFacetedList<T>(opts: {
     state.bools = {}
     state.ranges = {}
   }
+  /** لقطة قابلة للتسلسل من الحالة الحاليّة (للعروض المحفوظة). */
+  function snapshot(): FacetState {
+    return {
+      q: state.q,
+      sel: Object.fromEntries(Object.entries(state.sel).map(([k, v]) => [k, [...v]])),
+      bools: { ...state.bools },
+      ranges: { ...state.ranges },
+      sortKey: state.sortKey,
+    }
+  }
+  /** تطبيق حالة محفوظة (استبدال كامل، مع نسخ عميق كي لا تتشارك المراجع). */
+  function applyState(s: Partial<FacetState>) {
+    state.q = s.q ?? ''
+    state.sel = Object.fromEntries(Object.entries(s.sel ?? {}).map(([k, v]) => [k, [...v]]))
+    state.bools = { ...(s.bools ?? {}) }
+    state.ranges = { ...(s.ranges ?? {}) }
+    if (s.sortKey)
+      state.sortKey = s.sortKey
+  }
   /** هل هناك أيّ فاسِت مطبّق (عدا البحث)؟ */
   const hasActiveFacets = computed(() => opts.facets.some(f => isActive(f.key)))
 
@@ -255,5 +274,7 @@ export function useFacetedList<T>(opts: {
     activeCount,
     clearFacet,
     clearAll,
+    snapshot,
+    applyState,
   }
 }

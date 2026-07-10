@@ -178,6 +178,8 @@
     "sortBy": "ترتيب حسب",
     "clearAll": "امسح الكل",
     "yourViews": "عروضك:",
+    "saveView": "احفظ العرض",
+    "savedView": "عرض",
     "reset": "إعادة",
     "noResults": "لا نتائج مطابقة",
     "noResultsHint": "جرّب توسيع الفلاتر أو تعديل البحث",
