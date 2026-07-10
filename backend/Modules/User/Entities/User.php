@@ -14,8 +14,14 @@ class User extends Authenticatable
     use HasApiTokens, HasFactory, HasRoles, Notifiable;
 
     protected $fillable = [
-        'name', 'email', 'password', 'uuid', 'role', 'kind', 'tier', 'phone',
+        'name', 'email', 'password', 'uuid', 'role', 'kind', 'tier', 'phone', 'status',
     ];
+
+    /** هل الحساب معلَّق (يُمنع من الدخول)؟ */
+    public function isSuspended(): bool
+    {
+        return $this->status === 'suspended';
+    }
 
     protected $hidden = [
         'password', 'remember_token',

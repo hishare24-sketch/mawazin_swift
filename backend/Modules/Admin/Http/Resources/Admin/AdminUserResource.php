@@ -14,7 +14,14 @@ class AdminUserResource extends JsonResource
             'name' => $this->name,
             'email' => $this->email,
             'role' => $this->role,
+            'kind' => $this->kind,
             'tier' => $this->tier,
+            'status' => $this->status ?? 'active',
+            // أدوار لوحة الأدمن المُسندة (guard=admin): super_admin/admin/governance
+            'adminRoles' => $this->roles
+                ->where('guard_name', 'admin')
+                ->pluck('name')
+                ->values(),
             'createdAt' => optional($this->created_at)->toISOString(),
         ];
     }

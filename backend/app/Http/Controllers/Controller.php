@@ -24,4 +24,16 @@ class Controller extends BaseController
         return $this->checkAuthorize($ability)
             ?: abort(403, __('You are not authorized to perform this action'));
     }
+
+    /** يفكّ معامل فرز "-field" → [column, direction] مع قائمة بيضاء (حماية من الحقن). */
+    protected function parseSort(string $sort, array $sortable, string $default = 'id'): array
+    {
+        $desc = str_starts_with($sort, '-');
+        $column = ltrim($sort, '-');
+        if (! in_array($column, $sortable, true)) {
+            $column = $default;
+        }
+
+        return [$column, $desc ? 'desc' : 'asc'];
+    }
 }

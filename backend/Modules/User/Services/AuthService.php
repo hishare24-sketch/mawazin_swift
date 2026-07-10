@@ -30,6 +30,11 @@ class AuthService
             return null;
         }
 
+        // الحساب المُعلَّق من الأدمن يُمنع من الدخول (403 — البيانات صحيحة لكن الحساب موقوف)
+        if ($user->isSuspended()) {
+            abort(403, __('This account is suspended. Please contact support.'));
+        }
+
         return $this->sessionFor($user);
     }
 

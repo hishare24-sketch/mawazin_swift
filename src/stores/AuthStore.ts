@@ -53,7 +53,11 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   function hasPermission(permission: string): boolean {
-    return authUser.value?.permissions?.includes(permission) ?? false
+    const perms = authUser.value?.permissions
+    if (!perms)
+      return false
+    // '*' = تخويل شامل (الأدمن الأعلى) — يمرّ أي فحص صلاحية
+    return perms.includes('*') || perms.includes(permission)
   }
 
   function hasPermissions(permissions: string[]): boolean {

@@ -42,7 +42,7 @@ export const navItems: NavItem[] = [
   { title: 'dashboard', icon: 'mdi-view-dashboard-outline', to: 'dashboard', roles: ['seeker', 'company'], section: 'role' },
 
   // Admin
-  { title: 'dashboard', icon: 'mdi-view-dashboard-outline', to: 'admin-dashboard', roles: ['admin'], section: 'role' },
+  { title: 'dashboard', icon: 'mdi-view-dashboard-outline', to: 'admin-overview', roles: ['admin'], section: 'role' },
   { title: 'users', icon: 'mdi-account-multiple-outline', to: 'admin-users', roles: ['admin'], section: 'role' },
   { title: 'team', icon: 'mdi-shield-account-outline', to: 'admin-roles', roles: ['admin'], section: 'role' },
 

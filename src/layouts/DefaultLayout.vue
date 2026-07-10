@@ -117,6 +117,8 @@ function exitDelegation() {
 }
 const user = computed(() => authStore.authUser)
 const roleLabel = computed(() => (authStore.role ? t(`roles.${authStore.role}`) : ''))
+// دخول كونسول الأدمن المنفصل — يظهر فقط لمن يملك صلاحيّات الأدمن
+const isAdmin = computed(() => authStore.role === 'admin')
 
 const themeStore = useThemeStore()
 const isDark = computed(() => themeStore.isDark)
@@ -440,6 +442,19 @@ onBeforeUnmount(() => window.removeEventListener('scroll', onScroll))
 
         <template #default="{ close }">
           <div class="py-1">
+            <!-- دخول كونسول الأدمن المنفصل -->
+            <template v-if="isAdmin">
+              <RouterLink class="menu-row admin-entry" :to="{ name: 'admin-overview' }" @click="close()">
+                <span class="grid h-8 w-8 place-items-center rounded-ui bg-brand text-on-brand">
+                  <BaseIcon name="mdi-shield-crown-outline" :size="18" />
+                </span>
+                <span class="flex-1 font-bold" style="color: rgb(var(--v-theme-primary))">{{ t('admin.consoleTitle') }}</span>
+                <BaseIcon name="mdi-chevron-left" :size="18" class="text-muted ltr:hidden" />
+                <BaseIcon name="mdi-chevron-right" :size="18" class="text-muted rtl:hidden" />
+              </RouterLink>
+              <div class="my-1 border-t border-ui" />
+            </template>
+
             <div class="px-4 py-1.5 text-xs font-bold text-muted">
               {{ t('accounts.myAccounts') }}
             </div>

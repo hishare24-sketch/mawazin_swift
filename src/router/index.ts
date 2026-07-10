@@ -40,6 +40,12 @@ router.beforeEach((to) => {
     return { name: roleHome(authStore.role) }
   }
 
+  // بوّابة صلاحيّة دقيقة (مسارات الأدمن) — نقص الصلاحية يعيد للنظرة العامّة (لا حلقة)
+  const perm = to.meta.permission as string | undefined
+  if (perm && authStore.isAuthUser && !authStore.hasPermission(perm) && to.name !== 'admin-overview') {
+    return { name: 'admin-overview' }
+  }
+
   return true
 })
 

@@ -291,24 +291,36 @@ export const routes: RouteRecordRaw[] = [
     meta: { layout: 'default', roles: ['endorser'] },
   },
 
-  // ===== Admin =====
+  // ===== Admin Console (كونسول مستقلّ) =====
   {
     path: '/admin',
-    name: 'admin-dashboard',
-    component: () => import('@/modules/admin/pages/AdminDashboardPage.vue'),
-    meta: { layout: 'default', roles: ['admin'] },
+    name: 'admin-overview',
+    component: () => import('@/modules/admin/pages/AdminOverviewPage.vue'),
+    meta: { layout: 'admin', roles: ['admin'], permission: 'view_analytics', title: 'admin.nav.overview' },
   },
   {
     path: '/admin/users',
     name: 'admin-users',
-    component: () => import('@/modules/team/pages/UsersPage.vue'),
-    meta: { layout: 'default', roles: ['admin'] },
+    component: () => import('@/modules/admin/pages/AdminUsersPage.vue'),
+    meta: { layout: 'admin', roles: ['admin'], permission: 'view_users', title: 'admin.nav.users' },
   },
   {
     path: '/admin/roles',
     name: 'admin-roles',
-    component: () => import('@/modules/team/pages/RolesPage.vue'),
-    meta: { layout: 'default', roles: ['admin'] },
+    component: () => import('@/modules/admin/pages/AdminRolesPage.vue'),
+    meta: { layout: 'admin', roles: ['admin'], permission: 'view_roles', title: 'admin.nav.roles' },
+  },
+  {
+    path: '/admin/opportunities',
+    name: 'admin-opportunities',
+    component: () => import('@/modules/admin/pages/AdminOpportunitiesPage.vue'),
+    meta: { layout: 'admin', roles: ['admin'], permission: 'view_opportunities', title: 'admin.nav.opportunities' },
+  },
+  {
+    path: '/admin/requests',
+    name: 'admin-requests',
+    component: () => import('@/modules/admin/pages/AdminRequestsPage.vue'),
+    meta: { layout: 'admin', roles: ['admin'], permission: 'view_requests', title: 'admin.nav.requests' },
   },
 
   // ===== Ecosystem expert roles (coach / trainer / consultant) =====

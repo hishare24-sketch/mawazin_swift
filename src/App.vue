@@ -6,6 +6,7 @@ import { useTheme } from 'vuetify'
 import DefaultLayout from '@/layouts/DefaultLayout.vue'
 import BlankLayout from '@/layouts/BlankLayout.vue'
 import FormsLayout from '@/layouts/FormsLayout.vue'
+import AdminLayout from '@/layouts/AdminLayout.vue'
 import { useThemeStore } from '@/stores/ThemeStore'
 
 const route = useRoute()
@@ -21,6 +22,7 @@ const layouts = {
   default: DefaultLayout,
   blank: BlankLayout,
   forms: FormsLayout,
+  admin: AdminLayout,
 }
 
 const layoutComponent = computed(() => {

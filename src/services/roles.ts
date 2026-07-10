@@ -34,7 +34,7 @@ export const ROLE_META: Record<UserRole, RoleMeta> = {
   interviewer: { icon: 'mdi-star-check-outline', labelKey: 'interviewer', home: 'interviewer-dashboard', requestable: true, activation: 'instant' },
   company: { icon: 'mdi-office-building-outline', labelKey: 'company', home: 'dashboard', requestable: true, activation: 'instant' },
   endorser: { icon: 'mdi-hand-heart-outline', labelKey: 'endorser', home: 'endorser-home', requestable: true, activation: 'instant' },
-  admin: { icon: 'mdi-shield-crown-outline', labelKey: 'admin', home: 'admin-dashboard', requestable: false, activation: 'approval' },
+  admin: { icon: 'mdi-shield-crown-outline', labelKey: 'admin', home: 'admin-overview', requestable: false, activation: 'approval' },
   coach: { icon: 'mdi-compass-outline', labelKey: 'coach', home: 'coach-dashboard', requestable: true, activation: 'instant' },
   trainer: { icon: 'mdi-school-outline', labelKey: 'trainer', home: 'trainer-dashboard', requestable: true, activation: 'instant' },
   consultant: { icon: 'mdi-lightbulb-on-outline', labelKey: 'consultant', home: 'consultant-dashboard', requestable: true, activation: 'instant' },

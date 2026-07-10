@@ -23,7 +23,9 @@ function buildMockUser(partial: Partial<User> & Pick<User, 'email' | 'role' | 'n
 
 /** يبني User المنصة من مستخدم الباك-إند (NestJS). الأدوار الفورية تُشتق من الدور المفرد. */
 function fromNestUser(u: ApiAuthUser, token: string): User {
-  const role = (u.role ?? 'seeker') as UserRole
+  // حساب أدمن يُكتشف عبر adminRoles الآتية من الخادم — يُفتح الكونسول وتُعتمد صلاحيّاته الفعليّة
+  const isAdmin = (u.adminRoles?.length ?? 0) > 0
+  const role = (isAdmin ? 'admin' : (u.role ?? 'seeker')) as UserRole
   return {
     id: u.id,
     uuid: u.uuid,
@@ -34,7 +36,7 @@ function fromNestUser(u: ApiAuthUser, token: string): User {
     role,
     roles: defaultRoleEntries(role),
     token,
-    permissions: ROLE_PERMISSIONS[role],
+    permissions: isAdmin && u.permissions?.length ? u.permissions : ROLE_PERMISSIONS[role],
     created_at: u.created_at,
   }
 }

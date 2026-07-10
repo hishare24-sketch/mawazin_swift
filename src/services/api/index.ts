@@ -107,6 +107,21 @@ export const API_PATHS = {
     wallet: '/v1/wallet',
     plan: '/v1/account/plan',
   },
+  /** لوحة الأدمن — تحت /api/admin (حارس admin) لا /v1 */
+  admin: {
+    stats: '/admin/stats',
+    users: '/admin/users',
+    user: (id: number) => `/admin/users/${id}`,
+    suspend: (id: number) => `/admin/users/${id}/suspend`,
+    activate: (id: number) => `/admin/users/${id}/activate`,
+    adminRole: (id: number) => `/admin/users/${id}/admin-role`,
+    roles: '/admin/roles',
+    rolePermissions: (role: string) => `/admin/roles/${role}/permissions`,
+    opportunities: '/admin/opportunities',
+    opportunity: (id: number) => `/admin/opportunities/${id}`,
+    requests: '/admin/requests',
+    request: (id: number) => `/admin/requests/${id}`,
+  },
   /** وسيط Claude — المفتاح يبقى في الخادم، والعقد يطابق أسماء src/services/ai/types.ts */
   ai: (contract: string) => `/v1/ai/${contract}`,
 } as const
@@ -153,6 +168,19 @@ async function del(url: string): Promise<void> {
   }
 }
 
+/** ترقيم لوحة الأدمن: يحفظ meta (dashboardResponse يعيد {data, meta} — get العاديّ يفكّ data ويُسقط meta). */
+export interface PageMeta { current_page: number, last_page: number, itemPerPage: number, total: number }
+export interface Page<T> { items: T[], meta: PageMeta | null }
+async function getPage<T>(url: string, params?: Record<string, unknown>): Promise<Page<T>> {
+  try {
+    const body = (await http.get(url, { params })).data as { data?: T[], meta?: PageMeta | null }
+    return { items: body?.data ?? [], meta: body?.meta ?? null }
+  }
+  catch (err) {
+    throw normalizeApiError(err)
+  }
+}
+
 /** المستخدم كما يعيده الباك-إند (NestJS) — قبل التحويل لـ User المنصة */
 export interface ApiAuthUser {
   id: number
@@ -163,9 +191,41 @@ export interface ApiAuthUser {
   kind?: 'individual' | 'organization'
   tier: 'free' | 'pro' | 'elite'
   phone: string | null
+  /** أدوار لوحة الأدمن (guard=admin) — وجودها يعني حساب أدمن */
+  adminRoles?: string[]
+  /** صلاحيّات الأدمن الفعليّة (من Spatie) — لتبويب الكونسول الدقيق */
+  permissions?: string[]
   created_at?: string
 }
 export interface ApiAuthSession { user: ApiAuthUser, token: string }
+
+// ===== أنواع لوحة الأدمن =====
+export interface AdminUser {
+  id: number
+  uuid: string
+  name: string
+  email: string
+  role: string
+  kind?: 'individual' | 'organization'
+  tier: 'free' | 'pro' | 'elite'
+  status: 'active' | 'suspended'
+  adminRoles: string[]
+  createdAt?: string
+}
+export interface AdminStats {
+  totals: { users: number, suspended: number, opportunities: number, requests: number, interviews: number, interviewers: number, surveys: number }
+  usersByRole: Record<string, number>
+  usersByTier: Record<string, number>
+  usersByKind: Record<string, number>
+  signups: { date: string, count: number }[]
+}
+export interface AdminRole { name: string, usersCount: number, permissions: string[] }
+export interface AdminRolesResponse { roles: AdminRole[], permissions: string[] }
+export interface AdminUserQuery { page?: number, perPage?: number, sort?: string, q?: string, role?: string, tier?: string, kind?: string, status?: string }
+export type AdminUserPatch = Partial<Pick<AdminUser, 'name' | 'email' | 'role' | 'tier' | 'kind'>> & { phone?: string | null }
+export interface AdminOpportunity { id: number, title: string, company: string, location: string, salary: string, category: string, skills: string[], createdAt?: string }
+export interface AdminMarketRequest { id: number, type: string, title: string, org: string, state: string, compensation: string, remote: boolean, createdAt?: string }
+export interface AdminMarketQuery { page?: number, perPage?: number, sort?: string, q?: string, category?: string, type?: string, state?: string }
 
 export const api = {
   auth: {
@@ -240,6 +300,22 @@ export const api = {
     wallet: () => get(API_PATHS.account.wallet),
     plan: () => get<{ tier: 'free' | 'pro' | 'elite' }>(API_PATHS.account.plan),
     setPlan: (tier: 'free' | 'pro' | 'elite') => put<{ tier: 'free' | 'pro' | 'elite', balance: number }>(API_PATHS.account.plan, { tier }),
+  },
+  /** لوحة الأدمن — /api/admin (حارس sanctum+admin؛ كل نقطة تفرض صلاحيّتها) */
+  admin: {
+    stats: () => get<AdminStats>(API_PATHS.admin.stats),
+    users: (params?: AdminUserQuery) => getPage<AdminUser>(API_PATHS.admin.users, params as Record<string, unknown>),
+    user: (id: number) => get<AdminUser>(API_PATHS.admin.user(id)),
+    updateUser: (id: number, body: AdminUserPatch) => patch<AdminUser>(API_PATHS.admin.user(id), body),
+    suspendUser: (id: number) => post<AdminUser>(API_PATHS.admin.suspend(id)),
+    activateUser: (id: number) => post<AdminUser>(API_PATHS.admin.activate(id)),
+    setAdminRole: (id: number, role: string | null) => put<AdminUser>(API_PATHS.admin.adminRole(id), { role }),
+    roles: () => get<AdminRolesResponse>(API_PATHS.admin.roles),
+    updateRolePermissions: (role: string, permissions: string[]) => put(API_PATHS.admin.rolePermissions(role), { permissions }),
+    opportunities: (params?: AdminMarketQuery) => getPage<AdminOpportunity>(API_PATHS.admin.opportunities, params as Record<string, unknown>),
+    deleteOpportunity: (id: number) => del(API_PATHS.admin.opportunity(id)),
+    requests: (params?: AdminMarketQuery) => getPage<AdminMarketRequest>(API_PATHS.admin.requests, params as Record<string, unknown>),
+    deleteRequest: (id: number) => del(API_PATHS.admin.request(id)),
   },
   /** تنفيذ عقد AI عبر وسيط الخادم — بديل claudeAi المباشر (يحمي المفتاح) */
   ai: <T>(contract: string, payload: Record<string, unknown>) => post<T>(API_PATHS.ai(contract), payload),
