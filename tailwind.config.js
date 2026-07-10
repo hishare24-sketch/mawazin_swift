@@ -32,7 +32,7 @@ export default {
         'ui-lg': 'var(--ui-radius-lg, 16px)',
       },
       fontFamily: {
-        sans: ['Tajawal', 'system-ui', 'sans-serif'],
+        sans: ['system-ui', '-apple-system', 'Segoe UI', 'SF Arabic', 'Noto Sans Arabic', 'Helvetica Neue', 'sans-serif'],
       },
     },
   },

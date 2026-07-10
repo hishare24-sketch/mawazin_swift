@@ -5,16 +5,21 @@ import PageHeader from '@/components/shared/PageHeader.vue'
 import { usePublicProfileStore } from '@/stores/PublicProfileStore'
 import { useSectorContext } from '@/composables/useSectorContext'
 import { dominantSector } from '@/services/matchProfile'
+import { getSector, visibleSectors } from '@/services/sectors'
+import type { FacetSpec, SortSpec } from '@/composables/useFacetedList'
+import FacetedList from '@/components/shared/FacetedList.vue'
 
 // ===== استكشاف الأشخاص — دليل الصفحات التعريفية العامة: بوابة هوية أهل المنصة =====
 const router = useRouter()
 const pub = usePublicProfileStore()
 const sector = useSectorContext()
 
-// قطاع الشخص يُشتقّ من مهاراته (لا حقل قطاع صريح على البطاقة) — للترتيب والتقييد
-const sectorScope = ref<'mine' | 'all'>(sector.hasExplicit.value ? 'mine' : 'all')
+// قطاع الشخص يُشتقّ من مهاراته (لا حقل قطاع صريح) ويُطبَّع إلى slug ليطابق الفاسِت
 function personSector(skills: string[]): string | undefined {
-  return dominantSector(skills)
+  return getSector(dominantSector(skills))?.id
+}
+function uniq<A>(xs: A[]): A[] {
+  return [...new Set(xs)]
 }
 
 interface PersonCard {
@@ -56,26 +61,31 @@ const people = computed<PersonCard[]>(() => [
   { slug: 'khalid-alharbi', name: 'خالد الحربي', initial: 'خ', headline: 'مطوّر ويب — شغوف بجودة الكود', location: 'مكة المكرمة', roles: ['باحث عن عمل'], skills: ['JavaScript', 'Node.js'], credibility: 61, followers: 54, rating: 4.1 },
 ])
 
-// —— بحث وفلترة وفرز ——
-const query = ref('')
-const roleFilter = ref<string[]>([])
-const sortBy = ref<'followers' | 'credibility' | 'rating'>('followers')
-
-const allRoles = computed(() => [...new Set(people.value.flatMap(p => p.roles))])
-
-const visible = computed(() => {
-  const q = query.value.trim()
-  const list = people.value
-    .filter(p => !q || p.name.includes(q) || p.headline.includes(q) || p.skills.some(s => s.includes(q)))
-    .filter(p => !roleFilter.value.length || p.roles.some(r => roleFilter.value.includes(r)))
-    // نطاق «قطاعاتي» — يقيّد على اتّحاد قطاعات المستخدم (قابل للتجاوز بـ«الكل»)
-    .filter(p => sectorScope.value === 'all' || !sector.has.value || sector.inEffective(personSector(p.skills)))
-  return [...list].sort((a, b) => {
-    const d = b[sortBy.value] - a[sortBy.value]
-    // عند تعادل الفرز: ترفع أشخاص قطاعاتي (الأبرز ثم الصريح ثم المشتقّ)
-    return d !== 0 ? d : sector.boost(personSector(b.skills)) - sector.boost(personSector(a.skills))
-  })
-})
+// —— العقد الموحّد: القطاع (مشتقّ) + الدور + المدينة فاسِتات ——
+const facets = computed<FacetSpec<PersonCard>[]>(() => [
+  {
+    key: 'sector', label: 'القطاعات', kind: 'multi', primary: true, searchable: true,
+    value: p => personSector(p.skills),
+    options: () => visibleSectors().map(s => ({ value: s.id, label: s.label, icon: s.icon })),
+  },
+  {
+    key: 'role', label: 'الدور', kind: 'multi', value: p => p.roles,
+    options: () => uniq(people.value.flatMap(p => p.roles)).map(r => ({ value: r, label: r })),
+  },
+  {
+    key: 'city', label: 'المدينة', kind: 'multi', value: p => p.location,
+    options: () => uniq(people.value.map(p => p.location)).map(c => ({ value: c, label: c })),
+  },
+])
+const sorts = computed<SortSpec<PersonCard>[]>(() => [
+  { key: 'followers', label: 'الأكثر متابعة', cmp: (a, b) => { const d = b.followers - a.followers; return d !== 0 ? d : sector.boost(personSector(b.skills)) - sector.boost(personSector(a.skills)) } },
+  { key: 'credibility', label: 'الأعلى مصداقية', cmp: (a, b) => b.credibility - a.credibility },
+  { key: 'rating', label: 'الأعلى تقييمًا', cmp: (a, b) => b.rating - a.rating },
+])
+const primaryPreset = computed(() =>
+  sector.has.value ? { label: 'قطاعاتي', icon: 'mdi-shape-outline', values: sector.effective.value } : undefined,
+)
+const personText = (p: PersonCard) => `${p.name} ${p.headline} ${p.skills.join(' ')}`
 
 // —— فتح الملف: الحيّ يفتح صفحته، والتجريبي بطاقة معاينة ——
 const previewPerson = ref<PersonCard | null>(null)
@@ -95,39 +105,20 @@ function open(p: PersonCard) {
       icon="mdi-account-group-outline"
     />
 
-    <!-- تحكم -->
-    <VRow dense class="mb-3">
-      <VCol cols="12" sm="5">
-        <VTextField v-model="query" placeholder="ابحث بالاسم أو التخصص أو المهارة..." prepend-inner-icon="mdi-magnify" density="compact" hide-details clearable />
-      </VCol>
-      <VCol cols="12" sm="4">
-        <VSelect v-model="roleFilter" :items="allRoles" label="الأدوار" multiple chips closable-chips clearable density="compact" hide-details />
-      </VCol>
-      <VCol cols="12" sm="3">
-        <VSelect
-          v-model="sortBy"
-          :items="[
-            { value: 'followers', title: 'الأكثر متابعة' },
-            { value: 'credibility', title: 'الأعلى مصداقية' },
-            { value: 'rating', title: 'الأعلى تقييمًا' },
-          ]"
-          label="ترتيب"
-          density="compact"
-          hide-details
-        />
-      </VCol>
-    </VRow>
-
-    <div v-if="sector.has.value" class="seg mb-3" role="group" aria-label="نطاق القطاع">
-      <button type="button" class="seg-btn" :class="{ 'is-active': sectorScope === 'mine' }" @click="sectorScope = 'mine'">
-        <VIcon icon="mdi-shape-outline" size="15" /> قطاعاتي
-      </button>
-      <button type="button" class="seg-btn" :class="{ 'is-active': sectorScope === 'all' }" @click="sectorScope = 'all'">الكل</button>
-    </div>
-
-    <VRow>
-      <VCol v-for="p in visible" :key="p.slug" cols="12" sm="6" lg="4">
-        <VCard class="pa-4 h-100 d-flex flex-column person-card" @click="open(p)">
+    <FacetedList
+      :items="people"
+      :facets="facets"
+      :sorts="sorts"
+      :text="personText"
+      :item-key="(p: PersonCard) => p.slug"
+      view="grid"
+      :primary-preset="primaryPreset"
+      noun="شخص"
+      search-placeholder="ابحث بالاسم أو التخصص أو المهارة…"
+    >
+      <template #item="{ item }">
+        <VCard class="pa-4 h-100 d-flex flex-column person-card" @click="open(item as PersonCard)">
+          <template v-for="p in [item as PersonCard]" :key="p.slug">
           <div class="d-flex align-center ga-3 mb-2">
             <VAvatar color="primary" variant="tonal" size="48">
               <span class="text-h6 font-weight-bold">{{ p.initial }}</span>
@@ -157,14 +148,10 @@ function open(p: PersonCard) {
             <VSpacer />
             <VIcon icon="mdi-arrow-left-circle-outline" size="18" color="primary" />
           </div>
+          </template>
         </VCard>
-      </VCol>
-    </VRow>
-
-    <VCard v-if="!visible.length" class="pa-10 text-center">
-      <VIcon icon="mdi-account-search-outline" size="48" color="medium-emphasis" />
-      <p class="text-body-2 text-medium-emphasis mt-2 mb-0">لا نتائج — جرّب مهارة أو اسمًا آخر.</p>
-    </VCard>
+      </template>
+    </FacetedList>
 
     <!-- CTA: صفحتك أنت -->
     <VCard class="brand-gradient pa-5 mt-4 text-center" theme="darkTheme">

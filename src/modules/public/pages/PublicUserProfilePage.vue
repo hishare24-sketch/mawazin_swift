@@ -291,7 +291,12 @@ function share() {
 }
 
 // بطاقة مشاركة PNG عبر canvas (بديل OG server-side في SPA)
-function downloadShareCard() {
+async function downloadShareCard() {
+  // Tajawal لم يعد خطّ الواجهة الافتراضيّ — نضمن تحميله قبل الرسم كي لا يسقط للاحتياطيّ
+  await Promise.all([
+    document.fonts.load('bold 64px Tajawal'),
+    document.fonts.load('34px Tajawal'),
+  ]).catch(() => {})
   const c = document.createElement('canvas')
   c.width = 1200
   c.height = 630

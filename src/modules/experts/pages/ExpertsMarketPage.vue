@@ -3,8 +3,9 @@ import { computed, ref } from 'vue'
 import PageHeader from '@/components/shared/PageHeader.vue'
 import type { MarketExpert, MarketExpertRole } from '@/stores/ExpertRolesStore'
 import { EXPERT_TIER_META, MARKET_EXPERTS, MARKET_ROLE_META, expertTier } from '@/stores/ExpertRolesStore'
-import type { ExpertSpecialty } from '@/services/personas'
-import { EXPERT_SPECIALTY_META, specialtiesForBucket } from '@/services/personas'
+import { EXPERT_SPECIALTY_META } from '@/services/personas'
+import type { FacetSpec, SortSpec } from '@/composables/useFacetedList'
+import FacetedList from '@/components/shared/FacetedList.vue'
 import type { PeerRequestType } from '@/stores/PeerRequestsStore'
 import { usePeerRequestsStore } from '@/stores/PeerRequestsStore'
 import { useNotificationsStore } from '@/stores/NotificationsStore'
@@ -24,27 +25,31 @@ const peerRequests = usePeerRequestsStore()
 const notifications = useNotificationsStore()
 const authStore = useAuthStore()
 
-const roleFilter = ref<'all' | MarketExpertRole>('all')
-const specialtyFilter = ref<'all' | ExpertSpecialty>('all')
-const search = ref('')
 const snackbar = ref(false)
 
-// عند تبديل الدور تُصفَّر التخصّص، وتظهر تخصّصات الدور كفلتر فرعي
-function setRole(r: 'all' | MarketExpertRole) {
-  roleFilter.value = r
-  specialtyFilter.value = 'all'
+// —— العقد الموحّد: الدور محوريّ + التخصّص فاسِت باحث (بلا محور قطاعيّ — محور مستقلّ) ——
+function uniq<A>(xs: A[]): A[] {
+  return [...new Set(xs)]
 }
-const subSpecialties = computed(() => (roleFilter.value === 'all' ? [] : specialtiesForBucket(roleFilter.value)))
-
-const filtered = computed(() =>
-  MARKET_EXPERTS
-    .filter(e => roleFilter.value === 'all' || e.role === roleFilter.value)
-    .filter(e => specialtyFilter.value === 'all' || e.specialtyKey === specialtyFilter.value)
-    .filter((e) => {
-      const q = search.value.trim()
-      return !q || e.name.includes(q) || e.specialty.includes(q) || e.title.includes(q) || EXPERT_SPECIALTY_META[e.specialtyKey].label.includes(q)
-    }),
-)
+const roleKeys = Object.keys(MARKET_ROLE_META) as MarketExpertRole[]
+const facets = computed<FacetSpec<MarketExpert>[]>(() => [
+  {
+    key: 'role', label: 'الدور', kind: 'multi', primary: true,
+    value: e => e.role,
+    options: () => roleKeys.map(r => ({ value: r, label: MARKET_ROLE_META[r].label, icon: MARKET_ROLE_META[r].icon })),
+  },
+  {
+    key: 'specialty', label: 'التخصّص', kind: 'multi', searchable: true,
+    value: e => e.specialtyKey,
+    options: () => uniq(MARKET_EXPERTS.map(e => e.specialtyKey)).map(sp => ({ value: sp, label: EXPERT_SPECIALTY_META[sp].label, icon: EXPERT_SPECIALTY_META[sp].icon })),
+  },
+])
+const sorts = computed<SortSpec<MarketExpert>[]>(() => [
+  { key: 'rating', label: 'الأعلى تقييمًا', cmp: (a, b) => b.rating - a.rating },
+  { key: 'clients', label: 'الأكثر عملاء', cmp: (a, b) => b.clients - a.clients },
+  { key: 'price', label: 'الأقل سعرًا', cmp: (a, b) => a.priceFrom - b.priceFrom },
+])
+const expertText = (e: MarketExpert) => `${e.name} ${e.title} ${e.specialty} ${EXPERT_SPECIALTY_META[e.specialtyKey].label}`
 
 type BaseColor = 'brand' | 'emerald' | 'accent' | 'success' | 'info' | 'warning' | 'error' | 'neutral'
 function roleColor(role: MarketExpertRole): BaseColor {
@@ -108,54 +113,19 @@ const canJoin = computed(() => !!authStore.authUser)
       icon="mdi-storefront-outline"
     />
 
-    <!-- فلاتر -->
-    <div class="mb-4 flex flex-wrap items-center gap-3">
-      <div class="rounded-ui inline-flex flex-wrap overflow-hidden border-ui">
-        <button
-          class="px-3 py-2 text-sm transition"
-          :class="roleFilter === 'all' ? 'bg-brand text-on-brand' : 'text-muted hover:bg-surfalt'"
-          @click="setRole('all')"
-        >الكل ({{ MARKET_EXPERTS.length }})</button>
-        <button
-          v-for="(meta, role) in MARKET_ROLE_META"
-          :key="role"
-          class="flex items-center gap-1 px-3 py-2 text-sm transition"
-          :class="roleFilter === role ? 'bg-brand text-on-brand' : 'text-muted hover:bg-surfalt'"
-          @click="setRole(role)"
-        >
-          <BaseIcon :name="meta.icon" :size="16" /> {{ meta.label }}
-        </button>
-      </div>
-      <BaseInput v-model="search" prefix-icon="mdi-magnify" placeholder="ابحث بالاسم أو التخصص..." class="w-[280px]">
-        <template #suffix>
-          <button v-if="search" type="button" class="text-muted" aria-label="مسح" @click="search = ''">
-            <BaseIcon name="mdi-close" :size="18" />
-          </button>
-        </template>
-      </BaseInput>
-    </div>
-
-    <!-- فلتر التخصّص الفرعي (يظهر عند اختيار دور) -->
-    <div v-if="subSpecialties.length" class="mb-4 flex flex-wrap items-center gap-2">
-      <span class="text-xs text-muted">التخصّص:</span>
-      <button
-        class="rounded-full px-2.5 py-1 text-xs font-medium transition"
-        :class="specialtyFilter === 'all' ? 'bg-emerald text-on-brand' : 'border-ui text-content hover:bg-surfalt'"
-        @click="specialtyFilter = 'all'"
-      >الكل</button>
-      <button
-        v-for="sp in subSpecialties"
-        :key="sp"
-        class="inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-medium transition"
-        :class="specialtyFilter === sp ? 'bg-emerald text-on-brand' : 'border-ui text-content hover:bg-surfalt'"
-        @click="specialtyFilter = sp"
-      >
-        <BaseIcon :name="EXPERT_SPECIALTY_META[sp].icon" :size="14" /> {{ EXPERT_SPECIALTY_META[sp].label }}
-      </button>
-    </div>
-
-    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-      <BaseCard v-for="e in filtered" :key="e.id" class="flex h-full flex-col">
+    <FacetedList
+      :items="MARKET_EXPERTS"
+      :facets="facets"
+      :sorts="sorts"
+      :text="expertText"
+      :item-key="(e: MarketExpert) => e.id"
+      view="grid"
+      noun="خبير"
+      search-placeholder="ابحث بالاسم أو التخصص…"
+    >
+      <template #item="{ item }">
+        <template v-for="e in [item as MarketExpert]" :key="e.id">
+        <BaseCard class="flex h-full flex-col">
         <div class="mb-2 flex items-center gap-3">
           <BaseAvatar :color="roleColor(e.role)" :size="48" tonal>{{ e.initial }}</BaseAvatar>
           <div class="flex-1">
@@ -186,13 +156,10 @@ const canJoin = computed(() => !!authStore.authUser)
             <BaseIcon name="mdi-send" :size="16" /> اطلب {{ MARKET_ROLE_META[e.role].service }}
           </BaseButton>
         </div>
-      </BaseCard>
-    </div>
-
-    <BaseCard v-if="!filtered.length" class="py-10 text-center">
-      <BaseIcon name="mdi-magnify-remove-outline" :size="48" class="text-muted" />
-      <p class="mt-2 text-sm text-muted">لا نتائج مطابقة — جرّب تخصصًا أو اسمًا آخر.</p>
-    </BaseCard>
+        </BaseCard>
+        </template>
+      </template>
+    </FacetedList>
 
     <!-- دعوة جانب العرض -->
     <div v-if="canJoin" class="brand-gradient rounded-ui-lg mt-6 p-5 text-center">

@@ -429,9 +429,14 @@ export const GOVERNANCE_RULES: { id: string, rule: string, example: string, enfo
   { id: 'other_hidden', rule: '«أخرى» ليست خيارًا بارزًا؛ تُراجَع دوريًّا.', example: 'متفرقات تُحوَّل لقطاعات فعلية.', enforced: true },
 ]
 
+let _visible: Sector[] | null = null
 /** القطاعات المرئية للمنتقيات — تُخفي «أخرى/S21» افتراضيًّا (قاعدة other_hidden) */
 export function visibleSectors(includeOther = false): Sector[] {
-  return sectorsByPriority().filter(s => includeOther || s.code !== 'S21')
+  if (includeOther)
+    return sectorsByPriority()
+  if (!_visible)
+    _visible = sectorsByPriority().filter(s => s.code !== 'S21')
+  return _visible
 }
 
 export interface ClassificationResult {
@@ -534,9 +539,13 @@ export function sectorForSkill(name: string): string | undefined {
   return undefined
 }
 
+// مذكَّرة: SECTORS ثابتة، فنفرزها مرّة واحدة (تُستدعى كثيرًا في العرض عبر كل الأسواق)
+let _byPriority: Sector[] | null = null
 /** القطاعات مرتّبة بأولوية العرض؛ يمكن قصّها لأهمّ N في الواجهة */
 export function sectorsByPriority(): Sector[] {
-  return [...SECTORS].sort((a, b) => a.priority - b.priority)
+  if (!_byPriority)
+    _byPriority = [...SECTORS].sort((a, b) => a.priority - b.priority)
+  return _byPriority
 }
 
 /** أهمّ N قطاعًا (لعرض «أهمّ القطاعات» + «المزيد») */
