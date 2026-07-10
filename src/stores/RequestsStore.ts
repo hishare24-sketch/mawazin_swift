@@ -108,7 +108,7 @@ const REQUESTS_SEED: MarketRequest[] = [
   },
   {
     id: 4, title: 'مهمة: تحويل تصميم Figma إلى مكوّنات', org: 'وكالة إبداع', orgInitial: 'إ', orgRating: 4.2, orgReviews: 15, state: 'new', postedOrder: 2,
-    kind: 'task', field: 'واجهات المستخدم', city: 'عن بُعد', remote: true, duration: 'أسبوع', durationWeeks: 1,
+    kind: 'task', field: 'واجهات المستخدم', city: 'الرياض', remote: true, duration: 'أسبوع', durationWeeks: 1,
     budget: '2,500 ريال', budgetValue: 2500, matchRate: 76,
     breakdown: { skills: 80, experience: 72, location: 100, duration: 90 }, applicants: 8, postedAt: 'أمس', isNew: true,
     description: 'تحويل 8 شاشات من Figma إلى مكوّنات Vue قابلة لإعادة الاستخدام مطابقة للتصميم.',
@@ -144,7 +144,7 @@ const REQUESTS_SEED: MarketRequest[] = [
   },
   {
     id: 8, title: 'حملة تسويق رقمي لإطلاق منتج', org: 'علامة نُضج', orgInitial: 'ن', orgRating: 4.4, orgReviews: 22, state: 'new', postedOrder: 8,
-    kind: 'project', field: 'التسويق', city: 'عن بُعد', remote: true, duration: '6 أسابيع', durationWeeks: 6,
+    kind: 'project', field: 'التسويق', city: 'جدة', remote: true, duration: '6 أسابيع', durationWeeks: 6,
     budget: '12,000 - 18,000 ريال', budgetValue: 18000, matchRate: 61,
     breakdown: { skills: 63, experience: 58, location: 100, duration: 80 }, applicants: 14, postedAt: 'قبل يومين', isNew: true,
     description: 'تخطيط وتنفيذ حملة إطلاق متعدّدة القنوات مع قياس الأداء والتحسين المستمر.',
@@ -171,7 +171,7 @@ const REQUESTS_SEED: MarketRequest[] = [
   },
   {
     id: 11, title: 'مراجعة عقود وامتثال لشركة ناشئة', org: 'منصة عِقد القانونية', orgInitial: 'ع', orgRating: 4.6, orgReviews: 19, state: 'new', postedOrder: 11,
-    kind: 'task', field: 'القانون والاستشارات', city: 'عن بُعد', remote: true, duration: 'أسبوعان', durationWeeks: 2,
+    kind: 'task', field: 'القانون والاستشارات', city: 'الدمام', remote: true, duration: 'أسبوعان', durationWeeks: 2,
     budget: '6,000 - 9,000 ريال', budgetValue: 9000, matchRate: 38,
     breakdown: { skills: 40, experience: 52, location: 100, duration: 78 }, applicants: 4, postedAt: 'أمس', isNew: true,
     description: 'مراجعة نماذج عقود العملاء وسياسات الامتثال وصياغة بنود حماية الملكية الفكرية.',

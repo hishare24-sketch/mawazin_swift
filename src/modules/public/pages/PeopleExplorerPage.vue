@@ -8,6 +8,7 @@ import { useSectorContext } from '@/composables/useSectorContext'
 import { dominantSector } from '@/services/matchProfile'
 import { getSector } from '@/services/sectors'
 import { sectorFacet } from '@/composables/sectorFacet'
+import { cityFacet, countryFacet } from '@/composables/locationFacet'
 import type { FacetSpec, SortSpec } from '@/composables/useFacetedList'
 import FacetedList from '@/components/shared/FacetedList.vue'
 import { uniq } from '@/utils/array'
@@ -60,10 +61,8 @@ const facets = computed<FacetSpec<Person>[]>(() => [
     key: 'role', label: t('discovery.people.facetRole'), kind: 'multi', value: p => p.roles,
     options: () => uniq(people.value.flatMap(p => p.roles)).map(r => ({ value: r, label: r })),
   },
-  {
-    key: 'city', label: t('discovery.city'), kind: 'multi', value: p => p.location,
-    options: () => uniq(people.value.map(p => p.location)).map(c => ({ value: c, label: c })),
-  },
+  countryFacet(p => p.location, () => people.value),
+  cityFacet(p => p.location, () => people.value),
 ])
 const sorts = computed<SortSpec<Person>[]>(() => [
   { key: 'followers', label: t('discovery.people.sortFollowers'), cmp: (a, b) => { const d = b.followers - a.followers; return d !== 0 ? d : sector.boost(personSector(b.skills)) - sector.boost(personSector(a.skills)) } },

@@ -139,10 +139,10 @@ function pickSort(key: string) {
         v-for="opt in ribbonOptions.slice(0, RIBBON_LIMIT)"
         :key="opt.value"
         type="button"
-        class="chip" :class="ribbonActive(opt.value) ? 'chip-on' : ''"
+        class="chip" :class="[ribbonActive(opt.value) ? 'chip-on' : '', opt.count === 0 ? 'chip-empty' : '']"
         @click="pickRibbon(opt.value)"
       >
-        <BaseIcon v-if="opt.icon" :name="opt.icon" :size="15" /> {{ opt.label }}
+        <BaseIcon v-if="opt.icon" :name="opt.icon" :size="15" /> {{ opt.label }}<span v-if="opt.count != null" class="chip-count">{{ opt.count }}</span>
       </button>
       <button type="button" class="chip" @click="filterOpen = true">
         <BaseIcon name="mdi-dots-horizontal" :size="15" /> {{ t('discovery.more') }}
@@ -254,7 +254,8 @@ function pickSort(key: string) {
                   <BaseIcon v-if="(api.state.sel[f.key] ?? []).includes(opt.value)" name="mdi-check" :size="14" />
                 </span>
                 <BaseIcon v-if="opt.icon" :name="opt.icon" :size="18" class="text-muted" />
-                <span class="flex-1 truncate text-sm">{{ opt.label }}</span>
+                <span class="flex-1 truncate text-sm" :class="opt.count === 0 ? 'text-muted' : ''">{{ opt.label }}</span>
+                <span v-if="opt.count != null" class="text-xs text-muted tabular-nums">{{ opt.count }}</span>
               </button>
               <button
                 v-if="!facetQuery(f.key).trim() && hiddenCount(f) > 0"
@@ -360,6 +361,10 @@ function pickSort(key: string) {
 }
 .chip:hover { background: rgba(var(--v-theme-on-surface), 0.05); }
 .chip:active { transform: scale(0.96); }
+/* عدّاد النتائج داخل الرقاقة + تخفيف الرقائق الفارغة (تبقى مرئيّة لكن ثانويّة) */
+.chip-count { margin-inline-start: 5px; font-size: 11.5px; opacity: 0.6; font-variant-numeric: tabular-nums; }
+.chip-empty { opacity: 0.5; }
+.chip-empty.chip-on { opacity: 1; }
 .chip-on {
   background: rgb(var(--v-theme-primary));
   border-color: rgb(var(--v-theme-primary));

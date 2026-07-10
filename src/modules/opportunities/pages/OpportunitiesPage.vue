@@ -13,6 +13,7 @@ import { opportunityMatchProfile, seekerMatchProfile } from '@/services/matchPro
 import { sectorForField } from '@/services/sectors'
 import { useSectorContext } from '@/composables/useSectorContext'
 import { sectorFacet, sectorFromFieldAndSkills } from '@/composables/sectorFacet'
+import { cityFacet, countryFacet } from '@/composables/locationFacet'
 import type { FacetSpec, SortSpec } from '@/composables/useFacetedList'
 import FacetedList from '@/components/shared/FacetedList.vue'
 import { uniq } from '@/utils/array'
@@ -57,10 +58,8 @@ function oppSector(o: Opportunity): string | undefined {
 // —— العقد الموحّد: spec الفاسِتات + الفرز (القطاع محوريّ، مُنتقٍ باحث) ——
 const facets = computed<FacetSpec<Opportunity>[]>(() => [
   sectorFacet(sectorFromFieldAndSkills(oppSector, o => o.skills), () => mockOpportunities),
-  {
-    key: 'city', label: t('discovery.city'), kind: 'multi', value: o => o.city,
-    options: () => uniq(mockOpportunities.map(o => o.city)).map(c => ({ value: c, label: c })),
-  },
+  countryFacet(o => o.city, () => mockOpportunities),
+  cityFacet(o => o.city, () => mockOpportunities),
   {
     key: 'type', label: t('discovery.opportunities.facetType'), kind: 'multi', value: o => o.type,
     options: () => uniq(mockOpportunities.map(o => o.type)).map(t => ({ value: t, label: EMPLOYMENT_TYPE_LABELS[t] })),

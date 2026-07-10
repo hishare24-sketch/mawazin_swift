@@ -11,11 +11,11 @@ import { matchScore } from '@/services/matching'
 import { requestMatchProfile, seekerMatchProfile } from '@/services/matchProfile'
 import { useSectorContext } from '@/composables/useSectorContext'
 import { sectorFacet, sectorFromFieldAndSkills } from '@/composables/sectorFacet'
+import { cityFacet, countryFacet } from '@/composables/locationFacet'
 import { sectorForField } from '@/services/sectors'
 import type { FacetSpec, SortSpec } from '@/composables/useFacetedList'
 import FacetedList from '@/components/shared/FacetedList.vue'
 import MatchBadge from '@/components/shared/MatchBadge.vue'
-import { uniq } from '@/utils/array'
 import BaseCard from '@/components/ui/BaseCard.vue'
 import BaseButton from '@/components/ui/BaseButton.vue'
 import BaseChip from '@/components/ui/BaseChip.vue'
@@ -67,10 +67,8 @@ const facets = computed<FacetSpec<MarketRequest>[]>(() => [
     key: 'kind', label: t('discovery.requests.facetKind'), kind: 'multi', value: r => r.kind,
     options: () => kinds.map(k => ({ value: k, label: KIND_META[k].label, icon: KIND_META[k].icon })),
   },
-  {
-    key: 'city', label: t('discovery.city'), kind: 'multi', value: r => r.city,
-    options: () => uniq(store.requests.map(r => r.city)).map(c => ({ value: c, label: c })),
-  },
+  countryFacet(r => r.city, () => store.requests),
+  cityFacet(r => r.city, () => store.requests),
   { key: 'remote', label: t('discovery.remote'), kind: 'bool', boolValue: r => r.remote },
   { key: 'budget', label: t('discovery.requests.facetMinBudget'), kind: 'range', numberValue: r => r.budgetValue, range: { min: 0, max: 50000, step: 2500 } },
   { key: 'duration', label: t('discovery.requests.facetDuration'), kind: 'range', numberValue: r => r.durationWeeks, range: { min: 1, max: 20, step: 1, mode: 'max' } },
