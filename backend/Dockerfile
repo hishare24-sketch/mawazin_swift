@@ -32,6 +32,6 @@ ENV APP_ENV=production \
     APP_DEBUG=false \
     LOG_CHANNEL=stderr
 
-# الإقلاع بصيغة شِل — Docker يُشغّلها عبر /bin/sh -c (يُفسّر ;/&& و$PORT، بلا سكربت
-# ولا قلق نهايات أسطر). هجرة بمهلة لا تُعلّق الاستيقاظ، ثمّ صلاحيّات، ثمّ تقديم.
-CMD timeout 60 php artisan migrate --force || true; php artisan permission:insert || true; exec frankenphp php-server --root public/ --listen :${PORT:-8080}
+# الإقلاع بصيغة شِل (Docker يُشغّلها عبر /bin/sh -c). على المثيل المجّانيّ 512MB نستخدم
+# php artisan serve (عمليّة واحدة خفيفة) بدل FrankenPHP متعدّد الخيوط (يتجنّب نفاد الذاكرة).
+CMD timeout 60 php artisan migrate --force || true; php artisan permission:insert || true; exec php artisan serve --host=0.0.0.0 --port=${PORT:-8080}
