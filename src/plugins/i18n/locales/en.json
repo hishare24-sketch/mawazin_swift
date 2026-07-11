@@ -979,7 +979,20 @@
       "confirm_rejected_title": "Reject item?",
       "confirm_resolved_title": "Resolve item?",
       "confirmMsg": "\"{subject}\"",
-      "done": "Item reviewed"
+      "done": "Item reviewed",
+      "removed": "Content removed",
+      "reason": "Reason",
+      "resolver": "Reviewer",
+      "target": "Target",
+      "targetType": "Type",
+      "targetTitle": "Title",
+      "targetRemoved": "Target removed",
+      "targetLive": "Target live",
+      "targetMissing": "Target missing",
+      "upholdRemove": "Uphold report & remove content",
+      "bulkConfirmTitle": "Bulk resolve?",
+      "bulkConfirmMsg": "Apply \"{decision}\" to {count} pending items",
+      "bulkDone": "Resolved {count} items"
     },
     "broadcast": {
       "title": "Broadcast & notifications",

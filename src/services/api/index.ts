@@ -139,7 +139,9 @@ export const API_PATHS = {
     settingsReset: '/admin/settings/reset',
     moderation: '/admin/moderation',
     moderationStats: '/admin/moderation/stats',
+    moderationItem: (id: number) => `/admin/moderation/${id}`,
     moderationResolve: (id: number) => `/admin/moderation/${id}/resolve`,
+    moderationBulk: '/admin/moderation/bulk-resolve',
     broadcasts: '/admin/broadcasts',
     broadcastsStats: '/admin/broadcasts/stats',
     broadcastAudience: '/admin/broadcasts/audience',
@@ -228,6 +230,8 @@ export const API_PATHS = {
     complianceFunnel: '/admin/compliance/funnel',
     complianceAuditTrail: '/admin/compliance/audit-trail',
   },
+  /** بلاغ محتوى من المستخدم → طابور الإشراف (مصادَق) */
+  reports: '/v1/reports',
   /** هويّة المنصّة العامّة (بلا مصادقة) */
   brandingPublic: '/v1/branding',
   /** وسيط Claude — المفتاح يبقى في الخادم، والعقد يطابق أسماء src/services/ai/types.ts */
@@ -339,7 +343,9 @@ export interface AdminStats {
 }
 export interface AdminSetting { key: string, value: string | number | boolean, default: string | number | boolean, modified: boolean, type: 'string' | 'number' | 'boolean' | 'select', group: string, label: string, description: string | null, options: { value: string, label: string }[], sort: number }
 export interface AdminSettingsOverview { total: number, groups: number, modified: number, byGroup: { label: string, value: number }[] }
-export interface AdminModerationItem { id: number, type: string, subject: string, submitter: string, targetRef: string | null, reason: string | null, status: string, resolver: string | null, resolvedAt?: string, createdAt?: string }
+export interface AdminModerationItem { id: number, type: string, subject: string, submitter: string, targetRef: string | null, reason: string | null, status: string, resolver: string | null, removed: boolean, resolvedAt?: string, createdAt?: string }
+export interface ModerationTarget { type: string, id: number, title: string | null, exists: boolean, removed: boolean }
+export interface AdminModerationDetail extends AdminModerationItem { target: ModerationTarget | null }
 export interface AdminModerationStats { total: number, pending: number, approved: number, rejected: number, byType: { label: string, value: number }[], byStatus: { label: string, value: number }[], series: { date: string, value: number }[] }
 export interface AdminBroadcast { id: number, title: string, body: string, channel: string, audience: string, audience_value: string | null, status: string, recipients: number, sender: string | null, sentAt?: string, createdAt?: string }
 export interface AdminBroadcastCreate { title: string, body: string, channel: string, audience: string, audience_value?: string }
@@ -619,6 +625,11 @@ export const api = {
     plan: () => get<{ tier: 'free' | 'pro' | 'elite' }>(API_PATHS.account.plan),
     setPlan: (tier: 'free' | 'pro' | 'elite') => put<{ tier: 'free' | 'pro' | 'elite', balance: number }>(API_PATHS.account.plan, { tier }),
   },
+  /** بلاغ محتوى من المستخدم (مصادَق) → طابور إشراف المنصّة */
+  reports: {
+    create: (body: { targetRef: string, subject: string, reason?: string }) =>
+      post<{ id: number, status: string }>(API_PATHS.reports, body),
+  },
   /** هويّة المنصّة العامّة — تُطبَّق عند الإقلاع (بلا مصادقة) */
   branding: () => get<Branding | null>(API_PATHS.brandingPublic),
   /** المساعد الذكيّ للمستخدم — محكوم بحوكمة الذكاء، سياقيّ، مبادر */
@@ -658,7 +669,9 @@ export const api = {
     resetSettings: (payload: { keys?: string[], group?: string }) => post<AdminSetting[]>(API_PATHS.admin.settingsReset, payload),
     moderation: (params?: AdminMarketQuery) => getPage<AdminModerationItem>(API_PATHS.admin.moderation, params as Record<string, unknown>),
     moderationStats: () => get<AdminModerationStats>(API_PATHS.admin.moderationStats),
+    moderationDetail: (id: number) => get<AdminModerationDetail>(API_PATHS.admin.moderationItem(id)),
     resolveModeration: (id: number, decision: 'approved' | 'rejected' | 'resolved') => post<AdminModerationItem>(API_PATHS.admin.moderationResolve(id), { decision }),
+    bulkResolveModeration: (ids: number[], decision: 'approved' | 'rejected' | 'resolved') => post<{ resolved: number }>(API_PATHS.admin.moderationBulk, { ids, decision }),
     broadcasts: (params?: AdminMarketQuery) => getPage<AdminBroadcast>(API_PATHS.admin.broadcasts, params as Record<string, unknown>),
     broadcastsStats: () => get<AdminBroadcastStats>(API_PATHS.admin.broadcastsStats),
     broadcastAudience: (audience: string, audience_value?: string) => get<{ count: number }>(API_PATHS.admin.broadcastAudience, { audience, audience_value }),

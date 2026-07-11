@@ -979,7 +979,20 @@
       "confirm_rejected_title": "رفض العنصر؟",
       "confirm_resolved_title": "إغلاق العنصر؟",
       "confirmMsg": "«{subject}»",
-      "done": "تمّ البتّ في العنصر"
+      "done": "تمّ البتّ في العنصر",
+      "removed": "أُزيل المحتوى",
+      "reason": "السبب",
+      "resolver": "المُراجِع",
+      "target": "الهدف",
+      "targetType": "النوع",
+      "targetTitle": "العنوان",
+      "targetRemoved": "الهدف مُزال",
+      "targetLive": "الهدف ظاهر",
+      "targetMissing": "الهدف غير موجود",
+      "upholdRemove": "قبول البلاغ وإزالة المحتوى",
+      "bulkConfirmTitle": "بتّ جماعيّ؟",
+      "bulkConfirmMsg": "تطبيق «{decision}» على {count} عنصرًا معلّقًا",
+      "bulkDone": "بُتّ {count} عنصرًا"
     },
     "broadcast": {
       "title": "الإشعارات والبثّ",

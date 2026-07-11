@@ -17,6 +17,7 @@ class AdminModerationResource extends JsonResource
             'reason' => $this->reason,
             'status' => $this->status,
             'resolver' => $this->resolver_name,
+            'removed' => (bool) data_get($this->meta, 'takedown.removed', false),
             'resolvedAt' => optional($this->resolved_at)->toISOString(),
             'createdAt' => optional($this->created_at)->toISOString(),
         ];

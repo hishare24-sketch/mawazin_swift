@@ -6,12 +6,16 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Modules\Governance\Entities\ModerationItem;
+use Modules\Governance\Http\Requests\Admin\BulkResolveRequest;
 use Modules\Governance\Http\Resources\Admin\AdminModerationResource;
+use Modules\Governance\Services\ModerationService;
 
 class AdminModerationController extends Controller
 {
     private const SORTABLE = ['id', 'type', 'status', 'created_at'];
     private const DECISIONS = ['approved', 'rejected', 'resolved'];
+
+    public function __construct(private readonly ModerationService $service) {}
 
     /** طابور المراجعة — بحث + فلترة نوع/حالة + فرز + ترقيم. */
     public function index(Request $request)
@@ -70,7 +74,18 @@ class AdminModerationController extends Controller
         ]);
     }
 
-    /** بتّ عنصر — approved | rejected | resolved (المعلّق فقط). */
+    /** تفصيل عنصر — يشمل لقطة الهدف (عنوان/موجود/مُزال) لواجهة المراجعة العميقة. */
+    public function show(ModerationItem $item)
+    {
+        $this->authorize('view_governance');
+
+        $data = (new AdminModerationResource($item))->resolve();
+        $data['target'] = $this->service->targetSnapshot($item->target_ref);
+
+        return $this->dataResponse($data);
+    }
+
+    /** بتّ عنصر — approved | rejected | resolved (المعلّق فقط). فعلٌ حقيقيّ على الهدف + إخطار. */
     public function resolve(Request $request, ModerationItem $item)
     {
         $this->authorize('manage_governance');
@@ -83,14 +98,22 @@ class AdminModerationController extends Controller
             return $this->forbiddenResponse(__('This item has already been reviewed.'));
         }
 
-        $user = current_user();
-        $item->update([
-            'status' => $data['decision'],
-            'resolved_by' => $user?->id,
-            'resolver_name' => $user?->name,
-            'resolved_at' => Carbon::now(),
-        ]);
+        $this->service->resolve($item, $data['decision'], current_user());
 
         return $this->updatedResponse((new AdminModerationResource($item->fresh()))->resolve());
+    }
+
+    /** بتّ جماعيّ — body: { ids: [], decision }. يعيد عدد ما بُتّ. */
+    public function bulkResolve(BulkResolveRequest $request)
+    {
+        $this->authorize('manage_governance');
+
+        $resolved = $this->service->bulkResolve(
+            $request->validated('ids'),
+            $request->validated('decision'),
+            current_user(),
+        );
+
+        return $this->updatedResponse(['resolved' => $resolved]);
     }
 }
