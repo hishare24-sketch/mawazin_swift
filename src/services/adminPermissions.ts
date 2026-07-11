@@ -18,6 +18,7 @@ export const ADMIN_PERMISSIONS = [
   'view_platform_accounts', 'manage_platform_accounts',
   'view_support', 'manage_support',
   'view_analytics', 'view_audit', 'view_settings', 'manage_settings',
+  'view_branding', 'manage_branding',
   'view_ai', 'manage_ai',
   'view_chat', 'manage_chat',
   'view_reports', 'view_health',
@@ -37,7 +38,7 @@ export const PERMISSION_GROUPS: PermissionGroup[] = [
   { key: 'broadcast', labelKey: 'admin.groups.broadcast', permissions: ['view_broadcast', 'create_broadcast'] },
   { key: 'billing', labelKey: 'admin.groups.billing', permissions: ['view_plans', 'create_plans', 'update_plans', 'delete_plans', 'view_billing', 'manage_billing', 'view_wallets', 'adjust_wallets', 'view_platform_accounts', 'manage_platform_accounts'] },
   { key: 'support', labelKey: 'admin.groups.support', permissions: ['view_support', 'manage_support'] },
-  { key: 'analytics', labelKey: 'admin.groups.analytics', permissions: ['view_analytics', 'view_audit', 'view_settings', 'manage_settings', 'view_reports', 'view_health'] },
+  { key: 'analytics', labelKey: 'admin.groups.analytics', permissions: ['view_analytics', 'view_audit', 'view_settings', 'manage_settings', 'view_reports', 'view_health', 'view_branding', 'manage_branding'] },
   { key: 'ai', labelKey: 'admin.groups.ai', permissions: ['view_ai', 'manage_ai'] },
   { key: 'communications', labelKey: 'admin.groups.communications', permissions: ['view_chat', 'manage_chat'] },
 ]

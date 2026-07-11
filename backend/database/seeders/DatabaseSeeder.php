@@ -11,6 +11,7 @@ use Modules\Ai\Database\Seeders\AiSeeder;
 use Modules\Chat\Database\Seeders\ChatSeeder;
 use Modules\Governance\Database\Seeders\ModerationSeeder;
 use Modules\Support\Database\Seeders\TicketSeeder;
+use Modules\Settings\Database\Seeders\BrandingSettingSeeder;
 use Modules\Settings\Database\Seeders\PlatformSettingSeeder;
 use Modules\Survey\Database\Seeders\SurveyTemplateSeeder;
 
@@ -34,6 +35,7 @@ class DatabaseSeeder extends Seeder
         $this->call(PlatformAccountSeeder::class);
         $this->call(SurveyTemplateSeeder::class);
         $this->call(PlatformSettingSeeder::class);
+        $this->call(BrandingSettingSeeder::class);
         $this->call(ModerationSeeder::class);
         $this->call(TicketSeeder::class);
         $this->call(AiSeeder::class);

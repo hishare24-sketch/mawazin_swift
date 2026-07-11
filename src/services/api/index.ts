@@ -204,7 +204,10 @@ export const API_PATHS = {
     pipelineBulkMove: '/admin/pipeline/bulk-move',
     matchingSettings: '/admin/matching/settings',
     matchingShortlist: '/admin/matching/shortlist',
+    branding: '/admin/branding',
   },
+  /** هويّة المنصّة العامّة (بلا مصادقة) */
+  brandingPublic: '/v1/branding',
   /** وسيط Claude — المفتاح يبقى في الخادم، والعقد يطابق أسماء src/services/ai/types.ts */
   ai: (contract: string) => `/v1/ai/${contract}`,
 } as const
@@ -421,6 +424,29 @@ export interface PipelineStage { key: PipelineStageKey, count: number, items: Pi
 export interface PipelineBoard { stages: PipelineStage[] }
 export interface PipelineStats { total: number, active: number, hired: number, rejected: number, hireRate: number, byStage: { label: string, value: number }[] }
 export interface PipelineOpportunity { id: number, title: string, company: string | null, applications: number }
+// ——— هويّة المنصّة (Branding) ———
+export interface Branding {
+  platformName: string
+  tagline: string | null
+  logoUrl: string | null
+  preset: string
+  primaryColor: string | null
+  secondaryColor: string | null
+  mode: 'dark' | 'light' | 'mixed'
+  loginHeadline: string | null
+  loginSubtext: string | null
+}
+export interface BrandingPatch {
+  platform_name?: string
+  tagline?: string | null
+  logo_url?: string | null
+  default_preset?: string
+  primary_color?: string | null
+  secondary_color?: string | null
+  default_mode?: string
+  login_headline?: string | null
+  login_subtext?: string | null
+}
 // ——— المطابقة والفرز الذكيّ ———
 export interface MatchSettings { skillsWeight: number, experienceWeight: number, categoryWeight: number, threshold: number, aiBoost: boolean }
 export interface MatchBreakdown { skills: number, experience: number, category: number, aiBoost: boolean }
@@ -530,6 +556,8 @@ export const api = {
     plan: () => get<{ tier: 'free' | 'pro' | 'elite' }>(API_PATHS.account.plan),
     setPlan: (tier: 'free' | 'pro' | 'elite') => put<{ tier: 'free' | 'pro' | 'elite', balance: number }>(API_PATHS.account.plan, { tier }),
   },
+  /** هويّة المنصّة العامّة — تُطبَّق عند الإقلاع (بلا مصادقة) */
+  branding: () => get<Branding | null>(API_PATHS.brandingPublic),
   /** المساعد الذكيّ للمستخدم — محكوم بحوكمة الذكاء، سياقيّ، مبادر */
   assistant: {
     context: () => get<AssistantContextResponse>(API_PATHS.assistant.context),
@@ -636,6 +664,8 @@ export const api = {
     matchingSettings: () => get<MatchSettingsResponse>(API_PATHS.admin.matchingSettings),
     updateMatchingSettings: (body: MatchSettingsPatch) => put<MatchSettings>(API_PATHS.admin.matchingSettings, body),
     matchingShortlist: (opportunityId: number) => get<MatchShortlist>(API_PATHS.admin.matchingShortlist, { opportunity_id: opportunityId }),
+    branding: () => get<Branding>(API_PATHS.admin.branding),
+    updateBranding: (body: BrandingPatch) => put<Branding>(API_PATHS.admin.branding, body),
     toggleAiCapability: (id: number) => post<AiCapability>(API_PATHS.admin.aiCapabilityToggle(id)),
     addAiKnowledge: (body: AiKnowledgePayload) => post<AiKnowledgeEntry>(API_PATHS.admin.aiKnowledge, body),
     updateAiKnowledge: (id: number, body: Partial<AiKnowledgePayload>) => put<AiKnowledgeEntry>(API_PATHS.admin.aiKnowledgeItem(id), body),
