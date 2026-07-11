@@ -60,8 +60,9 @@ services:
     dockerContext: backend
     plan: free
     healthCheckPath: /up
-    # المجّانيّ لا يدعم preDeployCommand → الهجرات + الصلاحيّات عند الإقلاع ثمّ التقديم
-    dockerCommand: "php artisan migrate --force && php artisan permission:insert && frankenphp php-server --root public/ --listen :${PORT}"
+    # المجّانيّ لا يدعم preDeployCommand → هجرة + صلاحيّات عند الإقلاع ثمّ التقديم.
+    # يُغلَّف بـ sh -c كي يُفسَّر && و$PORT (Render لا يمرّر الأمر عبر شِل تلقائيًّا).
+    dockerCommand: "sh -c 'php artisan migrate --force && php artisan permission:insert && frankenphp php-server --root public/ --listen :$PORT'"
     envVars:
       - fromGroup: recruitment-shared
       - key: DB_HOST
