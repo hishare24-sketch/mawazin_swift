@@ -194,6 +194,8 @@ export const API_PATHS = {
     chatThreads: '/admin/chat/threads',
     chatThread: (key: string) => `/admin/chat/threads/${encodeURIComponent(key)}`,
     chatAssistantPreview: '/admin/chat/assistant-preview',
+    reportsOverview: '/admin/reports/overview',
+    reportsReport: '/admin/reports/report',
   },
   /** وسيط Claude — المفتاح يبقى في الخادم، والعقد يطابق أسماء src/services/ai/types.ts */
   ai: (contract: string) => `/v1/ai/${contract}`,
@@ -386,6 +388,24 @@ export interface ChatThreadDetail { key: string, participants: string[], message
 export interface ChatStats { threads: number, messages: number, activeToday: number, participants: number, series: { date: string, value: number }[], topSenders: { label: string, value: number }[] }
 export interface ChatAssistantPreview { reply: string, level: number, tokensCap: number, provider: string, model: string | null, simulated: boolean, usedKnowledge: string[] }
 export interface ChatSettingsPatch { direct_messages_enabled?: boolean, assistant_enabled?: boolean, moderation_enabled?: boolean, retention_days?: number }
+// ——— الرؤى والتقارير ———
+export interface ReportFunnelStage { stage: string, value: number }
+export interface ReportOverview {
+  funnel: ReportFunnelStage[]
+  conversion: { applicationsPerOpportunity: number, interviewRate: number, completionRate: number }
+  kpis: Record<string, number>
+  growthSeries: { date: string, value: number }[]
+  revenueSeries: { date: string, value: number }[]
+}
+export interface ReportResult {
+  domain: string
+  summary: { label: string, value: number }[]
+  series?: { date: string, value: number }[]
+  breakdown?: { label: string, value: number }[]
+  columns: string[]
+  rows: (string | number)[][]
+}
+export type ReportDomain = 'growth' | 'finance' | 'funnel' | 'engagement' | 'quality'
 // ——— المساعد الذكيّ للمستخدم + الدعم ———
 export interface AssistantGovernanceState { aiEnabled: boolean, capabilityEnabled: boolean, assistantEnabled: boolean, effectiveEnabled: boolean, level: number, provider: string, model: string | null }
 export interface AssistantActivity { wallet: number, opportunities: number, applications: number, surveys: number }
@@ -572,6 +592,8 @@ export const api = {
     updateAiSettings: (body: AiSettingsPatch) => put<AiSettings>(API_PATHS.admin.aiSettings, body),
     updateAiQuotas: (body: { doc_max_reads?: number, quotas?: Record<string, AiQuotaField> }) =>
       put<{ planQuotas: AiQuota[], docMaxReads: number }>(API_PATHS.admin.aiQuotas, body),
+    reportsOverview: () => get<ReportOverview>(API_PATHS.admin.reportsOverview),
+    report: (domain: ReportDomain, from?: string, to?: string) => get<ReportResult>(API_PATHS.admin.reportsReport, { domain, from, to }),
     toggleAiCapability: (id: number) => post<AiCapability>(API_PATHS.admin.aiCapabilityToggle(id)),
     addAiKnowledge: (body: AiKnowledgePayload) => post<AiKnowledgeEntry>(API_PATHS.admin.aiKnowledge, body),
     updateAiKnowledge: (id: number, body: Partial<AiKnowledgePayload>) => put<AiKnowledgeEntry>(API_PATHS.admin.aiKnowledgeItem(id), body),

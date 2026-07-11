@@ -56,6 +56,9 @@ class PermissionEnum
 
             // المحادثات (إشراف وحوكمة)
             'view_chat', 'manage_chat',
+
+            // الرؤى والتقارير
+            'view_reports',
         ];
     }
 }

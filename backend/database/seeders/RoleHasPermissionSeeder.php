@@ -32,6 +32,7 @@ class RoleHasPermissionSeeder extends Seeder
             'view_analytics', 'view_audit', 'view_settings', 'manage_settings',
             'view_ai', 'manage_ai',
             'view_chat', 'manage_chat',
+            'view_reports',
         ]);
 
         // governance: الحوكمة والمحتوى فقط
