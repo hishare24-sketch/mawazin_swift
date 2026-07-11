@@ -48,6 +48,35 @@ function fmtDate(iso?: string) { return iso ? new Date(iso).toLocaleString() : '
 const detailOpen = ref(false)
 const detail = ref<AdminAuditLog | null>(null)
 function openDetail(row: AdminAuditLog) { detail.value = row; detailOpen.value = true }
+
+// مدى تاريخيّ (خادميّ) — يمرَّر كفلتر from/to لمحرّك المورد
+const fromDate = ref('')
+const toDate = ref('')
+function applyDate(key: 'from' | 'to', value: string) { r.setFilter(key, value || undefined) }
+
+// تصدير خادميّ لكامل السجلّ المطابق للفلاتر (لا الصفحة الظاهرة فقط)
+const exporting = ref(false)
+function currentQuery(): Record<string, string> {
+  const p: Record<string, string> = { ...filters.value }
+  if (search.value.trim()) p.q = search.value.trim()
+  return p
+}
+async function exportAll() {
+  if (exporting.value) return
+  exporting.value = true
+  try {
+    const blob = await api.admin.exportAuditLogs(currentQuery())
+    const url = URL.createObjectURL(blob)
+    const a = document.createElement('a')
+    a.href = url
+    a.download = `audit-logs-${new Date().toISOString().slice(0, 10)}.csv`
+    a.click()
+    URL.revokeObjectURL(url)
+  }
+  finally {
+    exporting.value = false
+  }
+}
 </script>
 
 <template>
@@ -79,6 +108,22 @@ function openDetail(row: AdminAuditLog) { detail.value = row; detailOpen.value =
       </BaseCard>
     </div>
 
+    <!-- شريط المدى التاريخيّ + تصدير خادميّ كامل -->
+    <div class="mb-3 flex flex-wrap items-end gap-3 rounded-ui border-ui p-3">
+      <label class="flex flex-col gap-1 text-xs text-muted">
+        {{ t('admin.audit.dateFrom') }}
+        <input v-model="fromDate" type="date" class="date-in" @change="applyDate('from', fromDate)">
+      </label>
+      <label class="flex flex-col gap-1 text-xs text-muted">
+        {{ t('admin.audit.dateTo') }}
+        <input v-model="toDate" type="date" class="date-in" @change="applyDate('to', toDate)">
+      </label>
+      <button class="export-btn" :disabled="exporting" @click="exportAll">
+        <BaseIcon :name="exporting ? 'mdi-loading' : 'mdi-download'" :size="16" :class="exporting ? 'animate-spin' : ''" />
+        {{ exporting ? t('admin.audit.exporting') : t('admin.audit.exportAll') }}
+      </button>
+    </div>
+
     <ResourceScaffold
       :columns="columns"
       :items="items"
@@ -89,7 +134,7 @@ function openDetail(row: AdminAuditLog) { detail.value = row; detailOpen.value =
       :filters="filterDefs"
       :active-filters="filters"
       :search-placeholder="t('admin.audit.searchPlaceholder')"
-      export-name="audit-logs"
+      :exportable="false"
       inspectable
       @update:sort-key="r.setSort"
       @update:search="r.setSearch"
@@ -193,5 +238,29 @@ function openDetail(row: AdminAuditLog) { detail.value = row; detailOpen.value =
   padding: 7px 10px;
   border-radius: 8px;
   border: 1px solid rgba(var(--v-theme-on-surface), 0.1);
+}
+.date-in {
+  padding: 6px 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(var(--v-theme-on-surface), 0.16);
+  background: rgb(var(--v-theme-surface));
+  color: rgb(var(--v-theme-on-surface));
+  font-size: 0.8rem;
+}
+.export-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 7px 14px;
+  border-radius: 8px;
+  background: rgb(var(--v-theme-primary));
+  color: rgb(var(--v-theme-on-primary, #fff));
+  font-size: 0.8rem;
+  font-weight: 700;
+  margin-inline-start: auto;
+}
+.export-btn:disabled {
+  opacity: 0.6;
+  cursor: default;
 }
 </style>

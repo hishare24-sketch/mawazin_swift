@@ -3,20 +3,74 @@
 namespace Modules\Audit\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Modules\Audit\Entities\AuditLog;
 use Modules\Audit\Http\Resources\Admin\AuditLogResource;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class AuditLogController extends Controller
 {
     private const SORTABLE = ['id', 'action', 'resource', 'status', 'created_at'];
 
-    /** سجلّ التدقيق — بحث + فلترة (فعل/مورد/طريقة) + فرز + ترقيم. */
+    /** سجلّ التدقيق — بحث + فلترة (فعل/مورد/طريقة/فاعل/مدى تاريخيّ) + فرز + ترقيم. */
     public function index(Request $request)
     {
         $this->authorize('view_audit');
 
+        $query = $this->filtered($request);
+
+        [$column, $dir] = $this->parseSort((string) $request->query('sort', '-id'), self::SORTABLE);
+        $query->orderBy($column, $dir);
+
+        $items = $query->paginate((int) $request->query('perPage', 20));
+        $items->setCollection(
+            $items->getCollection()->map(fn (AuditLog $l) => (new AuditLogResource($l))->resolve())
+        );
+
+        return $this->dashboardResponse($items);
+    }
+
+    /**
+     * تصدير كامل السجلّ المطابق للفلاتر إلى CSV (لا يقتصر على الصفحة الحاليّة).
+     * يُبثّ عبر cursor فلا يحمّل الذاكرة مهما كبر السجلّ.
+     */
+    public function export(Request $request): StreamedResponse
+    {
+        $this->authorize('view_audit');
+
+        $query = $this->filtered($request)->orderByDesc('id');
+        $filename = 'audit-logs-'.Carbon::now()->format('Ymd-His').'.csv';
+        $columns = ['id', 'at', 'actor', 'actor_id', 'method', 'resource', 'action', 'path', 'target_id', 'status', 'ip', 'changes'];
+
+        return response()->streamDownload(function () use ($query, $columns): void {
+            $out = fopen('php://output', 'w');
+            fprintf($out, "\xEF\xBB\xBF"); // BOM ليعرض Excel العربيّة صحيحًا
+            fputcsv($out, $columns);
+            foreach ($query->cursor() as $log) {
+                fputcsv($out, [
+                    $log->id,
+                    optional($log->created_at)->toISOString(),
+                    $log->actor_name ?? '—',
+                    $log->actor_id,
+                    $log->method,
+                    $log->getAttribute('resource'),
+                    $log->action,
+                    $log->path,
+                    $log->target_id,
+                    (int) $log->status,
+                    $log->ip,
+                    $log->meta ? json_encode($log->meta, JSON_UNESCAPED_UNICODE) : '',
+                ]);
+            }
+            fclose($out);
+        }, $filename, ['Content-Type' => 'text/csv; charset=UTF-8']);
+    }
+
+    /** بانية الاستعلام المشتركة (index + export) — مصدر فلترة واحد. */
+    private function filtered(Request $request): Builder
+    {
         $query = AuditLog::query();
 
         if ($q = trim((string) $request->query('q', ''))) {
@@ -29,16 +83,17 @@ class AuditLogController extends Controller
                 $query->where($filter, $v);
             }
         }
+        if ($actor = $request->query('actorId')) {
+            $query->where('actor_id', (int) $actor);
+        }
+        if ($from = $request->query('from')) {
+            $query->where('created_at', '>=', Carbon::parse($from)->startOfDay());
+        }
+        if ($to = $request->query('to')) {
+            $query->where('created_at', '<=', Carbon::parse($to)->endOfDay());
+        }
 
-        [$column, $dir] = $this->parseSort((string) $request->query('sort', '-id'), self::SORTABLE);
-        $query->orderBy($column, $dir);
-
-        $items = $query->paginate((int) $request->query('perPage', 20));
-        $items->setCollection(
-            $items->getCollection()->map(fn (AuditLog $l) => (new AuditLogResource($l))->resolve())
-        );
-
-        return $this->dashboardResponse($items);
+        return $query;
     }
 
     /** إحصاءات — العدّ الكلّيّ/اليوم + التوزيع بالفعل والمورد + سلسلة 14 يومًا. */

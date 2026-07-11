@@ -80,5 +80,51 @@ class AdminAuditTest extends TestCase
     {
         Sanctum::actingAs(User::create(['name' => 'U', 'email' => 'au'.uniqid().'@rec.test', 'password' => 'secret123']));
         $this->getJson('/api/admin/audit-logs')->assertStatus(403);
+        $this->getJson('/api/admin/audit-logs/export')->assertStatus(403);
+    }
+
+    public function test_export_streams_csv_of_all_matching_rows(): void
+    {
+        $this->admin();
+        $this->postJson('/api/admin/plans', ['key' => 'e1', 'name' => 'x', 'price' => 1])->assertStatus(201);
+        $this->postJson('/api/admin/plans', ['key' => 'e2', 'name' => 'y', 'price' => 2])->assertStatus(201);
+
+        $res = $this->get('/api/admin/audit-logs/export');
+        $res->assertOk();
+        $res->assertHeader('content-type', 'text/csv; charset=UTF-8');
+
+        $csv = $res->streamedContent();
+        // ترويسة + صفّان مطابقان
+        $this->assertStringContainsString('id,at,actor,actor_id,method,resource,action,path', $csv);
+        $lines = array_values(array_filter(explode("\n", trim($csv))));
+        $this->assertCount(3, $lines); // header + 2 rows
+        $this->assertStringContainsString('plans', $csv);
+    }
+
+    public function test_export_respects_resource_filter(): void
+    {
+        $admin = $this->admin();
+        $this->postJson('/api/admin/plans', ['key' => 'f1', 'name' => 'x', 'price' => 1])->assertStatus(201);
+        // فعل على مورد آخر (surveys/close) كي لا يظهر في تصدير plans
+        $survey = \Modules\Survey\Entities\Survey::create(['user_id' => $admin->id, 'title' => 'S', 'state' => 'active']);
+        $this->postJson("/api/admin/surveys/{$survey->id}/close")->assertOk();
+
+        $csv = $this->get('/api/admin/audit-logs/export?resource=plans')->assertOk()->streamedContent();
+        $lines = array_values(array_filter(explode("\n", trim($csv))));
+        $this->assertCount(2, $lines); // header + plans row only
+        $this->assertStringNotContainsString('surveys', $csv);
+    }
+
+    public function test_date_range_filter_narrows_results(): void
+    {
+        $this->admin();
+        $this->postJson('/api/admin/plans', ['key' => 'd1', 'name' => 'x', 'price' => 1])->assertStatus(201);
+
+        // اليوم يُرجِع القيد؛ نطاق ماضٍ لا يُرجِع شيئًا
+        $today = \Illuminate\Support\Carbon::now()->toDateString();
+        $this->getJson("/api/admin/audit-logs?from={$today}&to={$today}")->assertOk()->assertJsonPath('meta.total', 1);
+
+        $past = \Illuminate\Support\Carbon::now()->subDays(5)->toDateString();
+        $this->getJson("/api/admin/audit-logs?from={$past}&to={$past}")->assertOk()->assertJsonPath('meta.total', 0);
     }
 }

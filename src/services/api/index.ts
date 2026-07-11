@@ -133,6 +133,7 @@ export const API_PATHS = {
     adminRole: (id: number) => `/admin/users/${id}/admin-role`,
     auditLogs: '/admin/audit-logs',
     auditStats: '/admin/audit-logs/stats',
+    auditExport: '/admin/audit-logs/export',
     settings: '/admin/settings',
     moderation: '/admin/moderation',
     moderationStats: '/admin/moderation/stats',
@@ -286,6 +287,16 @@ async function getPage<T>(url: string, params?: Record<string, unknown>): Promis
   }
 }
 
+/** تنزيل ملفّ خادميّ (CSV/بلوب) مع حمل التوكن — للتصدير الكامل عبر الفلاتر (لا الصفحة فقط). */
+async function getBlob(url: string, params?: Record<string, unknown>): Promise<Blob> {
+  try {
+    return (await http.get(url, { params, responseType: 'blob' })).data as Blob
+  }
+  catch (err) {
+    throw normalizeApiError(err)
+  }
+}
+
 /** المستخدم كما يعيده الباك-إند (NestJS) — قبل التحويل لـ User المنصة */
 export interface ApiAuthUser {
   id: number
@@ -354,7 +365,7 @@ export interface AdminOpportunity { id: number, title: string, company: string, 
 export interface AdminOpportunitiesStats { total: number, categories: number, locations: number, byCategory: { label: string, value: number }[], series: { date: string, value: number }[] }
 export interface AdminRequestsStats { total: number, types: number, open: number, byType: { label: string, value: number }[], byState: { label: string, value: number }[], series: { date: string, value: number }[] }
 export interface AdminMarketRequest { id: number, type: string, title: string, org: string, state: string, compensation: string, remote: boolean, createdAt?: string }
-export interface AdminMarketQuery { page?: number, perPage?: number, sort?: string, q?: string, category?: string, type?: string, state?: string, status?: string, specialty?: string, action?: string, resource?: string, method?: string }
+export interface AdminMarketQuery { page?: number, perPage?: number, sort?: string, q?: string, category?: string, type?: string, state?: string, status?: string, specialty?: string, action?: string, resource?: string, method?: string, actorId?: number, from?: string, to?: string }
 export interface AdminSurvey { id: number, title: string, state: string, points_pool: number, responses: number, owner: string | null, createdAt?: string }
 export interface AdminSurveysStats { total: number, active: number, responses: number, avgResponses: number, distribution: { label: string, value: number }[], series: { date: string, value: number }[] }
 export interface AdminTemplateQuestion { text: string, type: string, options?: string[], rows?: string[], scaleMin?: string, scaleMax?: string }
@@ -637,6 +648,7 @@ export const api = {
     setAdminRole: (id: number, role: string | null) => put<AdminUser>(API_PATHS.admin.adminRole(id), { role }),
     auditLogs: (params?: AdminMarketQuery) => getPage<AdminAuditLog>(API_PATHS.admin.auditLogs, params as Record<string, unknown>),
     auditStats: () => get<AdminAuditStats>(API_PATHS.admin.auditStats),
+    exportAuditLogs: (params?: AdminMarketQuery) => getBlob(API_PATHS.admin.auditExport, params as Record<string, unknown>),
     settings: () => get<AdminSetting[]>(API_PATHS.admin.settings),
     updateSettings: (settings: Record<string, string | number | boolean>) => put<AdminSetting[]>(API_PATHS.admin.settings, { settings }),
     moderation: (params?: AdminMarketQuery) => getPage<AdminModerationItem>(API_PATHS.admin.moderation, params as Record<string, unknown>),
