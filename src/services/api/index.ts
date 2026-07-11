@@ -376,7 +376,7 @@ export interface AiCapability { id: number, key: string, label: string, icon: st
 export interface AiKnowledgeEntry { id: number, title: string, content: string, tags: string[], enabled: boolean }
 export interface AiQuota { key: string, name: string, maxTokensPerRequest: number, dailyTokens: number, weeklyTokens: number, monthlyTokens: number }
 export interface AiConfig { settings: AiSettings, capabilities: AiCapability[], knowledge: AiKnowledgeEntry[], planQuotas: AiQuota[] }
-export interface AiStats { enabled: boolean, provider: string, model: string | null, capabilitiesTotal: number, capabilitiesEnabled: number, knowledgeTotal: number, knowledgeActive: number, plansConfigured: number, assistantLevel: number, distribution: { label: string, value: number }[] }
+export interface AiStats { enabled: boolean, provider: string, model: string | null, capabilitiesTotal: number, capabilitiesEnabled: number, knowledgeTotal: number, knowledgeActive: number, plansConfigured: number, assistantLevel: number, distribution: { label: string, value: number }[], usageToday?: number, usageMonth?: number, usageUsers?: number }
 export interface AiSettingsPatch {
   enabled?: boolean
   provider?: AiProvider
@@ -477,9 +477,10 @@ export interface AssistantGovernanceState { aiEnabled: boolean, capabilityEnable
 export interface AssistantActivity { wallet: number, opportunities: number, applications: number, surveys: number }
 export interface AssistantContext { name: string, role: string, kind?: string, tier: string, persona: string, dataAccess: boolean, proactive: boolean, activity?: AssistantActivity }
 export interface AssistantNudge { tone: string, icon: string, text: string, action: string | null, actionLabel: string | null }
-export interface AssistantContextResponse { governance: AssistantGovernanceState, context: AssistantContext, suggestions: string[], nudges: AssistantNudge[] }
+export interface AssistantQuota { tier: string, used: { daily: number, weekly: number, monthly: number }, limits: { daily: number, weekly: number, monthly: number, perRequest: number }, remaining: { daily: number | null, weekly: number | null, monthly: number | null } }
+export interface AssistantContextResponse { governance: AssistantGovernanceState, context: AssistantContext, suggestions: string[], nudges: AssistantNudge[], quota?: AssistantQuota }
 export interface AssistantMeta { level?: number, tokensCap?: number, provider?: string, model?: string | null, simulated?: boolean, persona?: string, usedKnowledge?: string[], nudges?: AssistantNudge[], blocked?: boolean }
-export interface AssistantMessageResponse { conversationId: number, reply: string, blocked: boolean, canEscalate: boolean, meta: AssistantMeta, nudges: AssistantNudge[] }
+export interface AssistantMessageResponse { conversationId: number, reply: string, blocked: boolean, canEscalate: boolean, meta: AssistantMeta, nudges: AssistantNudge[], quotaBlocked?: string, quota?: AssistantQuota }
 export interface AssistantConversationRow { id: number, title: string, messagesCount: number, updatedAt: string | null }
 export interface AssistantMessageRow { id: number, role: 'user' | 'assistant', body: string, meta: AssistantMeta | null, at: string | null }
 export interface AssistantConversationDetail { id: number, title: string, messages: AssistantMessageRow[] }

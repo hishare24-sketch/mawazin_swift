@@ -139,4 +139,60 @@ class AssistantTest extends TestCase
         $reply = $this->postJson('/api/v1/assistant/message', ['message' => 'ساعدني'])->json('data.reply');
         $this->assertStringContainsString('كباحث عن عمل', $reply);
     }
+
+    public function test_message_records_token_usage(): void
+    {
+        $this->seed(AiSeeder::class);
+        $user = $this->user(['role' => 'seeker']);
+
+        $this->postJson('/api/v1/assistant/message', ['message' => 'كيف أحسّن ملفّي؟'])->assertOk();
+
+        $row = \Modules\Ai\Entities\AiUsage::where('user_id', $user->id)->first();
+        $this->assertNotNull($row);
+        $this->assertGreaterThan(0, $row->tokens);
+        $this->assertSame($row->request_tokens + $row->response_tokens, $row->tokens);
+    }
+
+    public function test_context_exposes_quota_snapshot(): void
+    {
+        $this->seed(AiSeeder::class);
+        $this->user(['role' => 'seeker', 'tier' => 'free']);
+
+        $this->getJson('/api/v1/assistant/context')
+            ->assertOk()
+            ->assertJsonStructure(['data' => ['quota' => ['tier', 'used', 'limits', 'remaining']]]);
+    }
+
+    public function test_message_blocked_when_daily_quota_exceeded(): void
+    {
+        $this->seed(AiSeeder::class);
+        // حصّة يوميّة ضيّقة جدًّا للباقة المجّانيّة
+        AiSetting::query()->where('id', 1)->update([
+            'plan_quotas' => ['free' => ['maxTokensPerRequest' => 2048, 'dailyTokens' => 1, 'weeklyTokens' => 0, 'monthlyTokens' => 0]],
+        ]);
+        $this->user(['role' => 'seeker', 'tier' => 'free']);
+
+        $this->postJson('/api/v1/assistant/message', ['message' => 'رسالة تتجاوز الحصّة اليوميّة'])
+            ->assertOk()
+            ->assertJsonPath('data.blocked', true)
+            ->assertJsonPath('data.quotaBlocked', 'daily')
+            ->assertJsonPath('data.canEscalate', true);
+
+        // لم يُسجَّل أيّ استهلاك لأنّ الطلب حُجب قبل التأليف
+        $this->assertDatabaseCount('ai_usage', 0);
+    }
+
+    public function test_message_blocked_when_request_exceeds_per_request_cap(): void
+    {
+        $this->seed(AiSeeder::class);
+        AiSetting::query()->where('id', 1)->update([
+            'plan_quotas' => ['free' => ['maxTokensPerRequest' => 2, 'dailyTokens' => 0, 'weeklyTokens' => 0, 'monthlyTokens' => 0]],
+        ]);
+        $this->user(['role' => 'seeker', 'tier' => 'free']);
+
+        $this->postJson('/api/v1/assistant/message', ['message' => 'رسالة طويلة تتجاوز حدّ الطلب الواحد بكثير'])
+            ->assertOk()
+            ->assertJsonPath('data.blocked', true)
+            ->assertJsonPath('data.quotaBlocked', 'perRequest');
+    }
 }

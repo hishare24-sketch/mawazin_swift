@@ -4,10 +4,12 @@ namespace Modules\Ai\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Modules\Account\Entities\Plan;
 use Modules\Ai\Entities\AiCapability;
 use Modules\Ai\Entities\AiKnowledge;
 use Modules\Ai\Entities\AiSetting;
+use Modules\Ai\Entities\AiUsage;
 
 class AdminAiController extends Controller
 {
@@ -163,6 +165,10 @@ class AdminAiController extends Controller
             ->map(fn ($q) => ['label' => $q['name'], 'value' => (int) $q['monthlyTokens']])
             ->values();
 
+        // استهلاك التوكن الفعليّ (إنفاذ الحصص) — اليوم/الشهر + مستخدمون نشطون.
+        $startOfDay = Carbon::now()->startOfDay();
+        $startOfMonth = Carbon::now()->startOfMonth();
+
         return $this->dataResponse([
             'enabled' => $setting->enabled,
             'provider' => $setting->provider,
@@ -174,6 +180,9 @@ class AdminAiController extends Controller
             'plansConfigured' => count($quotas),
             'assistantLevel' => $setting->assistant_level,
             'distribution' => $distribution,
+            'usageToday' => (int) AiUsage::where('created_at', '>=', $startOfDay)->sum('tokens'),
+            'usageMonth' => (int) AiUsage::where('created_at', '>=', $startOfMonth)->sum('tokens'),
+            'usageUsers' => (int) AiUsage::where('created_at', '>=', $startOfMonth)->distinct('user_id')->count('user_id'),
         ]);
     }
 

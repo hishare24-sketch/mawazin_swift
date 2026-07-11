@@ -8,14 +8,18 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
 use Modules\Ai\Entities\AssistantConversation;
 use Modules\Ai\Entities\AssistantPreference;
+use Modules\Ai\Services\AiUsageService;
 use Modules\Ai\Services\AssistantService;
 use Modules\Support\Entities\Ticket;
 
 class AssistantController extends Controller
 {
-    public function __construct(private readonly AssistantService $service) {}
+    public function __construct(
+        private readonly AssistantService $service,
+        private readonly AiUsageService $usage,
+    ) {}
 
-    /** لقطة سياق المستخدم + الحوكمة + الاقتراحات + التنبيهات (شفافيّة: ما يعرفه المساعد). */
+    /** لقطة سياق المستخدم + الحوكمة + الاقتراحات + التنبيهات + حصّة التوكن (شفافيّة: ما يعرفه المساعد). */
     public function context(Request $request)
     {
         $user = $request->user();
@@ -26,6 +30,7 @@ class AssistantController extends Controller
             'context' => $context,
             'suggestions' => $this->service->suggestions($context),
             'nudges' => $this->service->nudges($context),
+            'quota' => $this->usage->snapshot($user),
         ]);
     }
 
@@ -57,8 +62,32 @@ class AssistantController extends Controller
             ]);
         }
 
+        // إنفاذ حصّة التوكن (يوميّ/أسبوعيّ/شهريّ + حدّ الطلب) — الحجب مهذّب مع إتاحة التصعيد.
+        $requestTokens = $this->usage->estimate($data['message']);
+        $quotaBlock = $this->usage->check($user, $requestTokens);
+        if ($quotaBlock !== null) {
+            $conversation->messages()->create(['role' => 'assistant', 'body' => $quotaBlock['reason'], 'meta' => ['quotaBlocked' => $quotaBlock['kind']]]);
+            $conversation->touch();
+
+            return $this->dataResponse([
+                'conversationId' => $conversation->id,
+                'reply' => $quotaBlock['reason'],
+                'blocked' => true,
+                'quotaBlocked' => $quotaBlock['kind'],
+                'canEscalate' => true,
+                'meta' => ['quotaBlocked' => $quotaBlock['kind']],
+                'nudges' => [],
+                'quota' => $this->usage->snapshot($user),
+            ]);
+        }
+
         $context = $this->service->context($user);
         $composed = $this->service->compose($data['message'], $context);
+
+        // قياس الاستهلاك: تفضيل ما يعيده المزوّد الحقيقيّ، وإلّا تقدير الردّ.
+        $responseTokens = (int) ($composed['meta']['usage']['response'] ?? $this->usage->estimate($composed['reply']));
+        $requestTokens = (int) ($composed['meta']['usage']['request'] ?? $requestTokens);
+        $this->usage->record($user, $requestTokens, $responseTokens, $composed['meta']['provider'] ?? null, $composed['meta']['model'] ?? null);
 
         $conversation->messages()->create(['role' => 'assistant', 'body' => $composed['reply'], 'meta' => $composed['meta']]);
         $conversation->touch();
@@ -70,6 +99,7 @@ class AssistantController extends Controller
             'canEscalate' => true,
             'meta' => $composed['meta'],
             'nudges' => $composed['meta']['nudges'] ?? [],
+            'quota' => $this->usage->snapshot($user),
         ]);
     }
 

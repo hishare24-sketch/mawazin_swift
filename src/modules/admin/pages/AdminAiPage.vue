@@ -81,6 +81,8 @@ const providerLabel = computed(() => PROVIDERS.value.find(p => p.value === setti
 const enabledCaps = computed(() => capabilities.value.filter(c => c.enabled).length)
 const activeKnowledge = computed(() => knowledge.value.filter(k => k.enabled).length)
 const donutData = computed(() => stats.value?.distribution?.map(d => ({ label: d.label, value: d.value })) ?? [])
+const usageMonthLabel = computed(() => (stats.value?.usageMonth ?? 0).toLocaleString())
+const usageTodayLabel = computed(() => (stats.value?.usageToday ?? 0).toLocaleString())
 
 // ═══ المفتاح الرئيسيّ ═══
 async function toggleMaster() {
@@ -269,6 +271,14 @@ async function removeKnowledge(k: AiKnowledgeEntry) {
         <StatCard icon="mdi-brain" :value="settings?.model || '—'" :title="t('admin.ai.statModel')" color="info" />
         <StatCard icon="mdi-puzzle-outline" :value="`${enabledCaps}/${capabilities.length}`" :title="t('admin.ai.statSections')" color="accent" />
         <StatCard icon="mdi-book-open-variant" :value="`${activeKnowledge}/${knowledge.length}`" :title="t('admin.ai.statKnowledge')" color="success" />
+        <StatCard
+          icon="mdi-fire"
+          class="col-span-2"
+          :value="usageMonthLabel"
+          :title="t('admin.ai.statUsageMonth')"
+          :trend="`${usageTodayLabel} ${t('admin.ai.statUsageToday')} · ${stats?.usageUsers ?? 0} ${t('admin.ai.statUsageUsers')}`"
+          color="warning"
+        />
       </div>
       <BaseCard>
         <div class="mb-2 flex items-center gap-2">

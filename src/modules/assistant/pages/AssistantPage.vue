@@ -14,7 +14,7 @@ import BaseSwitch from '@/components/ui/BaseSwitch.vue'
 import BaseTextarea from '@/components/ui/BaseTextarea.vue'
 import {
   type AssistantContext, type AssistantContextResponse, type AssistantConversationRow, type AssistantGovernanceState,
-  type AssistantNudge, type SupportTicketDetail, type SupportTicketRow, api,
+  type AssistantNudge, type AssistantQuota, type SupportTicketDetail, type SupportTicketRow, api,
 } from '@/services/api'
 
 const { t } = useI18n()
@@ -27,7 +27,26 @@ const governance = ref<AssistantGovernanceState | null>(null)
 const context = ref<AssistantContext | null>(null)
 const suggestions = ref<string[]>([])
 const nudges = ref<AssistantNudge[]>([])
+const quota = ref<AssistantQuota | null>(null)
 const showContext = ref(false)
+
+// أضيق نافذة محدودة متبقّية (لعرضها بإيجاز)؛ null إن كانت كلّها بلا حدّ.
+const quotaRemaining = computed(() => {
+  const q = quota.value
+  if (!q)
+    return null
+  const windows: { key: 'daily' | 'weekly' | 'monthly', label: string }[] = [
+    { key: 'daily', label: t('assistant.quotaDaily') },
+    { key: 'weekly', label: t('assistant.quotaWeekly') },
+    { key: 'monthly', label: t('assistant.quotaMonthly') },
+  ]
+  const capped = windows
+    .map(w => ({ ...w, remaining: q.remaining[w.key], limit: q.limits[w.key] }))
+    .filter(w => w.remaining !== null && w.limit > 0)
+  if (!capped.length)
+    return null
+  return capped.reduce((a, b) => ((b.remaining as number) < (a.remaining as number) ? b : a))
+})
 
 const snack = ref({ show: false, text: '', color: 'success' })
 function toast(text: string, color = 'success') { snack.value = { show: true, text, color } }
@@ -45,6 +64,7 @@ async function loadContext() {
     context.value = r.context
     suggestions.value = r.suggestions
     nudges.value = r.nudges
+    quota.value = r.quota ?? null
   }
   catch (e) { fail(e) }
 }
@@ -96,6 +116,8 @@ async function send(text?: string) {
     messages.value.push({ role: 'assistant', body: r.reply, meta: r.meta })
     if (r.nudges?.length)
       nudges.value = r.nudges
+    if (r.quota)
+      quota.value = r.quota
     loadConversations()
   }
   catch (e) { fail(e) }
@@ -255,6 +277,10 @@ onMounted(async () => { await loadContext(); greet(); loadConversations(); loadT
               </div>
             </template>
             <p v-else class="flex items-center gap-1"><BaseIcon name="mdi-shield-lock-outline" :size="14" />{{ t('assistant.privacyOnNote') }}</p>
+            <p v-if="quotaRemaining" class="mt-2 flex items-center gap-1 border-t border-ui pt-2">
+              <BaseIcon name="mdi-fire" :size="14" class="text-brand" />
+              {{ t('assistant.quotaRemaining', { count: (quotaRemaining.remaining as number).toLocaleString(), window: quotaRemaining.label }) }}
+            </p>
           </div>
         </BaseCard>
 
