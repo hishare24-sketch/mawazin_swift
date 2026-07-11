@@ -1,4 +1,5 @@
 <script setup lang="ts">
+defineProps<{ embedded?: boolean }>()
 import { computed, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import PageHeader from '@/components/shared/PageHeader.vue'
@@ -259,7 +260,7 @@ async function removeKnowledge(k: AiKnowledgeEntry) {
 
 <template>
   <div>
-    <PageHeader :title="t('admin.ai.title')" :subtitle="t('admin.ai.subtitle')" icon="mdi-robot-outline" />
+    <PageHeader v-if="!embedded" :title="t('admin.ai.title')" :subtitle="t('admin.ai.subtitle')" icon="mdi-robot-outline" />
 
     <!-- شريط الإحصاءات -->
     <div class="mb-5 grid grid-cols-1 gap-4 lg:grid-cols-3">

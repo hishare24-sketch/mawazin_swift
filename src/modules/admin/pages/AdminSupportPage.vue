@@ -1,4 +1,5 @@
 <script setup lang="ts">
+defineProps<{ embedded?: boolean }>()
 import { computed, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import PageHeader from '@/components/shared/PageHeader.vue'
@@ -112,7 +113,7 @@ async function assign() {
 
 <template>
   <div>
-    <PageHeader :title="t('admin.support.title')" :subtitle="t('admin.support.subtitle')" icon="mdi-lifebuoy" />
+    <PageHeader v-if="!embedded" :title="t('admin.support.title')" :subtitle="t('admin.support.subtitle')" icon="mdi-lifebuoy" />
 
     <!-- شريط الإحصاءات -->
     <div class="mb-4 grid grid-cols-2 gap-3 md:grid-cols-4">

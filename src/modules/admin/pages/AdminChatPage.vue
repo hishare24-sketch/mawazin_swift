@@ -1,4 +1,5 @@
 <script setup lang="ts">
+defineProps<{ embedded?: boolean }>()
 import { computed, onMounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import { RouterLink } from 'vue-router'
@@ -113,7 +114,7 @@ onMounted(() => { loadConfig(); loadStats(); loadThreads() })
 
 <template>
   <div>
-    <PageHeader :title="t('admin.chat.title')" :subtitle="t('admin.chat.subtitle')" icon="mdi-forum-outline" />
+    <PageHeader v-if="!embedded" :title="t('admin.chat.title')" :subtitle="t('admin.chat.subtitle')" icon="mdi-forum-outline" />
 
     <!-- شريط الإحصاءات -->
     <div class="mb-5 grid grid-cols-1 gap-4 lg:grid-cols-3">

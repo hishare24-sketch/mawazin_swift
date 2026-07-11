@@ -60,6 +60,7 @@ export const ADMIN_NAV: AdminNavGroup[] = [
     key: 'support',
     titleKey: 'admin.nav.groupSupport',
     items: [
+      { title: 'admin.nav.supportHub', icon: 'mdi-headset', to: 'admin-support-hub', permission: 'view_support' },
       { title: 'admin.nav.support', icon: 'mdi-lifebuoy', to: 'admin-support', permission: 'view_support' },
     ],
   },
