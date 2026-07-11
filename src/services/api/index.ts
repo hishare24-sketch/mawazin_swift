@@ -107,6 +107,20 @@ export const API_PATHS = {
     wallet: '/v1/wallet',
     plan: '/v1/account/plan',
   },
+  /** المساعد الذكيّ للمستخدم + الدعم (تذاكر/محادثات) — تحت /v1 */
+  assistant: {
+    context: '/v1/assistant/context',
+    message: '/v1/assistant/message',
+    conversations: '/v1/assistant/conversations',
+    conversation: (id: number) => `/v1/assistant/conversations/${id}`,
+    settings: '/v1/assistant/settings',
+    escalate: '/v1/assistant/escalate',
+  },
+  support: {
+    tickets: '/v1/support/tickets',
+    ticket: (id: number) => `/v1/support/tickets/${id}`,
+    ticketReply: (id: number) => `/v1/support/tickets/${id}/reply`,
+  },
   /** لوحة الأدمن — تحت /api/admin (حارس admin) لا /v1 */
   admin: {
     stats: '/admin/stats',
@@ -372,6 +386,22 @@ export interface ChatThreadDetail { key: string, participants: string[], message
 export interface ChatStats { threads: number, messages: number, activeToday: number, participants: number, series: { date: string, value: number }[], topSenders: { label: string, value: number }[] }
 export interface ChatAssistantPreview { reply: string, level: number, tokensCap: number, provider: string, model: string | null, simulated: boolean, usedKnowledge: string[] }
 export interface ChatSettingsPatch { direct_messages_enabled?: boolean, assistant_enabled?: boolean, moderation_enabled?: boolean, retention_days?: number }
+// ——— المساعد الذكيّ للمستخدم + الدعم ———
+export interface AssistantGovernanceState { aiEnabled: boolean, capabilityEnabled: boolean, assistantEnabled: boolean, effectiveEnabled: boolean, level: number, provider: string, model: string | null }
+export interface AssistantActivity { wallet: number, opportunities: number, applications: number, surveys: number }
+export interface AssistantContext { name: string, role: string, kind?: string, tier: string, persona: string, dataAccess: boolean, proactive: boolean, activity?: AssistantActivity }
+export interface AssistantNudge { tone: string, icon: string, text: string, action: string | null, actionLabel: string | null }
+export interface AssistantContextResponse { governance: AssistantGovernanceState, context: AssistantContext, suggestions: string[], nudges: AssistantNudge[] }
+export interface AssistantMeta { level?: number, tokensCap?: number, provider?: string, model?: string | null, simulated?: boolean, persona?: string, usedKnowledge?: string[], nudges?: AssistantNudge[], blocked?: boolean }
+export interface AssistantMessageResponse { conversationId: number, reply: string, blocked: boolean, canEscalate: boolean, meta: AssistantMeta, nudges: AssistantNudge[] }
+export interface AssistantConversationRow { id: number, title: string, messagesCount: number, updatedAt: string | null }
+export interface AssistantMessageRow { id: number, role: 'user' | 'assistant', body: string, meta: AssistantMeta | null, at: string | null }
+export interface AssistantConversationDetail { id: number, title: string, messages: AssistantMessageRow[] }
+export interface AssistantSettings { dataAccess: boolean, proactive: boolean }
+export interface SupportTicketRow { id: number, subject: string, category: string, priority: string, status: string, repliesCount: number, lastReplyAt: string | null, createdAt: string | null }
+export interface SupportTicketReply { id: number, author: string, isStaff: boolean, body: string, at: string | null }
+export interface SupportTicketDetail extends SupportTicketRow { assignee: string | null, replies: SupportTicketReply[] }
+export interface SupportTicketCreate { subject: string, body: string, category?: string, priority?: string }
 
 export const api = {
   auth: {
@@ -446,6 +476,23 @@ export const api = {
     wallet: () => get(API_PATHS.account.wallet),
     plan: () => get<{ tier: 'free' | 'pro' | 'elite' }>(API_PATHS.account.plan),
     setPlan: (tier: 'free' | 'pro' | 'elite') => put<{ tier: 'free' | 'pro' | 'elite', balance: number }>(API_PATHS.account.plan, { tier }),
+  },
+  /** المساعد الذكيّ للمستخدم — محكوم بحوكمة الذكاء، سياقيّ، مبادر */
+  assistant: {
+    context: () => get<AssistantContextResponse>(API_PATHS.assistant.context),
+    message: (message: string, conversationId?: number) => post<AssistantMessageResponse>(API_PATHS.assistant.message, { message, conversationId }),
+    conversations: () => get<AssistantConversationRow[]>(API_PATHS.assistant.conversations),
+    conversation: (id: number) => get<AssistantConversationDetail>(API_PATHS.assistant.conversation(id)),
+    settings: () => get<AssistantSettings>(API_PATHS.assistant.settings),
+    updateSettings: (body: Partial<{ data_access: boolean, proactive: boolean }>) => put<AssistantSettings>(API_PATHS.assistant.settings, body),
+    escalate: (body: { conversationId?: number, subject?: string, body?: string, category?: string, priority?: string }) => post<{ id: number, subject: string, status: string }>(API_PATHS.assistant.escalate, body),
+  },
+  /** تذاكر/محادثات الدعم من جهة المستخدم */
+  support: {
+    tickets: () => get<SupportTicketRow[]>(API_PATHS.support.tickets),
+    createTicket: (body: SupportTicketCreate) => post<SupportTicketRow>(API_PATHS.support.tickets, body),
+    ticket: (id: number) => get<SupportTicketDetail>(API_PATHS.support.ticket(id)),
+    replyTicket: (id: number, body: string) => post<SupportTicketDetail>(API_PATHS.support.ticketReply(id), { body }),
   },
   /** لوحة الأدمن — /api/admin (حارس sanctum+admin؛ كل نقطة تفرض صلاحيّتها) */
   admin: {
