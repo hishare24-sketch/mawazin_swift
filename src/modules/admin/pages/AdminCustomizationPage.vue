@@ -74,14 +74,19 @@ async function save() {
 </script>
 
 <template>
-  <div v-if="form">
+  <div>
     <PageHeader :title="t('admin.branding.title')" :subtitle="t('admin.branding.subtitle')" icon="mdi-palette-outline">
       <template #actions>
-        <BaseButton variant="brand" size="sm" :disabled="!canManage || saving" @click="save"><BaseIcon name="mdi-content-save-outline" :size="18" />{{ t('admin.branding.save') }}</BaseButton>
+        <BaseButton variant="brand" size="sm" :disabled="!canManage || saving || !form" @click="save"><BaseIcon name="mdi-content-save-outline" :size="18" />{{ t('admin.branding.save') }}</BaseButton>
       </template>
     </PageHeader>
 
-    <div class="grid grid-cols-1 gap-4 lg:grid-cols-2">
+    <!-- حالة تحميل بدل الفراغ (الصفحة كانت تُخفى كليًّا حتى يعود api.admin.branding) -->
+    <div v-if="!form" class="flex justify-center py-24">
+      <BaseIcon name="mdi-loading" :size="34" class="animate-spin text-brand" />
+    </div>
+
+    <div v-else class="grid grid-cols-1 gap-4 lg:grid-cols-2">
       <!-- الهويّة -->
       <BaseCard>
         <h2 class="mb-3 flex items-center gap-2 font-bold text-content"><BaseIcon name="mdi-card-account-details-outline" :size="20" class="text-brand" />{{ t('admin.branding.identity') }}</h2>

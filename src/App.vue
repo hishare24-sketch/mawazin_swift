@@ -74,11 +74,10 @@ watch(
 <template>
   <VApp :theme="themeStore.activeThemeName">
     <Component :is="layoutComponent">
-      <RouterView v-slot="{ Component }">
-        <Transition name="fade" mode="out-in">
-          <Component :is="Component" />
-        </Transition>
-      </RouterView>
+      <!-- بلا Transition حاجب: `mode="out-in"` كان يعلّق تركيب الصفحة الجديدة على اكتمال
+           انتقال مغادرة السابقة، فتتجمّد بعض الأقسام (لا تفتح) عند تعذّر transitionend
+           (تبويب خلفيّ / تعطيل الحركة / نقر أثناء الانتقال). التبديل الفوريّ موثوق دائمًا. -->
+      <RouterView />
     </Component>
   </VApp>
 </template>
