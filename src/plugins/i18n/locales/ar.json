@@ -371,7 +371,8 @@
       "surveyTemplates": "نماذج الاستبيانات",
       "groupSystem": "النظام",
       "audit": "سجلّ التدقيق",
-      "settings": "إعدادات المنصّة"
+      "settings": "إعدادات المنصّة",
+      "billing": "الفوترة والاشتراكات"
     },
     "groups": {
       "users": "المستخدمون والأدوار",
@@ -775,6 +776,30 @@
       "group_finance": "الماليّة",
       "group_surveys": "الاستبيانات",
       "note": "بعض الإعدادات تحكم سلوكًا فعليًّا (تفعيل التسجيل، الرصيد الترحيبيّ)."
+    },
+    "billing": {
+      "title": "الفوترة والاشتراكات",
+      "subtitle": "فواتير ترقيات الباقات والإيراد والاسترداد",
+      "searchPlaceholder": "بحث بالمستخدم أو المرجع...",
+      "statRevenue": "الإيراد الصافي",
+      "statInvoices": "الفواتير",
+      "statPaid": "المدفوعة",
+      "statRefunded": "المستردّة",
+      "revenueTrend": "اتّجاه الإيراد",
+      "byPlan": "الإيراد حسب الباقة",
+      "noRevenue": "لا إيراد بعد",
+      "colRef": "المرجع",
+      "colUser": "المستخدم",
+      "colPlan": "الباقة",
+      "colAmount": "المبلغ",
+      "colStatus": "الحالة",
+      "colDate": "التاريخ",
+      "statusPaid": "مدفوعة",
+      "statusRefunded": "مستردّة",
+      "refund": "استرداد",
+      "refunded": "تمّ الاسترداد",
+      "confirmRefundTitle": "استرداد الفاتورة؟",
+      "confirmRefundMsg": "سيُعاد {amount} ر.س لمحفظة المستخدم ويُخصم من الخزينة ({ref})."
     }
   }
 }

@@ -371,7 +371,8 @@
       "surveyTemplates": "Survey templates",
       "groupSystem": "System",
       "audit": "Audit log",
-      "settings": "Platform settings"
+      "settings": "Platform settings",
+      "billing": "Billing"
     },
     "groups": {
       "users": "Users & Roles",
@@ -775,6 +776,30 @@
       "group_finance": "Finance",
       "group_surveys": "Surveys",
       "note": "Some settings govern real behavior (signup toggle, welcome balance)."
+    },
+    "billing": {
+      "title": "Billing & subscriptions",
+      "subtitle": "Plan-upgrade invoices, revenue and refunds",
+      "searchPlaceholder": "Search by user or reference...",
+      "statRevenue": "Net revenue",
+      "statInvoices": "Invoices",
+      "statPaid": "Paid",
+      "statRefunded": "Refunded",
+      "revenueTrend": "Revenue trend",
+      "byPlan": "Revenue by plan",
+      "noRevenue": "No revenue yet",
+      "colRef": "Reference",
+      "colUser": "User",
+      "colPlan": "Plan",
+      "colAmount": "Amount",
+      "colStatus": "Status",
+      "colDate": "Date",
+      "statusPaid": "Paid",
+      "statusRefunded": "Refunded",
+      "refund": "Refund",
+      "refunded": "Refunded",
+      "confirmRefundTitle": "Refund invoice?",
+      "confirmRefundMsg": "{amount} SAR will be returned to the user wallet and debited from treasury ({ref})."
     }
   }
 }

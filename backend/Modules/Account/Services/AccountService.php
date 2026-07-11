@@ -77,6 +77,17 @@ class AccountService
                 __('Plan upgrade to :tier', ['tier' => $tier]),
                 'user:'.$userId,
             );
+
+            // فاتورة اشتراك (سجلّ ماليّ قابل للاسترداد)
+            \Modules\Billing\Entities\Invoice::create([
+                'user_id' => $userId,
+                'user_name' => $user->name,
+                'plan_key' => $tier,
+                'plan_name' => optional(Plan::where('key', $tier)->first())->name ?? $tier,
+                'amount' => $cost,
+                'status' => 'paid',
+                'reference' => 'INV-'.$userId.'-'.$tier,
+            ]);
         }
 
         $user->tier = $tier;

@@ -152,6 +152,9 @@ export const API_PATHS = {
     plans: '/admin/plans',
     plansStats: '/admin/plans/stats',
     plan: (id: number) => `/admin/plans/${id}`,
+    invoices: '/admin/invoices',
+    invoicesStats: '/admin/invoices/stats',
+    invoiceRefund: (id: number) => `/admin/invoices/${id}/refund`,
   },
   /** وسيط Claude — المفتاح يبقى في الخادم، والعقد يطابق أسماء src/services/ai/types.ts */
   ai: (contract: string) => `/v1/ai/${contract}`,
@@ -286,6 +289,8 @@ export interface AdminPlan { id: number, key: string, name: string, price: numbe
 export interface AdminPlanPatch { name?: string, price?: number, survey_limit?: number | null, features?: string[], active?: boolean }
 export interface AdminPlanCreate { key: string, name: string, price: number, survey_limit?: number | null, features?: string[], active?: boolean }
 export interface AdminPlansStats { totalPlans: number, activePlans: number, subscribers: number, mrr: number, distribution: { label: string, value: number }[] }
+export interface AdminInvoice { id: number, user: string, userId: number | null, plan_key: string, plan_name: string | null, amount: number, status: string, reference: string | null, refundedAt?: string, createdAt?: string }
+export interface AdminBillingStats { revenue: number, invoices: number, paid: number, refunded: number, refundedAmount: number, byPlan: { label: string, value: number }[], series: { date: string, value: number }[] }
 
 export const api = {
   auth: {
@@ -414,6 +419,9 @@ export const api = {
     deleteInterviewer: (id: number) => del(API_PATHS.admin.interviewer(id)),
     plans: (params?: AdminMarketQuery) => getPage<AdminPlan>(API_PATHS.admin.plans, params as Record<string, unknown>),
     plansStats: () => get<AdminPlansStats>(API_PATHS.admin.plansStats),
+    invoices: (params?: AdminMarketQuery & { plan_key?: string }) => getPage<AdminInvoice>(API_PATHS.admin.invoices, params as Record<string, unknown>),
+    invoicesStats: () => get<AdminBillingStats>(API_PATHS.admin.invoicesStats),
+    refundInvoice: (id: number) => post<AdminInvoice>(API_PATHS.admin.invoiceRefund(id)),
     createPlan: (body: AdminPlanCreate) => post<AdminPlan>(API_PATHS.admin.plans, body),
     updatePlan: (id: number, body: AdminPlanPatch) => put<AdminPlan>(API_PATHS.admin.plan(id), body),
     deletePlan: (id: number) => del(API_PATHS.admin.plan(id)),

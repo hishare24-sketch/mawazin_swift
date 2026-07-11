@@ -13,6 +13,7 @@ export const ADMIN_PERMISSIONS = [
   'view_profiles', 'verify_skills', 'view_endorsements', 'approve_endorsements', 'view_governance', 'approve_experts',
   'view_broadcast', 'create_broadcast',
   'view_plans', 'create_plans', 'update_plans', 'delete_plans', 'view_wallets', 'adjust_wallets',
+  'view_billing', 'manage_billing',
   'view_platform_accounts', 'manage_platform_accounts',
   'view_analytics', 'view_audit', 'view_settings', 'manage_settings',
 ] as const
@@ -29,6 +30,6 @@ export const PERMISSION_GROUPS: PermissionGroup[] = [
   { key: 'surveys', labelKey: 'admin.groups.surveys', permissions: ['view_surveys', 'update_surveys', 'delete_surveys', 'close_surveys', 'view_survey_templates', 'manage_survey_templates'] },
   { key: 'governance', labelKey: 'admin.groups.governance', permissions: ['view_profiles', 'verify_skills', 'view_endorsements', 'approve_endorsements', 'view_governance', 'approve_experts'] },
   { key: 'broadcast', labelKey: 'admin.groups.broadcast', permissions: ['view_broadcast', 'create_broadcast'] },
-  { key: 'billing', labelKey: 'admin.groups.billing', permissions: ['view_plans', 'create_plans', 'update_plans', 'delete_plans', 'view_wallets', 'adjust_wallets', 'view_platform_accounts', 'manage_platform_accounts'] },
+  { key: 'billing', labelKey: 'admin.groups.billing', permissions: ['view_plans', 'create_plans', 'update_plans', 'delete_plans', 'view_billing', 'manage_billing', 'view_wallets', 'adjust_wallets', 'view_platform_accounts', 'manage_platform_accounts'] },
   { key: 'analytics', labelKey: 'admin.groups.analytics', permissions: ['view_analytics', 'view_audit', 'view_settings', 'manage_settings'] },
 ]

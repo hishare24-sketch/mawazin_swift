@@ -25,6 +25,7 @@ class RoleHasPermissionSeeder extends Seeder
             'view_survey_templates', 'manage_survey_templates',
             'view_profiles', 'view_broadcast', 'create_broadcast',
             'view_plans', 'create_plans', 'update_plans', 'delete_plans', 'view_wallets', 'adjust_wallets',
+            'view_billing', 'manage_billing',
             'view_platform_accounts', 'manage_platform_accounts',
             'view_analytics', 'view_audit', 'view_settings', 'manage_settings',
         ]);

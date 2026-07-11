@@ -35,8 +35,9 @@ class PermissionEnum
             // البثّ والإشعارات
             'view_broadcast', 'create_broadcast',
 
-            // الباقات والمحفظة
+            // الباقات والمحفظة والفوترة
             'view_plans', 'create_plans', 'update_plans', 'delete_plans', 'view_wallets', 'adjust_wallets',
+            'view_billing', 'manage_billing',
 
             // خزينة المنصّة (حسابات بنكيّة/دفتر إيرادات)
             'view_platform_accounts', 'manage_platform_accounts',
