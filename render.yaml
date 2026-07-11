@@ -1,0 +1,136 @@
+# ===== مخطّط نشر Render لمنظومة التوظيف =====
+# يطابق مكدّس موازين: Render (استضافة) + Supabase (Postgres) + Resend (بريد) + Firebase (FCM).
+# القاعدة خارجيّة (Supabase) فلا تُعرَّف هنا؛ تُضبط أسرارها في مجموعة البيئة أدناه.
+# النشر: Render → New → Blueprint → اختر المستودع. ثمّ املأ الأسرار في لوحة Render (لا في الكود).
+
+envVarGroups:
+  - name: recruitment-shared
+    envVars:
+      - key: APP_NAME
+        value: "منظومة التوظيف الذكية"
+      - key: APP_ENV
+        value: production
+      - key: APP_DEBUG
+        value: "false"
+      - key: APP_KEY
+        sync: false            # ولّده: php artisan key:generate --show ثمّ الصقه في Render
+      - key: APP_URL
+        sync: false            # https://api.example.com
+      # ——— قاعدة Supabase (Postgres) ———
+      - key: DB_CONNECTION
+        value: pgsql
+      - key: DB_HOST
+        sync: false            # db.xxxx.supabase.co
+      - key: DB_PORT
+        value: "5432"
+      - key: DB_DATABASE
+        value: postgres
+      - key: DB_USERNAME
+        sync: false
+      - key: DB_PASSWORD
+        sync: false
+      - key: DB_SSLMODE
+        value: require
+      # ——— الجلسات/الكاش/الطابور/البثّ ———
+      - key: SESSION_DRIVER
+        value: database
+      - key: CACHE_STORE
+        value: redis
+      - key: QUEUE_CONNECTION
+        value: redis
+      - key: BROADCAST_CONNECTION
+        value: reverb
+      # ——— Reverb (البثّ اللحظيّ) ———
+      - key: REVERB_APP_ID
+        sync: false
+      - key: REVERB_APP_KEY
+        sync: false
+      - key: REVERB_APP_SECRET
+        sync: false
+      - key: REVERB_HOST
+        sync: false            # ws.example.com (دومين خدمة reverb أدناه)
+      - key: REVERB_PORT
+        value: "443"
+      - key: REVERB_SCHEME
+        value: https
+      - key: REVERB_SERVER_HOST
+        value: 0.0.0.0
+      # ——— Resend (البريد) ———
+      - key: MAIL_MAILER
+        value: resend
+      - key: RESEND_API_KEY
+        sync: false
+      - key: MAIL_FROM_ADDRESS
+        sync: false
+      - key: MAIL_FROM_NAME
+        value: "منظومة التوظيف الذكية"
+      # ——— Firebase (FCM) ———
+      - key: FIREBASE_CREDENTIALS
+        sync: false            # مسار/محتوى ملفّ حساب الخدمة JSON
+      # ——— الذكاء (وسيط Claude، اختياريّ) ———
+      - key: ANTHROPIC_API_KEY
+        sync: false
+
+services:
+  # 1) الويب — واجهة الـAPI
+  - type: web
+    name: recruitment-api
+    runtime: docker
+    repo: https://github.com/hishare24-sketch/smart-recruitment-system
+    branch: main
+    dockerfilePath: backend/Dockerfile
+    dockerContext: backend
+    plan: starter
+    healthCheckPath: /up
+    # الهجرات + بذر الصلاحيّات قبل تبديل الإصدار (لا في أمر التشغيل)
+    preDeployCommand: "php artisan migrate --force && php artisan permission:insert"
+    envVars:
+      - fromGroup: recruitment-shared
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: recruitment-redis
+          property: connectionString
+
+  # 2) عامل الطابور — الإشعارات/البثّ مُصفَّرة عبر Redis
+  - type: worker
+    name: recruitment-queue
+    runtime: docker
+    repo: https://github.com/hishare24-sketch/smart-recruitment-system
+    branch: main
+    dockerfilePath: backend/Dockerfile
+    dockerContext: backend
+    plan: starter
+    dockerCommand: "php artisan queue:work --tries=3 --timeout=90 --sleep=1"
+    envVars:
+      - fromGroup: recruitment-shared
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: recruitment-redis
+          property: connectionString
+
+  # 3) Reverb — خادم WebSocket العامّ (اربط دومين ws.example.com بهذه الخدمة)
+  - type: web
+    name: recruitment-reverb
+    runtime: docker
+    repo: https://github.com/hishare24-sketch/smart-recruitment-system
+    branch: main
+    dockerfilePath: backend/Dockerfile
+    dockerContext: backend
+    plan: starter
+    dockerCommand: "php artisan reverb:start --host=0.0.0.0 --port=${PORT}"
+    envVars:
+      - fromGroup: recruitment-shared
+      - key: REDIS_URL
+        fromService:
+          type: redis
+          name: recruitment-redis
+          property: connectionString
+
+  # 4) Redis — كاش/طابور/توسّع البثّ (Render Key Value)
+  - type: redis
+    name: recruitment-redis
+    plan: starter
+    maxmemoryPolicy: noeviction
+    ipAllowList: []          # داخليّ فقط (وصول الخدمات أعلاه)

@@ -1,4 +1,9 @@
-# الباك-إند — NestJS + JWT
+> # ⚠️ مُهمَل (DEPRECATED)
+> هذا الباك-إند (NestJS) **مُقاعَد**. الباك-إند الحيّ الآن هو **Laravel في [`../backend/`](../backend/)**،
+> والواجهة تعمل عليه. يبقى **[`openapi.yaml`](./openapi.yaml) مرجع العقد** فقط — لا يُبنى ولا يُنشَر.
+> خطّة الهجرة: [`../DOC/LARAVEL_MIGRATION_PLAN.md`](../DOC/LARAVEL_MIGRATION_PLAN.md) · النشر: [`../DOC/DEPLOYMENT.md`](../DOC/DEPLOYMENT.md).
+
+# الباك-إند — NestJS + JWT (مُهمَل)
 
 باك-إند منظومة التوظيف الذكية، ينفّذ عقد [`openapi.yaml`](./openapi.yaml).
 جزء من monorepo (الواجهة في الجذر، الباك-إند هنا). **يعمل على Node** — بلا PHP/Docker للتطوير.
