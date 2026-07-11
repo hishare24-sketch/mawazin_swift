@@ -60,9 +60,7 @@ services:
     dockerContext: backend
     plan: free
     healthCheckPath: /up
-    # المجّانيّ: هجرة بمهلة (لا تُعلّق الاستيقاظ لو تباطأت القاعدة المجّانيّة) ثمّ تقديم
-    # عبر FrankenPHP (المُثبَت أنّه خدم عند أوّل نشر أخضر). exec ليصير PID 1.
-    dockerCommand: "sh -c 'timeout 60 php artisan migrate --force || true; php artisan permission:insert || true; exec frankenphp php-server --root public/ --listen :$PORT'"
+    # الإقلاع من CMD في الـDockerfile (sh start.sh: هجرة+صلاحيّات+تقديم) — بلا تجاوز أمر.
     envVars:
       - fromGroup: recruitment-shared
       - key: DB_HOST

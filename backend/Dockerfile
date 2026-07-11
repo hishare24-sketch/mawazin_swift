@@ -26,12 +26,12 @@ RUN composer install --no-dev --no-scripts --no-autoloader --prefer-dist --no-in
 
 # بقيّة التطبيق + بناء autoload المحسّن
 COPY . .
-RUN composer dump-autoload --optimize --no-dev --classmap-authoritative
+RUN composer dump-autoload --optimize --no-dev --classmap-authoritative \
+ && chmod +x start.sh
 
 ENV APP_ENV=production \
     APP_DEBUG=false \
     LOG_CHANNEL=stderr
 
-# Render يمرّر PORT؛ FrankenPHP يخدم public/ (تطبيق Laravel كلاسيكيّ، بلا Octane).
-# صيغة shell كي يتوسّع ${PORT}. (بلا config:cache/route:cache — تفاديًا لفشل الإقلاع مع مسارات closure.)
-CMD frankenphp php-server --root public/ --listen :${PORT:-8080}
+# الإقلاع عبر سكربت (هجرة + صلاحيّات + تقديم) — يتجنّب تفسير Render لـ && في dockerCommand.
+CMD ["sh", "start.sh"]
