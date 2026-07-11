@@ -44,16 +44,31 @@ class AdminInterviewQualityController extends Controller
         [$column, $dir] = $this->parseSort((string) $request->query('sort', '-id'), self::BOARD_SORTABLE);
         $query->orderBy($column, $dir);
 
-        $items = $query->paginate((int) $request->query('perPage', 15));
-
-        // فلترة مستوى النزاهة بعد الحساب (مشتقّ لا عمود).
+        $perPage = (int) $request->query('perPage', 15);
         $level = $request->query('integrity');
-        $rows = collect($items->items())
-            ->map(fn (Interview $i) => $this->rowFor($i))
-            ->when($level, fn ($c) => $c->where('integrityLevel', $level))
-            ->values();
 
-        $items->setCollection($rows);
+        // مستوى النزاهة مشتقّ (لا عمود) فلا يُرشَّح في SQL: عند طلبه نُرشّح كامل المجموعة يدويًّا
+        // ثمّ نُرقّم — وإلّا لصار الترقيم يشمل صفوفًا لا تطابق والعدّادات خاطئة.
+        if ($level) {
+            $all = $query->get()
+                ->map(fn (Interview $i) => $this->rowFor($i))
+                ->where('integrityLevel', $level)
+                ->values();
+
+            $page = max(1, (int) $request->query('page', 1));
+            $items = new \Illuminate\Pagination\LengthAwarePaginator(
+                $all->forPage($page, $perPage)->values(),
+                $all->count(),
+                $perPage,
+                $page,
+                ['path' => $request->url(), 'query' => $request->query()]
+            );
+
+            return $this->dashboardResponse($items);
+        }
+
+        $items = $query->paginate($perPage);
+        $items->setCollection(collect($items->items())->map(fn (Interview $i) => $this->rowFor($i))->values());
 
         return $this->dashboardResponse($items);
     }

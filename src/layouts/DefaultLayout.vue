@@ -157,10 +157,11 @@ function onScroll() {
 function scrollTop() {
   window.scrollTo({ top: 0, behavior: 'smooth' })
 }
-onMounted(() => {
+onMounted(async () => {
   window.addEventListener('scroll', onScroll, { passive: true })
-  // الإشعارات الحيّة: تحميل من الخادم + اشتراك Reverb (وضع الـAPI الحقيقيّ فقط)
-  notificationsStore.hydrate()
+  // الإشعارات الحيّة: تحميل من الخادم ثمّ اشتراك Reverb (الترتيب مهمّ — الاشتراك بعد
+  // الإماهة كي لا يطمس استبدالُ hydrate إشعارًا حيًّا وصل أثناء الجلب). وضع الـAPI الحقيقيّ فقط.
+  await notificationsStore.hydrate()
   notificationsStore.startRealtime()
 })
 onBeforeUnmount(() => {

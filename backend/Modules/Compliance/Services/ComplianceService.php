@@ -57,7 +57,10 @@ class ComplianceService
             ];
         })->values();
 
-        $maxRate = (float) $groups->max('selectionRate');
+        // الأساس المرجعيّ من المجموعات ذات العيّنة الكافية فقط (وإلّا مجموعة صغيرة 100% تشوّه المقياس).
+        $eligible = $groups->where('smallSample', false);
+        $maxRate = (float) ($eligible->isNotEmpty() ? $eligible->max('selectionRate') : $groups->max('selectionRate'));
+
         $groups = $groups->map(function (array $row) use ($maxRate) {
             $ratio = $maxRate > 0 ? round($row['selectionRate'] / $maxRate, 2) : null;
             $row['impactRatio'] = $ratio;

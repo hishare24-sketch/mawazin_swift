@@ -1,7 +1,5 @@
-import Echo from 'laravel-echo'
-import Pusher from 'pusher-js'
 import { USE_REAL_API } from '@/services/api'
-import { useAuthStore } from '@/stores/AuthStore'
+import { makeEcho } from '@/services/echo'
 
 /**
  * ===== البثّ اللحظيّ لردود الدعم (Reverb) =====
@@ -9,8 +7,7 @@ import { useAuthStore } from '@/stores/AuthStore'
  * الردّ يُدرَج عبر REST فيبثّ الخادم حدث `ticket.reply`:
  * - ردّ الدعم → قناة صاحب التذكرة الخاصّة `user.{uuid}` (مركز المساعدة عند المستخدم).
  * - ردّ المستخدم → قناة الأدمن `support.admin` (كنسول الدعم).
- * القنوات خاصّة توثَّق بتوكن Bearer على `/broadcasting/auth`.
- * في وضع المحاكاة كلّ الدوال محايدة.
+ * التهيئة عبر مصنع Echo المشترك. في وضع المحاكاة كلّ الدوال محايدة.
  */
 
 export interface TicketReplyEvent {
@@ -18,33 +15,6 @@ export interface TicketReplyEvent {
   subject: string
   status: string
   reply: { id: number, author: string, isStaff: boolean, body: string, at: string | null }
-}
-
-/** أصل الخادم (بلا لاحقة /api) — قاعدة `/broadcasting/auth`. */
-function serverBase(): string {
-  const raw = (import.meta.env.VITE_BASE_API_URL as string) || ''
-  return raw.replace(/\/api\/?$/, '') || window.location.origin
-}
-
-/** ينشئ عميل Echo موصّل بـReverb موثّقًا بتوكن الجلسة. */
-function makeEcho(): Echo<'reverb'> {
-  const token = useAuthStore().getToken
-  ;(window as unknown as { Pusher: typeof Pusher }).Pusher = Pusher
-
-  const scheme = (import.meta.env.VITE_REVERB_SCHEME as string) || 'http'
-  const port = Number(import.meta.env.VITE_REVERB_PORT || 8091)
-
-  return new Echo({
-    broadcaster: 'reverb',
-    key: import.meta.env.VITE_REVERB_APP_KEY as string,
-    wsHost: (import.meta.env.VITE_REVERB_HOST as string) || 'localhost',
-    wsPort: port,
-    wssPort: port,
-    forceTLS: scheme === 'https',
-    enabledTransports: ['ws', 'wss'],
-    authEndpoint: `${serverBase()}/broadcasting/auth`,
-    auth: { headers: { Authorization: `Bearer ${token}` } },
-  })
 }
 
 /** يشترك في ردود تذاكر المستخدم لحظيًّا على قناته — يعيد دالة إلغاء. */

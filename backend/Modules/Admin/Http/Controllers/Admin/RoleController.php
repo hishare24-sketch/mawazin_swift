@@ -198,7 +198,8 @@ class RoleController extends Controller
         $data = $request->validate(['userId' => ['required', 'integer']]);
         $user = User::findOrFail($data['userId']);
 
-        if ($role === 'super_admin') {
+        // حارس آخر super_admin — يُطبَّق فقط حين يكون الهدف حاملًا فعلًا (وإلّا 405 زائف لغير الحامل).
+        if ($role === 'super_admin' && $user->hasRole($target)) {
             $holders = DB::table('model_has_roles')->where('role_id', $target->id)->count();
             if ($holders <= 1) {
                 return $this->forbiddenResponse(__('Cannot revoke the last super_admin.'));

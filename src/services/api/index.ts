@@ -333,7 +333,7 @@ export interface AdminBroadcastStats { total: number, reach: number, audienceSiz
 export interface AdminTicketReply { id: number, author: string | null, isStaff: boolean, body: string, at?: string }
 export interface AdminTicket { id: number, subject: string, user: string, category: string, priority: string, status: string, assignee: string | null, repliesCount: number, lastReplyAt?: string, createdAt?: string, replies?: AdminTicketReply[] }
 export interface AdminSupportStats { total: number, open: number, pending: number, resolved: number, byCategory: { label: string, value: number }[], byPriority: { label: string, value: number }[], series: { date: string, value: number }[] }
-export interface AdminAuditMeta { role?: string, added?: string[], removed?: string[], granted?: string[], deleted?: boolean, user?: string, from?: string[] | string | null, to?: string[] | string | null, status?: { from: string, to: string }, assigned?: string, revoked?: string, userId?: number }
+export interface AdminAuditMeta { role?: string, added?: string[], removed?: string[], granted?: string[], deleted?: boolean, user?: string, from?: string[] | null, to?: string[] | null, status?: { from: string, to: string }, assigned?: string, revoked?: string, userId?: number }
 export interface AdminAuditLog { id: number, actor: string, actorId: number | null, method: string, resource: string | null, action: string, path: string, targetId: number | null, status: number, meta?: AdminAuditMeta | null, ip: string | null, at?: string }
 export interface RoleMember { id: number, name: string, email: string, status: string }
 export interface RoleMembersResponse { role: string, members: RoleMember[] }
