@@ -19,6 +19,7 @@ class AuditLogResource extends JsonResource
             'path' => $this->path,
             'targetId' => $this->target_id,
             'status' => (int) $this->status,
+            'meta' => $this->meta, // فرق قبل/بعد (added/removed/from/to) إن وُجد
             'ip' => $this->ip,
             'at' => optional($this->created_at)->toISOString(),
         ];

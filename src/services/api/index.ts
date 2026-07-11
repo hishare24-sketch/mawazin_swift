@@ -149,6 +149,9 @@ export const API_PATHS = {
     rolesStats: '/admin/roles/stats',
     role: (role: string) => `/admin/roles/${role}`,
     rolePermissions: (role: string) => `/admin/roles/${role}/permissions`,
+    roleMembers: (role: string) => `/admin/roles/${role}/members`,
+    roleAssign: (role: string) => `/admin/roles/${role}/assign`,
+    roleRevoke: (role: string) => `/admin/roles/${role}/revoke`,
     opportunities: '/admin/opportunities',
     opportunitiesStats: '/admin/opportunities/stats',
     opportunity: (id: number) => `/admin/opportunities/${id}`,
@@ -329,7 +332,10 @@ export interface AdminBroadcastStats { total: number, reach: number, audienceSiz
 export interface AdminTicketReply { id: number, author: string | null, isStaff: boolean, body: string, at?: string }
 export interface AdminTicket { id: number, subject: string, user: string, category: string, priority: string, status: string, assignee: string | null, repliesCount: number, lastReplyAt?: string, createdAt?: string, replies?: AdminTicketReply[] }
 export interface AdminSupportStats { total: number, open: number, pending: number, resolved: number, byCategory: { label: string, value: number }[], byPriority: { label: string, value: number }[], series: { date: string, value: number }[] }
-export interface AdminAuditLog { id: number, actor: string, actorId: number | null, method: string, resource: string | null, action: string, path: string, targetId: number | null, status: number, ip: string | null, at?: string }
+export interface AdminAuditMeta { role?: string, added?: string[], removed?: string[], granted?: string[], deleted?: boolean, user?: string, from?: string[] | string | null, to?: string[] | string | null, status?: { from: string, to: string }, assigned?: string, revoked?: string, userId?: number }
+export interface AdminAuditLog { id: number, actor: string, actorId: number | null, method: string, resource: string | null, action: string, path: string, targetId: number | null, status: number, meta?: AdminAuditMeta | null, ip: string | null, at?: string }
+export interface RoleMember { id: number, name: string, email: string, status: string }
+export interface RoleMembersResponse { role: string, members: RoleMember[] }
 export interface AdminAuditStats { total: number, today: number, actors: number, byAction: { label: string, value: number }[], byResource: { label: string, value: number }[], series: { date: string, value: number }[] }
 export interface AdminRole { name: string, usersCount: number, permissions: string[] }
 export interface AdminRolesResponse { roles: AdminRole[], permissions: string[] }
@@ -648,6 +654,9 @@ export const api = {
     createRole: (name: string, permissions: string[]) => post<AdminRole>(API_PATHS.admin.roles, { name, permissions }),
     deleteRole: (role: string) => del(API_PATHS.admin.role(role)),
     updateRolePermissions: (role: string, permissions: string[]) => put(API_PATHS.admin.rolePermissions(role), { permissions }),
+    roleMembers: (role: string) => get<RoleMembersResponse>(API_PATHS.admin.roleMembers(role)),
+    assignRole: (role: string, userId: number) => post<RoleMember>(API_PATHS.admin.roleAssign(role), { userId }),
+    revokeRole: (role: string, userId: number) => post(API_PATHS.admin.roleRevoke(role), { userId }),
     opportunities: (params?: AdminMarketQuery) => getPage<AdminOpportunity>(API_PATHS.admin.opportunities, params as Record<string, unknown>),
     opportunitiesStats: () => get<AdminOpportunitiesStats>(API_PATHS.admin.opportunitiesStats),
     deleteOpportunity: (id: number) => del(API_PATHS.admin.opportunity(id)),

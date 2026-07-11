@@ -25,5 +25,8 @@ Route::put('users/{user}/admin-role', [AdminUserController::class, 'setAdminRole
 Route::get('roles/stats', [RoleController::class, 'stats']);
 Route::get('roles', [RoleController::class, 'index']);
 Route::post('roles', [RoleController::class, 'store']);
+Route::get('roles/{role}/members', [RoleController::class, 'members']);
+Route::post('roles/{role}/assign', [RoleController::class, 'assign']);
+Route::post('roles/{role}/revoke', [RoleController::class, 'revoke']);
 Route::put('roles/{role}/permissions', [RoleController::class, 'updatePermissions']);
 Route::delete('roles/{role}', [RoleController::class, 'destroy']);

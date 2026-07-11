@@ -133,6 +133,52 @@ function openDetail(row: AdminAuditLog) { detail.value = row; detailOpen.value =
           <div class="det"><span class="text-muted">IP</span><span class="font-mono text-xs text-content" dir="ltr">{{ detail.ip ?? '—' }}</span></div>
           <div class="det"><span class="text-muted">{{ t('admin.audit.colTime') }}</span><span class="text-content">{{ fmtDate(detail.at) }}</span></div>
         </div>
+
+        <!-- فرق قبل/بعد (C2) -->
+        <div v-if="detail.meta" class="rounded-ui border-ui p-3">
+          <div class="mb-2 flex items-center gap-1.5 text-xs font-bold text-content">
+            <BaseIcon name="mdi-file-compare" :size="15" class="text-brand" />{{ t('admin.audit.changes') }}
+          </div>
+          <div class="space-y-1.5 text-xs">
+            <div v-if="detail.meta.role" class="flex items-center gap-1.5">
+              <span class="text-muted">{{ t('admin.audit.role') }}:</span><BaseChip color="brand">{{ detail.meta.role }}</BaseChip>
+              <BaseChip v-if="detail.meta.deleted" color="error">{{ t('admin.audit.deleted') }}</BaseChip>
+            </div>
+            <div v-if="detail.meta.user" class="flex items-center gap-1.5">
+              <span class="text-muted">{{ t('admin.audit.user') }}:</span><span class="text-content">{{ detail.meta.user }}</span>
+            </div>
+            <div v-if="detail.meta.added?.length" class="flex flex-wrap items-center gap-1">
+              <span class="text-muted">{{ t('admin.audit.added') }}:</span>
+              <BaseChip v-for="p in detail.meta.added" :key="p" color="success">+ {{ p }}</BaseChip>
+            </div>
+            <div v-if="detail.meta.removed?.length" class="flex flex-wrap items-center gap-1">
+              <span class="text-muted">{{ t('admin.audit.removed') }}:</span>
+              <BaseChip v-for="p in detail.meta.removed" :key="p" color="error">− {{ p }}</BaseChip>
+            </div>
+            <div v-if="detail.meta.granted?.length" class="flex flex-wrap items-center gap-1">
+              <span class="text-muted">{{ t('admin.audit.granted') }}:</span>
+              <BaseChip v-for="p in detail.meta.granted" :key="p" color="info">{{ p }}</BaseChip>
+            </div>
+            <div v-if="detail.meta.status" class="flex items-center gap-1.5">
+              <span class="text-muted">{{ t('admin.audit.statusChange') }}:</span>
+              <BaseChip color="neutral">{{ detail.meta.status.from }}</BaseChip>
+              <BaseIcon name="mdi-arrow-left" :size="14" class="text-muted" />
+              <BaseChip color="brand">{{ detail.meta.status.to }}</BaseChip>
+            </div>
+            <div v-if="Array.isArray(detail.meta.from) || Array.isArray(detail.meta.to)" class="flex flex-wrap items-center gap-1">
+              <span class="text-muted">{{ t('admin.audit.roleChange') }}:</span>
+              <BaseChip color="neutral">{{ (detail.meta.from as string[])?.join('، ') || '—' }}</BaseChip>
+              <BaseIcon name="mdi-arrow-left" :size="14" class="text-muted" />
+              <BaseChip color="brand">{{ (detail.meta.to as string[])?.join('، ') || '—' }}</BaseChip>
+            </div>
+            <div v-if="detail.meta.assigned" class="flex items-center gap-1.5">
+              <span class="text-muted">{{ t('admin.audit.assigned') }}:</span><BaseChip color="success">{{ detail.meta.assigned }}</BaseChip>
+            </div>
+            <div v-if="detail.meta.revoked" class="flex items-center gap-1.5">
+              <span class="text-muted">{{ t('admin.audit.revoked') }}:</span><BaseChip color="error">{{ detail.meta.revoked }}</BaseChip>
+            </div>
+          </div>
+        </div>
       </div>
     </BaseDrawer>
   </div>

@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
 use Modules\Admin\Enums\PermissionEnum;
+use Modules\User\Entities\User;
 use Spatie\Permission\Models\Role;
 
 class RoleController extends Controller
@@ -86,6 +87,8 @@ class RoleController extends Controller
             $role->syncPermissions($allowed);
         }
 
+        audit_changes(['role' => $role->name, 'granted' => $allowed]);
+
         return $this->createdResponse([
             'name' => $role->name,
             'usersCount' => 0,
@@ -109,6 +112,7 @@ class RoleController extends Controller
             return $this->forbiddenResponse(__('Cannot delete a role that is still assigned to users.'));
         }
 
+        audit_changes(['role' => $role, 'deleted' => true]);
         $target->delete();
 
         return $this->updatedResponse(null, __('Deleted successfully'));
@@ -135,11 +139,75 @@ class RoleController extends Controller
 
         // اقتصار على الصلاحيّات المعروفة فقط (حماية)
         $allowed = array_values(array_intersect($data['permissions'], PermissionEnum::permissions()));
+
+        // فرق قبل/بعد (تدقيق دقيق للتغيير على الصلاحيّات)
+        $before = $target->permissions->pluck('name')->values()->all();
+        $added = array_values(array_diff($allowed, $before));
+        $removed = array_values(array_diff($before, $allowed));
+
         $target->syncPermissions($allowed);
+
+        if ($added || $removed) {
+            audit_changes(['role' => $role, 'added' => $added, 'removed' => $removed]);
+        }
 
         return $this->updatedResponse([
             'name' => $target->name,
             'permissions' => $allowed,
         ]);
+    }
+
+    /** حاملو دور محدّد (إدارة عضويّة الأدوار — عمق RBAC). */
+    public function members(string $role)
+    {
+        $this->authorize('view_roles');
+
+        $target = Role::where(['name' => $role, 'guard_name' => 'admin'])->firstOrFail();
+        $ids = DB::table('model_has_roles')->where('role_id', $target->id)->pluck('model_id');
+        $members = User::whereIn('id', $ids)->orderBy('name')->get(['id', 'name', 'email', 'status'])
+            ->map(fn (User $u) => ['id' => $u->id, 'name' => $u->name, 'email' => $u->email, 'status' => $u->status]);
+
+        return $this->dataResponse(['role' => $role, 'members' => $members]);
+    }
+
+    /** إسناد دور لمستخدم (يجعله أدمن بصلاحيّات الدور). */
+    public function assign(Request $request, string $role)
+    {
+        $this->authorize('update_roles');
+
+        $target = Role::where(['name' => $role, 'guard_name' => 'admin'])->firstOrFail();
+        $data = $request->validate(['userId' => ['required', 'integer', Rule::exists('users', 'id')]]);
+        $user = User::findOrFail($data['userId']);
+
+        if ($user->hasRole($target)) {
+            return $this->forbiddenResponse(__('User already holds this role.'));
+        }
+
+        $user->assignRole($target);
+        audit_changes(['role' => $role, 'assigned' => $user->name, 'userId' => $user->id]);
+
+        return $this->updatedResponse(['id' => $user->id, 'name' => $user->name, 'email' => $user->email, 'status' => $user->status]);
+    }
+
+    /** نزع دور من مستخدم — لا يُنزع آخر super_admin (حارس القفل). */
+    public function revoke(Request $request, string $role)
+    {
+        $this->authorize('update_roles');
+
+        $target = Role::where(['name' => $role, 'guard_name' => 'admin'])->firstOrFail();
+        $data = $request->validate(['userId' => ['required', 'integer']]);
+        $user = User::findOrFail($data['userId']);
+
+        if ($role === 'super_admin') {
+            $holders = DB::table('model_has_roles')->where('role_id', $target->id)->count();
+            if ($holders <= 1) {
+                return $this->forbiddenResponse(__('Cannot revoke the last super_admin.'));
+            }
+        }
+
+        $user->removeRole($target);
+        audit_changes(['role' => $role, 'revoked' => $user->name, 'userId' => $user->id]);
+
+        return $this->updatedResponse(null, __('Updated successfully'));
     }
 }

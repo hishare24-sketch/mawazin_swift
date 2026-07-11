@@ -10,6 +10,16 @@ if (! function_exists('current_user')) {
     }
 }
 
+if (! function_exists('audit_changes')) {
+    /**
+     * يسجّل فرق قبل/بعد على طلب التدقيق الحاليّ (يلتقطه AuditMiddleware في meta).
+     */
+    function audit_changes(array $changes): void
+    {
+        \Modules\Audit\Support\AuditContext::set($changes);
+    }
+}
+
 if (! function_exists('setting')) {
     /**
      * قيمة إعداد منصّة مُطبَّعة (أو الافتراضيّ). آمنة حين غياب الجدول/الإعداد.

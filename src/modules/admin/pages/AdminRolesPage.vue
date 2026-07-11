@@ -13,7 +13,8 @@ import BaseSnackbar from '@/components/ui/BaseSnackbar.vue'
 import BaseTooltip from '@/components/ui/BaseTooltip.vue'
 import DonutChart from '@/components/charts/DonutChart.vue'
 import BarChart from '@/components/charts/BarChart.vue'
-import { type AdminRole, type AdminRolesStats, api } from '@/services/api'
+import BaseDrawer from '@/components/ui/BaseDrawer.vue'
+import { type AdminRole, type AdminRolesStats, type RoleMember, api } from '@/services/api'
 import { PERMISSION_GROUPS } from '@/services/adminPermissions'
 import { confirm } from '@/components/ui/confirm'
 import { useAuthStore } from '@/stores/AuthStore'
@@ -34,6 +35,63 @@ const original = ref<Record<string, Set<string>>>({})
 const snack = ref({ show: false, text: '', color: 'success' })
 function toast(text: string, color = 'success') { snack.value = { show: true, text, color } }
 function fail(e: unknown) { toast((e as { message?: string })?.message ?? t('admin.toast.failed'), 'error') }
+
+// ——— عضويّة الدور (C2) ———
+const membersOpen = ref(false)
+const membersRole = ref('')
+const members = ref<RoleMember[]>([])
+const membersLoading = ref(false)
+const memberQuery = ref('')
+const memberResults = ref<{ id: number, name: string, email: string }[]>([])
+const searching = ref(false)
+
+async function openMembers(roleName: string) {
+  membersRole.value = roleName
+  membersOpen.value = true
+  members.value = []
+  memberQuery.value = ''
+  memberResults.value = []
+  await loadMembers()
+}
+async function loadMembers() {
+  membersLoading.value = true
+  try { members.value = (await api.admin.roleMembers(membersRole.value)).members }
+  catch (e) { fail(e) }
+  finally { membersLoading.value = false }
+}
+let searchTimer: ReturnType<typeof setTimeout> | null = null
+function onSearch() {
+  if (searchTimer)
+    clearTimeout(searchTimer)
+  searchTimer = setTimeout(async () => {
+    const q = memberQuery.value.trim()
+    if (q.length < 2) { memberResults.value = []; return }
+    searching.value = true
+    try {
+      const held = new Set(members.value.map(m => m.id))
+      memberResults.value = (await api.admin.users({ q, perPage: 6 })).items
+        .filter(u => !held.has(u.id)).map(u => ({ id: u.id, name: u.name, email: u.email }))
+    }
+    catch { memberResults.value = [] }
+    finally { searching.value = false }
+  }, 250)
+}
+async function assign(userId: number) {
+  try {
+    await api.admin.assignRole(membersRole.value, userId)
+    toast(t('admin.roles.assigned'))
+    memberQuery.value = ''; memberResults.value = []
+    await loadMembers(); load(); loadStats()
+  }
+  catch (e) { fail(e) }
+}
+async function revoke(m: RoleMember) {
+  const ok = await confirm({ title: t('admin.roles.revokeTitle'), message: t('admin.roles.revokeMsg', { name: m.name, role: membersRole.value }), confirmText: t('admin.roles.revoke'), tone: 'danger', icon: 'mdi-account-remove-outline' })
+  if (!ok)
+    return
+  try { await api.admin.revokeRole(membersRole.value, m.id); toast(t('admin.toast.updated')); await loadMembers(); load(); loadStats() }
+  catch (e) { fail(e) }
+}
 
 async function loadStats() { try { stats.value = await api.admin.rolesStats() } catch { /* تجاهل */ } }
 async function load() {
@@ -189,7 +247,10 @@ async function removeRole(roleName: string) {
                     </button>
                   </BaseTooltip>
                 </div>
-                <div class="text-[11px] text-muted">{{ t('admin.roles.usersCount', { n: role.usersCount }) }}</div>
+                <button v-if="canEdit" class="mt-0.5 inline-flex items-center gap-1 rounded px-1.5 py-0.5 text-[11px] text-brand hover:bg-brand/[0.08]" @click="openMembers(role.name)">
+                  <BaseIcon name="mdi-account-multiple-outline" :size="13" />{{ t('admin.roles.usersCount', { n: role.usersCount }) }}
+                </button>
+                <div v-else class="text-[11px] text-muted">{{ t('admin.roles.usersCount', { n: role.usersCount }) }}</div>
               </th>
             </tr>
           </thead>
@@ -262,6 +323,46 @@ async function removeRole(roleName: string) {
         </BaseButton>
       </template>
     </BaseModal>
+
+    <!-- عضويّة الدور (C2) -->
+    <BaseDrawer v-model="membersOpen" :width="400">
+      <div class="p-4">
+        <h3 class="mb-3 flex items-center gap-2 text-base font-bold text-content">
+          <BaseIcon name="mdi-account-multiple-outline" :size="20" class="text-brand" />
+          {{ t('admin.roles.membersOf', { role: membersRole }) }}
+        </h3>
+
+        <!-- إضافة عضو -->
+        <div class="mb-3">
+          <BaseInput v-model="memberQuery" :label="t('admin.roles.addMember')" :placeholder="t('admin.roles.searchUser')" @update:model-value="onSearch" />
+          <div v-if="memberResults.length" class="mt-1 space-y-1 rounded-ui border-ui p-1.5">
+            <button v-for="u in memberResults" :key="u.id" class="flex w-full items-center gap-2 rounded px-2 py-1.5 text-start text-sm hover:bg-brand/[0.08]" @click="assign(u.id)">
+              <BaseIcon name="mdi-plus-circle-outline" :size="16" class="text-brand" />
+              <div class="flex-1">
+                <div class="text-content">{{ u.name }}</div>
+                <div class="text-[11px] text-muted" dir="ltr">{{ u.email }}</div>
+              </div>
+            </button>
+          </div>
+          <p v-else-if="searching" class="mt-1 text-xs text-muted">…</p>
+        </div>
+
+        <!-- الأعضاء الحاليّون -->
+        <div v-if="membersLoading" class="py-6 text-center"><BaseIcon name="mdi-loading" :size="24" class="animate-spin text-brand" /></div>
+        <div v-else class="space-y-1.5">
+          <div v-for="m in members" :key="m.id" class="flex items-center gap-2 rounded-ui border-ui px-3 py-2">
+            <BaseIcon name="mdi-account-circle-outline" :size="20" class="text-muted" />
+            <div class="flex-1">
+              <div class="text-sm text-content">{{ m.name }}</div>
+              <div class="text-[11px] text-muted" dir="ltr">{{ m.email }}</div>
+            </div>
+            <BaseChip :color="m.status === 'active' ? 'success' : 'neutral'">{{ m.status }}</BaseChip>
+            <button class="del-role" :aria-label="t('admin.roles.revoke')" @click="revoke(m)"><BaseIcon name="mdi-account-remove-outline" :size="16" /></button>
+          </div>
+          <p v-if="!members.length" class="rounded-ui border border-dashed border-ui py-5 text-center text-xs text-muted">{{ t('admin.roles.noMembers') }}</p>
+        </div>
+      </div>
+    </BaseDrawer>
 
     <BaseSnackbar v-model="snack.show" :color="snack.color">{{ snack.text }}</BaseSnackbar>
   </div>

@@ -155,6 +155,7 @@ class AdminUserController extends Controller
         }
 
         $user->update(['status' => 'suspended']);
+        audit_changes(['user' => $user->name, 'status' => ['from' => 'active', 'to' => 'suspended']]);
 
         return $this->updatedResponse((new AdminUserResource($user->load('roles')))->resolve());
     }
@@ -164,7 +165,9 @@ class AdminUserController extends Controller
     {
         $this->authorize('update_users');
 
+        $from = $user->status;
         $user->update(['status' => 'active']);
+        audit_changes(['user' => $user->name, 'status' => ['from' => $from, 'to' => 'active']]);
 
         return $this->updatedResponse((new AdminUserResource($user->load('roles')))->resolve());
     }
@@ -181,6 +184,8 @@ class AdminUserController extends Controller
             'role' => ['present', 'nullable', Rule::in(self::ADMIN_ROLES)],
         ]);
 
+        $before = $user->roles->where('guard_name', 'admin')->pluck('name')->values()->all();
+
         // نزع كل أدوار guard=admin ثم إسناد المطلوب — بكائنات Role (الاسم النصّيّ يُحلّ على guard=web الافتراضيّ للنموذج فيفشل)
         foreach ($user->roles->where('guard_name', 'admin') as $current) {
             $user->removeRole($current);
@@ -189,6 +194,8 @@ class AdminUserController extends Controller
             $role = Role::where(['name' => $data['role'], 'guard_name' => 'admin'])->firstOrFail();
             $user->assignRole($role);
         }
+
+        audit_changes(['user' => $user->name, 'from' => $before, 'to' => $data['role'] ? [$data['role']] : []]);
 
         return $this->updatedResponse((new AdminUserResource($user->load('roles')))->resolve());
     }

@@ -6,6 +6,7 @@ use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Modules\Audit\Entities\AuditLog;
+use Modules\Audit\Support\AuditContext;
 
 /**
  * يسجّل أفعال الأدمن المُعدِّلة تلقائيًّا (POST/PUT/PATCH/DELETE تحت api/admin).
@@ -16,15 +17,18 @@ class AuditMiddleware
     private const MUTATING = ['POST', 'PUT', 'PATCH', 'DELETE'];
 
     /** أفعال ذات معنًى في آخر المسار (بدل map الطريقة). */
-    private const VERBS = ['close', 'approve', 'reject', 'suspend', 'activate', 'adjust', 'transactions', 'permissions', 'admin-role'];
+    private const VERBS = ['close', 'approve', 'reject', 'suspend', 'activate', 'adjust', 'transactions', 'permissions', 'admin-role', 'assign', 'revoke', 'review'];
 
     public function handle(Request $request, Closure $next)
     {
+        AuditContext::reset(); // ابدأ نظيفًا لكلّ طلب
+
         $response = $next($request);
 
         if (in_array($request->method(), self::MUTATING, true)) {
             $this->record($request, $response->getStatusCode());
         }
+        AuditContext::reset();
 
         return $response;
     }
@@ -65,7 +69,7 @@ class AuditMiddleware
                 'path' => $request->path(),
                 'target_id' => $targetId,
                 'status' => $status,
-                'meta' => null,
+                'meta' => AuditContext::payload(), // فرق قبل/بعد إن سجّله الكنترولر
                 'ip' => $request->ip(),
                 'created_at' => Carbon::now(),
             ]);

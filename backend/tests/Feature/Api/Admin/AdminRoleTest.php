@@ -97,4 +97,51 @@ class AdminRoleTest extends TestCase
         Sanctum::actingAs(User::create(['name' => 'U', 'email' => 'rl'.uniqid().'@rec.test', 'password' => 'secret123']));
         $this->postJson('/api/admin/roles', ['name' => 'x'])->assertStatus(403);
     }
+
+    // ═══ C2: تدقيق قبل/بعد + عضويّة الأدوار ═══
+
+    public function test_update_permissions_records_before_after_audit(): void
+    {
+        $this->admin();
+        $this->postJson('/api/admin/roles', ['name' => 'auditor', 'permissions' => ['view_users']])->assertStatus(201);
+
+        $this->putJson('/api/admin/roles/auditor/permissions', ['permissions' => ['view_users', 'view_surveys']])->assertOk();
+
+        $log = \Modules\Audit\Entities\AuditLog::where('resource', 'roles')->where('action', 'permissions')->latest('id')->first();
+        $this->assertNotNull($log);
+        $this->assertSame(['view_surveys'], $log->meta['added']);
+        $this->assertSame([], $log->meta['removed']);
+        $this->assertSame('auditor', $log->meta['role']);
+    }
+
+    public function test_role_members_assign_and_revoke(): void
+    {
+        $this->admin();
+        $this->postJson('/api/admin/roles', ['name' => 'helper', 'permissions' => ['view_users']])->assertStatus(201);
+        $member = User::create(['name' => 'عضو', 'email' => 'mem'.uniqid().'@rec.test', 'password' => 'secret123']);
+
+        // فارغ ابتداءً
+        $this->getJson('/api/admin/roles/helper/members')->assertOk()->assertJsonCount(0, 'data.members');
+
+        // إسناد
+        $this->postJson('/api/admin/roles/helper/assign', ['userId' => $member->id])
+            ->assertOk()->assertJsonPath('data.name', 'عضو');
+        $this->getJson('/api/admin/roles/helper/members')->assertOk()->assertJsonCount(1, 'data.members');
+
+        // تدقيق الإسناد
+        $log = \Modules\Audit\Entities\AuditLog::where('action', 'assign')->latest('id')->first();
+        $this->assertSame($member->id, $log->meta['userId']);
+
+        // نزع
+        $this->postJson('/api/admin/roles/helper/revoke', ['userId' => $member->id])->assertOk();
+        $this->getJson('/api/admin/roles/helper/members')->assertOk()->assertJsonCount(0, 'data.members');
+    }
+
+    public function test_cannot_revoke_last_super_admin(): void
+    {
+        $admin = $this->admin(); // super_admin وحيد
+
+        $this->postJson('/api/admin/roles/super_admin/revoke', ['userId' => $admin->id])
+            ->assertStatus(405);
+    }
 }
