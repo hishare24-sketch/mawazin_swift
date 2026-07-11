@@ -45,7 +45,10 @@ export default defineConfig(({ command }) => ({
     },
   },
   server: {
-    port: Number(process.env.PORT) || 5173,
+    // منفذ ثابت مخصّص للواجهة (Docker/Sail يحجز 5173، فكان Vite ينحرف لمنفذ عشوائيّ
+    // كلّ تشغيل ويكسر الرابط). strictPort يفشل بوضوح بدل الانحراف — الرابط ثابت دائمًا.
+    port: Number(process.env.PORT) || 5273,
+    strictPort: true,
     host: true,
   },
   build: {
