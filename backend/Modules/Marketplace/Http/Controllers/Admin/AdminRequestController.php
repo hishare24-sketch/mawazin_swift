@@ -48,8 +48,8 @@ class AdminRequestController extends Controller
 
         if ($q = trim((string) $request->query('q', ''))) {
             $query->where(function ($sub) use ($q): void {
-                $sub->where('title', 'like', "%{$q}%")
-                    ->orWhere('org', 'like', "%{$q}%");
+                $sub->where('title', like_op(), "%{$q}%")
+                    ->orWhere('org', like_op(), "%{$q}%");
             });
         }
         foreach (['type', 'state'] as $filter) {

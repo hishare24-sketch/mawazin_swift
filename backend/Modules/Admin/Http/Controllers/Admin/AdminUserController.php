@@ -29,9 +29,9 @@ class AdminUserController extends Controller
 
         if ($q = trim((string) $request->query('q', ''))) {
             $query->where(function ($sub) use ($q): void {
-                $sub->where('name', 'like', "%{$q}%")
-                    ->orWhere('email', 'like', "%{$q}%")
-                    ->orWhere('uuid', 'like', "%{$q}%");
+                $sub->where('name', like_op(), "%{$q}%")
+                    ->orWhere('email', like_op(), "%{$q}%")
+                    ->orWhere('uuid', like_op(), "%{$q}%");
             });
         }
 

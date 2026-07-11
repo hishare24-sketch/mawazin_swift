@@ -26,7 +26,7 @@ class AdminModerationController extends Controller
 
         if ($q = trim((string) $request->query('q', ''))) {
             $query->where(function ($sub) use ($q): void {
-                $sub->where('subject', 'like', "%{$q}%")->orWhere('submitter_name', 'like', "%{$q}%");
+                $sub->where('subject', like_op(), "%{$q}%")->orWhere('submitter_name', like_op(), "%{$q}%");
             });
         }
         foreach (['type', 'status'] as $filter) {

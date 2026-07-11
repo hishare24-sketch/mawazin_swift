@@ -24,7 +24,7 @@ class AdminTicketController extends Controller
 
         if ($q = trim((string) $request->query('q', ''))) {
             $query->where(function ($sub) use ($q): void {
-                $sub->where('subject', 'like', "%{$q}%")->orWhere('user_name', 'like', "%{$q}%");
+                $sub->where('subject', like_op(), "%{$q}%")->orWhere('user_name', like_op(), "%{$q}%");
             });
         }
         foreach (['status', 'category', 'priority'] as $filter) {

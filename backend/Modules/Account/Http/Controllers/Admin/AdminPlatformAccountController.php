@@ -23,7 +23,7 @@ class AdminPlatformAccountController extends Controller
 
         if ($q = trim((string) $request->query('q', ''))) {
             $query->where(function ($sub) use ($q): void {
-                $sub->where('name', 'like', "%{$q}%")->orWhere('bank_name', 'like', "%{$q}%");
+                $sub->where('name', like_op(), "%{$q}%")->orWhere('bank_name', like_op(), "%{$q}%");
             });
         }
         if ($type = $request->query('type')) {

@@ -55,6 +55,16 @@ class MarketplaceTest extends TestCase
         $this->assertSame('Backend Engineer', $response->json('data.0.title'));
     }
 
+    public function test_search_is_case_insensitive_across_drivers(): void
+    {
+        $this->actingAsUser();
+        $this->postJson('/api/v1/opportunities', ['title' => 'Backend Engineer', 'company' => 'Acme', 'category' => 'tech']);
+
+        // حالة مغايرة تمامًا — يجب أن تجد النتيجة على MySQL و Postgres (عبر like_op/ilike)
+        $response = $this->getJson('/api/v1/opportunities?q=BACKEND')->assertOk();
+        $this->assertSame('Backend Engineer', $response->json('data.0.title'));
+    }
+
     public function test_create_opportunity_returns_201(): void
     {
         $this->actingAsUser();

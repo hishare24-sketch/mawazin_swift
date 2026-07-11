@@ -20,7 +20,7 @@ class AdminInterviewerController extends Controller
 
         if ($q = trim((string) $request->query('q', ''))) {
             $query->where(function ($sub) use ($q): void {
-                $sub->where('name', 'like', "%{$q}%")->orWhere('specialty', 'like', "%{$q}%");
+                $sub->where('name', like_op(), "%{$q}%")->orWhere('specialty', like_op(), "%{$q}%");
             });
         }
         if ($status = $request->query('status')) {

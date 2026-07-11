@@ -21,7 +21,7 @@ class AdminSurveyTemplateController extends Controller
         $query = SurveyTemplate::query();
 
         if ($q = trim((string) $request->query('q', ''))) {
-            $query->where('name', 'like', "%{$q}%");
+            $query->where('name', like_op(), "%{$q}%");
         }
         if ($category = $request->query('category')) {
             $query->where('category', $category);

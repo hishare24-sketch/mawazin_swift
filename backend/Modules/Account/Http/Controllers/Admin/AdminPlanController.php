@@ -22,7 +22,7 @@ class AdminPlanController extends Controller
 
         if ($q = trim((string) $request->query('q', ''))) {
             $query->where(function ($sub) use ($q): void {
-                $sub->where('name', 'like', "%{$q}%")->orWhere('key', 'like', "%{$q}%");
+                $sub->where('name', like_op(), "%{$q}%")->orWhere('key', like_op(), "%{$q}%");
             });
         }
 

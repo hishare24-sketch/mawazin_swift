@@ -23,7 +23,7 @@ class AdminInvoiceController extends Controller
 
         if ($q = trim((string) $request->query('q', ''))) {
             $query->where(function ($sub) use ($q): void {
-                $sub->where('user_name', 'like', "%{$q}%")->orWhere('reference', 'like', "%{$q}%");
+                $sub->where('user_name', like_op(), "%{$q}%")->orWhere('reference', like_op(), "%{$q}%");
             });
         }
         if ($status = $request->query('status')) {

@@ -1,5 +1,16 @@
 <?php
 
+if (! function_exists('like_op')) {
+    /**
+     * عامل البحث النصّيّ المحمول بين المحرّكات: `ilike` على Postgres (Supabase)
+     * ليبقى البحث غير حسّاس لحالة الأحرف كما في MySQL، و`like` على غيره.
+     */
+    function like_op(): string
+    {
+        return \Illuminate\Support\Facades\DB::connection()->getDriverName() === 'pgsql' ? 'ilike' : 'like';
+    }
+}
+
 if (! function_exists('current_user')) {
     /**
      * المستخدم الحاليّ. المرحلة 1 توسّعه لدعم حارسَي api (client) و admin.

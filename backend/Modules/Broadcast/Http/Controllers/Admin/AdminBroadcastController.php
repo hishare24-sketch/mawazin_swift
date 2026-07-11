@@ -29,7 +29,7 @@ class AdminBroadcastController extends Controller
         $query = Broadcast::query();
 
         if ($q = trim((string) $request->query('q', ''))) {
-            $query->where('title', 'like', "%{$q}%");
+            $query->where('title', like_op(), "%{$q}%");
         }
         foreach (['channel', 'audience'] as $filter) {
             if ($v = $request->query($filter)) {

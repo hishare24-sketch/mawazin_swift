@@ -47,9 +47,9 @@ class AdminOpportunityController extends Controller
 
         if ($q = trim((string) $request->query('q', ''))) {
             $query->where(function ($sub) use ($q): void {
-                $sub->where('title', 'like', "%{$q}%")
-                    ->orWhere('company', 'like', "%{$q}%")
-                    ->orWhere('location', 'like', "%{$q}%");
+                $sub->where('title', like_op(), "%{$q}%")
+                    ->orWhere('company', like_op(), "%{$q}%")
+                    ->orWhere('location', like_op(), "%{$q}%");
             });
         }
         if ($category = $request->query('category')) {

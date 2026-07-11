@@ -21,7 +21,7 @@ class AdminWalletController extends Controller
 
         if ($q = trim((string) $request->query('q', ''))) {
             $query->whereHas('user', function ($sub) use ($q): void {
-                $sub->where('name', 'like', "%{$q}%")->orWhere('email', 'like', "%{$q}%");
+                $sub->where('name', like_op(), "%{$q}%")->orWhere('email', like_op(), "%{$q}%");
             });
         }
 

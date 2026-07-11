@@ -32,7 +32,7 @@ class AdminInterviewQualityController extends Controller
 
         if ($q = trim((string) $request->query('q', ''))) {
             $query->where(function ($sub) use ($q): void {
-                $sub->where('candidate_name', 'like', "%{$q}%")->orWhere('track', 'like', "%{$q}%");
+                $sub->where('candidate_name', like_op(), "%{$q}%")->orWhere('track', like_op(), "%{$q}%");
             });
         }
         foreach (['track', 'review_status'] as $filter) {

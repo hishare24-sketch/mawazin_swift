@@ -3,6 +3,8 @@
 namespace Modules\User\Services;
 
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Mail;
+use Modules\User\Emails\WelcomeMail;
 use Modules\User\Entities\User;
 
 class AuthService
@@ -22,6 +24,9 @@ class AuthService
             'role' => $data['role'] ?? 'seeker',
             'kind' => $data['kind'] ?? 'individual',
         ]);
+
+        // بريد ترحيبيّ عبر Resend (مُصفَّر؛ لا يعطّل الاستجابة ولا يكسر التسجيل لو فشل)
+        Mail::to($user->email)->send(new WelcomeMail($user->name));
 
         return $this->sessionFor($user);
     }

@@ -16,7 +16,7 @@ class MarketplaceService
         return Opportunity::query()
             ->when($category, fn ($query) => $query->where('category', $category))
             ->when($q, fn ($query) => $query->where(
-                fn ($sub) => $sub->where('title', 'like', "%{$q}%")->orWhere('company', 'like', "%{$q}%")
+                fn ($sub) => $sub->where('title', like_op(), "%{$q}%")->orWhere('company', like_op(), "%{$q}%")
             ))
             ->orderByDesc('id')
             ->paginate($perPage);

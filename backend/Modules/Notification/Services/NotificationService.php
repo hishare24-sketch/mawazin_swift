@@ -40,6 +40,16 @@ class NotificationService
 
         $this->broadcast($notification, $data['uuid'] ?? User::whereKey($userId)->value('uuid'));
 
+        // Push عبر FCM لأجهزة المستخدم (محكوم؛ no-op بلا إعداد/توكنات، ولا يعطّل التدفّق)
+        try {
+            app(FcmService::class)->sendToUser($userId, $notification->title, $notification->body ?? '', [
+                'category' => (string) $notification->category,
+                'actionTo' => (string) ($notification->action_to ?? ''),
+            ]);
+        } catch (\Throwable $e) {
+            // البثّ لا يجب أن يكسر التدفّق
+        }
+
         return $notification;
     }
 

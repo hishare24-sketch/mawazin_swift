@@ -49,7 +49,7 @@ class AdminSurveyController extends Controller
         $query = Survey::with('user');
 
         if ($q = trim((string) $request->query('q', ''))) {
-            $query->where('title', 'like', "%{$q}%");
+            $query->where('title', like_op(), "%{$q}%");
         }
         if ($state = $request->query('state')) {
             $query->where('state', $state);

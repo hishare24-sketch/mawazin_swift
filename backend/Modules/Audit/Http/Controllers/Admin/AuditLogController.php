@@ -75,7 +75,7 @@ class AuditLogController extends Controller
 
         if ($q = trim((string) $request->query('q', ''))) {
             $query->where(function ($sub) use ($q): void {
-                $sub->where('actor_name', 'like', "%{$q}%")->orWhere('path', 'like', "%{$q}%");
+                $sub->where('actor_name', like_op(), "%{$q}%")->orWhere('path', like_op(), "%{$q}%");
             });
         }
         foreach (['action', 'resource', 'method'] as $filter) {
