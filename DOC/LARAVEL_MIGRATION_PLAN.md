@@ -135,17 +135,17 @@
 - [x] نقطة إثبات `GET /api/admin/users` (authorize `view_users` + `dashboardResponse` مقسّم `{data, meta}`) + أمر `user:promote {email} {role}`
 - [x] **تحقّق (4 Feature tests):** 401 بلا توكن · 403 لغير الأدمن · 200 للأدمن بـ view_users · **403 لدور أدمن بلا الصلاحية المحدّدة**. (الحزمة: 51 اختبارًا)
 
-### 🟡 المرحلة 5 — البثّ اللحظيّ (Reverb) — الباك-إند مُنجز
+### ✅ المرحلة 5 — البثّ اللحظيّ (Reverb) — مُنجزة (باك-إند + أمامي مُتحقَّق حيًّا)
 - [x] Module **Chat**: كيان `DirectMessage` (uuid طرفين، فهارس sender/recipient) + `POST/GET /direct-messages` + `POST /direct-messages/read` + `GET /direct-messages/resolve/{slug}` (يحلّ مالك الصفحة عبر PublicProfile+User)
 - [x] حدث **`MessageSent`** (`ShouldBroadcast`) على `PrivateChannel('user.{uuid}')` + `broadcastAs('message.sent')`؛ الإرسال يبثّه. تفويض القناة في `routes/channels.php` (`$user->uuid === $uuid`). `BROADCAST_CONNECTION=reverb` (dev، مُصفّ عبر queue فلا يعطّل الإرسال)
 - [x] **5 Feature tests خضراء** (منها تأكيد بثّ الحدث على القناة الصحيحة). الحزمة: **56 اختبارًا**
-- [ ] **مؤجّل للتحويل الأماميّ:** تشغيل `reverb:start` + الواجهة `socket.io-client`←`laravel-echo`(+pusher-js) + `/broadcasting/auth` بـ Sanctum + تحقّق WS حيّ بين متصفّحين
+- [x] **التحويل الأماميّ مُنجز ومُتحقَّق حيًّا:** خدمتا compose `reverb`(8091 مكشوف)+`queue`(queue:work) دائمتان · مصنع Echo مشترك `src/services/echo.ts` (laravel-echo+pusher-js، `/broadcasting/auth` بتوكن Bearer) · ثلاث خدمات بثّ أماميّة على `user.{uuid}`: **الرسائل** `.message.sent` · **الإشعارات** `.notification.new` (C3) · **الدعم** — مُفعَّلة في DefaultLayout/AssistantPage/AdminSupportPage. **تحقّق حيّ e2e (متصفّح فعليّ):** `POST /broadcasting/auth 200`×2 (إشعارات+رسائل) · دفع خادميّ (tinker `push`) → queue → Reverb → **متجر الإشعارات 1→2 فورًا بلا إعادة جلب HTTP**.
 - [ ] Redis Pub/Sub (`BROADCAST_CONNECTION` عبر Redis) — للتوسّع على AWS، يُضبط في النشر
 
 ### 🟡 المرحلة 6 — التحويل الأماميّ + الترقيم + التقاعد — **التحويل الأماميّ مُنجز ومُتحقَّق حيًّا**
 - [x] **التحويل الأماميّ:** `VITE_BASE_API_URL`→`http://localhost:8090/api` (الواجهة تفكّ `{data}` وتتوقّع أخطاء 422 «بأسلوب Laravel» أصلًا). **مُتحقَّق حيًّا في المتصفح:** تسجيل عبر الواجهة → `POST /api/v1/auth/register` **201** من Laravel → **توكن Sanctum حقيقيّ** (`1|…`) في authUser (id/uuid من القاعدة) → أدوار مُعبّأة عبر `fromNestUser` → انتقال onboarding → إماهة المخازن من `/account-states/*` (Bearer يعمل، **0 نداء فاشل**، **0 خطأ console**) → الجلسة تدوم بعد إعادة التحميل. CORS الافتراضيّ يسمح (api/* + أصل *).
 - [x] `->paginate()` + `{data,meta}` **معمّم على كل قوائم العميل** (opportunities/requests/mine · surveys · notifications · interviews · interviewers) عبر مساعِدَي `ApiResponder::paginatedResource()` + `perPage()` (افتراضي 15، محدود 100). **غير كاسر:** `data` يبقى مصفوفة الصفحة، و`unread` في الإشعارات يبقى إجماليًّا. أزرار الصفحات أماميًّا **جاهزة أصلًا** في كونسول الأدمن (ResourceScaffold + useAdminResource) — المستهلك الحقيقيّ الوحيد لقوائم العميل هو الإشعارات (تعرض أحدث صفحة، وهو المطلوب). **+9 اختبارات meta/ترقيم؛ الحزمة 214 خضراء.**
-- [ ] مؤجّلات المرحلة 5 الأماميّة: `reverb:start` + `socket.io-client`←`laravel-echo` + `/broadcasting/auth` + WS حيّ
+- [x] مؤجّلات المرحلة 5 الأماميّة (البثّ اللحظيّ) — **مُنجزة ومُتحقَّقة حيًّا e2e** (تفصيلها في المرحلة 5 أعلاه: رسائل+إشعارات+دعم على Reverb).
 - [ ] هجرة بيانات (إن لزم — dev يبدأ نظيفًا؛ يهمّ فقط لو ثمّة بيانات NestJS إنتاجيّة)
 - [ ] تقاعد `api/` (NestJS): إيقاف، إبقاء العقد `openapi.yaml` مرجعًا
 - [ ] تحديث `deploy.yml`/CI: `php artisan permission:insert` بعد كل نشر + نشر Laravel (Docker/Nginx) بدل GitHub Pages المحاكاة
