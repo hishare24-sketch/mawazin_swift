@@ -16,6 +16,7 @@ class NotificationResource extends JsonResource
             'category' => $this->category,
             'read' => (bool) $this->read,
             'actionTo' => $this->action_to,
+            'at' => optional($this->created_at)->toISOString(),
         ];
     }
 }

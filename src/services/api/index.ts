@@ -95,6 +95,7 @@ export const API_PATHS = {
   messaging: {
     notifications: '/v1/notifications',
     readAll: '/v1/notifications/read-all',
+    readNotification: (id: number) => `/v1/notifications/${id}/read`,
     conversations: '/v1/conversations',
     messages: (id: number) => `/v1/conversations/${id}/messages`,
   },
@@ -336,6 +337,7 @@ export interface AdminAuditMeta { role?: string, added?: string[], removed?: str
 export interface AdminAuditLog { id: number, actor: string, actorId: number | null, method: string, resource: string | null, action: string, path: string, targetId: number | null, status: number, meta?: AdminAuditMeta | null, ip: string | null, at?: string }
 export interface RoleMember { id: number, name: string, email: string, status: string }
 export interface RoleMembersResponse { role: string, members: RoleMember[] }
+export interface NotificationRow { id: number, icon: string, title: string, body: string, category: string, read: boolean, actionTo: string | null, at: string | null }
 export interface AdminAuditStats { total: number, today: number, actors: number, byAction: { label: string, value: number }[], byResource: { label: string, value: number }[], series: { date: string, value: number }[] }
 export interface AdminRole { name: string, usersCount: number, permissions: string[] }
 export interface AdminRolesResponse { roles: AdminRole[], permissions: string[] }
@@ -580,8 +582,9 @@ export const api = {
     respond: (id: number, body: unknown) => post(API_PATHS.surveys.responses(id), body),
   },
   messaging: {
-    notifications: () => get(API_PATHS.messaging.notifications),
+    notifications: () => get<NotificationRow[]>(API_PATHS.messaging.notifications),
     readAll: () => post(API_PATHS.messaging.readAll),
+    readNotification: (id: number) => post(API_PATHS.messaging.readNotification(id)),
     conversations: () => get(API_PATHS.messaging.conversations),
     send: (id: number, text: string) => post(API_PATHS.messaging.messages(id), { text }),
   },

@@ -4,6 +4,8 @@ namespace Modules\Notification\Services;
 
 use Illuminate\Support\Collection;
 use Modules\Notification\Entities\Notification;
+use Modules\Notification\Events\NotificationSent;
+use Modules\User\Entities\User;
 
 class NotificationService
 {
@@ -23,10 +25,10 @@ class NotificationService
         return Notification::where('user_id', $userId)->orderByDesc('id')->get();
     }
 
-    /** إنشاء إشعار — يُستدعى داخليًّا من التدفّقات (حجز/قبول/رسالة…). */
+    /** إنشاء إشعار وبثّه لحظيًّا — يُستدعى داخليًّا من التدفّقات (حجز/قبول/رسالة/بثّ…). */
     public function push(int $userId, array $data): Notification
     {
-        return Notification::create([
+        $notification = Notification::create([
             'user_id' => $userId,
             'icon' => $data['icon'] ?? 'mdi-bell',
             'title' => $data['title'],
@@ -35,10 +37,38 @@ class NotificationService
             'action_to' => $data['actionTo'] ?? null,
             'read' => false,
         ]);
+
+        $this->broadcast($notification, $data['uuid'] ?? User::whereKey($userId)->value('uuid'));
+
+        return $notification;
+    }
+
+    /** بثّ إشعار مُنشأ للمستخدم على قناته (لا يكسر التدفّق عند غياب uuid). */
+    private function broadcast(Notification $n, ?string $uuid): void
+    {
+        if (! $uuid) {
+            return;
+        }
+        event(new NotificationSent([
+            'id' => $n->id,
+            'icon' => $n->icon,
+            'title' => $n->title,
+            'body' => $n->body ?? '',
+            'category' => $n->category,
+            'read' => false,
+            'actionTo' => $n->action_to,
+            'at' => optional($n->created_at)->toISOString(),
+        ], $uuid));
     }
 
     public function markAllRead(int $userId): void
     {
         Notification::where('user_id', $userId)->where('read', false)->update(['read' => true]);
+    }
+
+    /** عدد غير المقروء. */
+    public function unread(int $userId): int
+    {
+        return (int) Notification::where('user_id', $userId)->where('read', false)->count();
     }
 }

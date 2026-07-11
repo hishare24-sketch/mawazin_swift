@@ -157,8 +157,16 @@ function onScroll() {
 function scrollTop() {
   window.scrollTo({ top: 0, behavior: 'smooth' })
 }
-onMounted(() => window.addEventListener('scroll', onScroll, { passive: true }))
-onBeforeUnmount(() => window.removeEventListener('scroll', onScroll))
+onMounted(() => {
+  window.addEventListener('scroll', onScroll, { passive: true })
+  // الإشعارات الحيّة: تحميل من الخادم + اشتراك Reverb (وضع الـAPI الحقيقيّ فقط)
+  notificationsStore.hydrate()
+  notificationsStore.startRealtime()
+})
+onBeforeUnmount(() => {
+  window.removeEventListener('scroll', onScroll)
+  notificationsStore.stopRealtime()
+})
 </script>
 
 <template>

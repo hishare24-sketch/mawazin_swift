@@ -7,4 +7,5 @@ use Modules\Notification\Http\Controllers\Api\NotificationController;
 Route::middleware('auth:sanctum')->group(function (): void {
     Route::get('notifications', [NotificationController::class, 'index']);
     Route::post('notifications/read-all', [NotificationController::class, 'readAll']);
+    Route::post('notifications/{notification}/read', [NotificationController::class, 'readOne']);
 });

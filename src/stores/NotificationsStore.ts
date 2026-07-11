@@ -1,8 +1,29 @@
 import { defineStore } from 'pinia'
 import { computed, ref, watch } from 'vue'
 import { syncPrivateDoc } from '@/services/cloudSync'
+import { type NotificationRow, USE_REAL_API, api } from '@/services/api'
+import { subscribeNotifications } from '@/services/notificationsRealtime'
+import { useAuthStore } from '@/stores/AuthStore'
 
 export type NotificationCategory = 'opportunity' | 'wish' | 'endorsement' | 'message' | 'system' | 'interview'
+
+/** لون البطاقة من الفئة (توافقًا مع البذور المحاكاة). */
+const CATEGORY_COLOR: Record<string, string> = {
+  opportunity: 'primary', wish: 'accent', endorsement: 'secondary', message: 'info', system: 'success', interview: 'success',
+}
+function mapRow(r: NotificationRow): AppNotification {
+  return {
+    id: r.id,
+    icon: r.icon,
+    color: CATEGORY_COLOR[r.category] ?? 'primary',
+    title: r.title,
+    body: r.body,
+    time: r.at ? new Date(r.at).toLocaleString() : 'الآن',
+    read: r.read,
+    category: (r.category as NotificationCategory),
+    actionTo: r.actionTo ?? undefined,
+  }
+}
 
 export interface AppNotification {
   id: number
@@ -83,6 +104,8 @@ export const useNotificationsStore = defineStore('notifications', () => {
 
   function markAllRead() {
     notifications.value.forEach(n => (n.read = true))
+    if (USE_REAL_API)
+      api.messaging.readAll().catch(() => {})
   }
   function toggleRead(id: number) {
     const n = notifications.value.find(x => x.id === id)
@@ -91,9 +114,36 @@ export const useNotificationsStore = defineStore('notifications', () => {
   }
   function markRead(id: number) {
     const n = notifications.value.find(x => x.id === id)
-    if (n)
+    if (n && !n.read) {
       n.read = true
+      if (USE_REAL_API)
+        api.messaging.readNotification(id).catch(() => {})
+    }
   }
 
-  return { notifications, syncStatus, unreadCount, push, markAllRead, toggleRead, markRead }
+  // ——— الوضع الحقيقيّ: تحميل من الخادم + بثّ لحظيّ عبر Reverb ———
+  async function hydrate() {
+    if (!USE_REAL_API)
+      return
+    try { notifications.value = (await api.messaging.notifications()).map(mapRow) }
+    catch { /* يبقى المحليّ */ }
+  }
+  let detachRealtime: (() => void) | null = null
+  function startRealtime() {
+    if (!USE_REAL_API || detachRealtime)
+      return
+    const uuid = useAuthStore().authUser?.uuid
+    if (!uuid)
+      return
+    detachRealtime = subscribeNotifications(uuid, (row) => {
+      if (!notifications.value.some(n => n.id === row.id))
+        notifications.value.unshift(mapRow(row))
+    })
+  }
+  function stopRealtime() {
+    detachRealtime?.()
+    detachRealtime = null
+  }
+
+  return { notifications, syncStatus, unreadCount, push, markAllRead, toggleRead, markRead, hydrate, startRealtime, stopRealtime }
 })

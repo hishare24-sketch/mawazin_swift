@@ -54,4 +54,42 @@ class NotificationTest extends TestCase
         $this->actingAsUser(); // user B
         $this->getJson('/api/v1/notifications')->assertJsonCount(1, 'data'); // فقط ترحيب B
     }
+
+    public function test_index_returns_unread_count(): void
+    {
+        $this->actingAsUser();
+
+        $this->getJson('/api/v1/notifications')
+            ->assertOk()
+            ->assertJsonPath('unread', 1)
+            ->assertJsonStructure(['data' => [['id', 'title', 'read', 'at']], 'unread']);
+    }
+
+    public function test_read_one_marks_single_and_enforces_ownership(): void
+    {
+        $owner = $this->actingAsUser();
+        $id = $this->getJson('/api/v1/notifications')->json('data.0.id');
+
+        // مالك آخر لا يستطيع
+        $this->actingAsUser();
+        $this->postJson("/api/v1/notifications/{$id}/read")->assertStatus(403);
+
+        // المالك يعلّمه مقروءًا
+        Sanctum::actingAs($owner);
+        $this->postJson("/api/v1/notifications/{$id}/read")->assertStatus(204);
+        $this->getJson('/api/v1/notifications')->assertJsonPath('unread', 0);
+    }
+
+    public function test_push_broadcasts_notification_sent(): void
+    {
+        $user = $this->actingAsUser();
+        \Illuminate\Support\Facades\Event::fake([\Modules\Notification\Events\NotificationSent::class]);
+
+        app(\Modules\Notification\Services\NotificationService::class)->push($user->id, ['title' => 'تنبيه حيّ', 'category' => 'system']);
+
+        \Illuminate\Support\Facades\Event::assertDispatched(
+            \Modules\Notification\Events\NotificationSent::class,
+            fn ($e) => $e->uuid === $user->fresh()->uuid && $e->notification['title'] === 'تنبيه حيّ',
+        );
+    }
 }

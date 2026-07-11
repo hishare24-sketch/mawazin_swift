@@ -7,10 +7,16 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Modules\Broadcast\Entities\Broadcast;
 use Modules\Broadcast\Http\Resources\Admin\AdminBroadcastResource;
+use Modules\Notification\Services\NotificationService;
 use Modules\User\Entities\User;
 
 class AdminBroadcastController extends Controller
 {
+    /** حدّ أمان للتوزيع اللحظيّ (يبقى العدّ في السجلّ كاملًا). */
+    private const FANOUT_CAP = 1000;
+
+    public function __construct(private readonly NotificationService $notifications) {}
+
     private const SORTABLE = ['id', 'title', 'channel', 'recipients_count', 'created_at'];
     private const CHANNELS = ['notification', 'banner', 'email'];
     private const AUDIENCES = ['all', 'role', 'tier'];
@@ -98,6 +104,19 @@ class AdminBroadcastController extends Controller
             'sent_at' => Carbon::now(),
         ]);
 
+        // قناة الإشعار → إنشاء إشعارات فعليّة وبثّها لحظيًّا لكلّ مستهدف (banner/email تُسجَّل فقط).
+        if ($data['channel'] === 'notification') {
+            foreach ($this->recipientUsers($data['audience'], $data['audience_value'] ?? null) as $u) {
+                $this->notifications->push($u->id, [
+                    'icon' => 'mdi-bullhorn-outline',
+                    'title' => $data['title'],
+                    'body' => $data['body'],
+                    'category' => 'system',
+                    'uuid' => $u->uuid, // مُحمَّل مسبقًا — لا استعلام إضافيّ
+                ]);
+            }
+        }
+
         return $this->createdResponse((new AdminBroadcastResource($broadcast))->resolve());
     }
 
@@ -109,5 +128,18 @@ class AdminBroadcastController extends Controller
             'tier' => $value ? User::where('tier', $value)->count() : 0,
             default => User::count(),
         };
+    }
+
+    /** مستخدمو الجمهور المستهدف (id+uuid) بحدّ أمان التوزيع. */
+    private function recipientUsers(string $audience, ?string $value)
+    {
+        $q = User::query()->select('id', 'uuid');
+        if ($audience === 'role' && $value) {
+            $q->where('role', $value);
+        } elseif ($audience === 'tier' && $value) {
+            $q->where('tier', $value);
+        }
+
+        return $q->limit(self::FANOUT_CAP)->get();
     }
 }
