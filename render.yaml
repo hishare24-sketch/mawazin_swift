@@ -1,14 +1,14 @@
-# ===== مخطّط نشر Render لمنظومة التوظيف =====
-# Render (استضافة + Postgres + Redis) + Resend (بريد) + Firebase (FCM).
-# القاعدة والكاش يُنشآن ويُربطان تلقائيًّا هنا — لا تنسخ سلسلة اتّصال ولا تلصق أسرار قاعدة.
-# النشر: Render → New → Blueprint → اختر المستودع. ثمّ الصق الأسرار غير-القاعديّة فقط.
+# ===== مخطّط نشر Render — نسخة مجّانيّة (تجربة/إثبات) =====
+# خدمة ويب واحدة + Postgres مجّانيّ. لا worker/Redis/Reverb (المجّانيّ لا يدعم العمّال ولا preDeploy).
+# المعالجة متزامنة (sync)، والكاش/الجلسة ملفّات، والبثّ اللحظيّ مطفأ (log) — يعود بترقية للمدفوع.
+# للترقية للمدفوع (نشر دائم + بثّ لحظيّ): استبدل هذا الملفّ بـ render.paid.yaml.
+# النشر: Render → New → Blueprint → اختر المستودع → لن يطلب دفعًا.
 
-# ——— القاعدة (Render Postgres، تُنشأ تلقائيًّا) ———
 databases:
   - name: recruitment-db
     databaseName: recruitment
     user: recruitment
-    plan: basic-256mb          # ~6$/شهر؛ للتجربة يمكن free (يُحذف بعد 30 يومًا)
+    plan: free                 # مجّانيّ (يُحذف بعد 30 يومًا)
     postgresMajorVersion: "16"
 
 envVarGroups:
@@ -21,37 +21,22 @@ envVarGroups:
       - key: APP_DEBUG
         value: "false"
       - key: APP_KEY
-        sync: false            # ولّده: php artisan key:generate --show ثمّ الصقه
+        sync: false            # php artisan key:generate --show
       - key: APP_URL
-        sync: false            # https://api.example.com (أو رابط onrender مؤقّتًا)
+        sync: false            # رابط onrender بعد الإنشاء
       - key: DB_CONNECTION
         value: pgsql
       - key: DB_SSLMODE
-        value: prefer          # اتّصال داخليّ في Render لا يحتاج SSL إلزاميًّا
-      # ——— الجلسات/الكاش/الطابور/البثّ ———
+        value: prefer
+      # المجّانيّ: بلا worker/Redis → معالجة متزامنة + ملفّات
       - key: SESSION_DRIVER
-        value: database
+        value: file
       - key: CACHE_STORE
-        value: redis
+        value: file
       - key: QUEUE_CONNECTION
-        value: redis
+        value: sync
       - key: BROADCAST_CONNECTION
-        value: reverb
-      # ——— Reverb (البثّ اللحظيّ) ———
-      - key: REVERB_APP_ID
-        sync: false
-      - key: REVERB_APP_KEY
-        sync: false
-      - key: REVERB_APP_SECRET
-        sync: false
-      - key: REVERB_HOST
-        sync: false            # دومين خدمة reverb (onrender أو ws.example.com)
-      - key: REVERB_PORT
-        value: "443"
-      - key: REVERB_SCHEME
-        value: https
-      - key: REVERB_SERVER_HOST
-        value: 0.0.0.0
+        value: log             # البثّ اللحظيّ مطفأ على المجّانيّ (يحتاج Reverb دائم التشغيل)
       # ——— Resend (البريد) ———
       - key: MAIL_MAILER
         value: resend
@@ -61,15 +46,13 @@ envVarGroups:
         sync: false
       - key: MAIL_FROM_NAME
         value: "منظومة التوظيف الذكية"
-      # ——— Firebase (FCM، اختياريّ — اتركه فارغًا لتخطّي Push) ———
+      # ——— اختياريّ ———
       - key: FIREBASE_CREDENTIALS
         sync: false
-      # ——— وسيط Claude (اختياريّ) ———
       - key: ANTHROPIC_API_KEY
         sync: false
 
 services:
-  # 1) الويب — واجهة الـAPI
   - type: web
     name: recruitment-api
     runtime: docker
@@ -77,9 +60,10 @@ services:
     branch: main
     dockerfilePath: backend/Dockerfile
     dockerContext: backend
-    plan: starter
+    plan: free
     healthCheckPath: /up
-    preDeployCommand: "php artisan migrate --force && php artisan permission:insert"
+    # المجّانيّ لا يدعم preDeployCommand → الهجرات + الصلاحيّات عند الإقلاع ثمّ التقديم
+    dockerCommand: "php artisan migrate --force && php artisan permission:insert && frankenphp php-server --root public/ --listen :${PORT}"
     envVars:
       - fromGroup: recruitment-shared
       - key: DB_HOST
@@ -92,62 +76,3 @@ services:
         fromDatabase: { name: recruitment-db, property: user }
       - key: DB_PASSWORD
         fromDatabase: { name: recruitment-db, property: password }
-      - key: REDIS_URL
-        fromService: { type: redis, name: recruitment-redis, property: connectionString }
-
-  # 2) عامل الطابور
-  - type: worker
-    name: recruitment-queue
-    runtime: docker
-    repo: https://github.com/hishare24-sketch/smart-recruitment-system
-    branch: main
-    dockerfilePath: backend/Dockerfile
-    dockerContext: backend
-    plan: starter
-    dockerCommand: "php artisan queue:work --tries=3 --timeout=90 --sleep=1"
-    envVars:
-      - fromGroup: recruitment-shared
-      - key: DB_HOST
-        fromDatabase: { name: recruitment-db, property: host }
-      - key: DB_PORT
-        fromDatabase: { name: recruitment-db, property: port }
-      - key: DB_DATABASE
-        fromDatabase: { name: recruitment-db, property: database }
-      - key: DB_USERNAME
-        fromDatabase: { name: recruitment-db, property: user }
-      - key: DB_PASSWORD
-        fromDatabase: { name: recruitment-db, property: password }
-      - key: REDIS_URL
-        fromService: { type: redis, name: recruitment-redis, property: connectionString }
-
-  # 3) Reverb — خادم WebSocket العامّ (اربط به دومين ws.example.com)
-  - type: web
-    name: recruitment-reverb
-    runtime: docker
-    repo: https://github.com/hishare24-sketch/smart-recruitment-system
-    branch: main
-    dockerfilePath: backend/Dockerfile
-    dockerContext: backend
-    plan: starter
-    dockerCommand: "php artisan reverb:start --host=0.0.0.0 --port=${PORT}"
-    envVars:
-      - fromGroup: recruitment-shared
-      - key: DB_HOST
-        fromDatabase: { name: recruitment-db, property: host }
-      - key: DB_PORT
-        fromDatabase: { name: recruitment-db, property: port }
-      - key: DB_DATABASE
-        fromDatabase: { name: recruitment-db, property: database }
-      - key: DB_USERNAME
-        fromDatabase: { name: recruitment-db, property: user }
-      - key: DB_PASSWORD
-        fromDatabase: { name: recruitment-db, property: password }
-      - key: REDIS_URL
-        fromService: { type: redis, name: recruitment-redis, property: connectionString }
-
-  # 4) Redis — كاش/طابور/توسّع البثّ (Render Key Value)
-  - type: redis
-    name: recruitment-redis
-    plan: starter
-    maxmemoryPolicy: noeviction
-    ipAllowList: []          # داخليّ فقط

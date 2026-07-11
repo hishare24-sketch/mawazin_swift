@@ -33,7 +33,5 @@ ENV APP_ENV=production \
     LOG_CHANNEL=stderr
 
 # Render يمرّر PORT؛ FrankenPHP يخدم public/ (تطبيق Laravel كلاسيكيّ، بلا Octane).
-# صيغة shell كي يتوسّع ${PORT}.
-CMD php artisan config:cache \
- && php artisan route:cache \
- && frankenphp php-server --root public/ --listen :${PORT:-8080}
+# صيغة shell كي يتوسّع ${PORT}. (بلا config:cache/route:cache — تفاديًا لفشل الإقلاع مع مسارات closure.)
+CMD frankenphp php-server --root public/ --listen :${PORT:-8080}
