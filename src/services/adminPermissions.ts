@@ -8,7 +8,7 @@ export const ADMIN_PERMISSIONS = [
   'view_opportunities', 'create_opportunities', 'update_opportunities', 'delete_opportunities',
   'view_requests', 'update_requests', 'delete_requests',
   'view_pipeline', 'manage_pipeline', 'view_matching', 'manage_matching',
-  'view_interviewers', 'update_interviewers', 'approve_interviewers', 'reject_interviewers', 'view_interviews',
+  'view_interviewers', 'update_interviewers', 'approve_interviewers', 'reject_interviewers', 'view_interviews', 'manage_interview_quality',
   'view_surveys', 'update_surveys', 'delete_surveys', 'close_surveys',
   'view_survey_templates', 'manage_survey_templates',
   'view_profiles', 'verify_skills', 'view_endorsements', 'approve_endorsements', 'view_governance', 'manage_governance', 'approve_experts',

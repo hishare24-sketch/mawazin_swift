@@ -209,6 +209,13 @@ export const API_PATHS = {
     archiveStats: '/admin/archive/stats',
     archiveRestore: '/admin/archive/restore',
     archivePurge: '/admin/archive/purge',
+    interviewQuality: '/admin/interview-quality',
+    interviewQualityItem: (id: number) => `/admin/interview-quality/${id}`,
+    interviewQualityReview: (id: number) => `/admin/interview-quality/${id}/review`,
+    interviewQualityStats: '/admin/interview-quality/stats',
+    interviewCalibration: '/admin/interview-quality/calibration',
+    interviewRubrics: '/admin/interview-rubrics',
+    interviewRubricItem: (id: number) => `/admin/interview-rubrics/${id}`,
   },
   /** هويّة المنصّة العامّة (بلا مصادقة) */
   brandingPublic: '/v1/branding',
@@ -431,6 +438,18 @@ export interface PipelineOpportunity { id: number, title: string, company: strin
 // ——— الأرشيف ———
 export interface ArchiveItem { type: string, id: number, title: string, deletedAt: string | null }
 export interface ArchiveStats { total: number, byType: { label: string, value: number }[] }
+
+// جودة المقابلات (B3)
+export type IntegrityLevel = 'low' | 'medium' | 'high'
+export interface RubricCriterion { key: string, label: string, weight: number }
+export interface AdminInterviewRubric { id: number, key: string, name: string, track: string, criteria: RubricCriterion[], active: boolean, isSystem: boolean }
+export interface AdminInterviewRow { id: number, track: string, candidateName: string | null, status: string, score: number, reviewStatus: string, integrityScore: number, integrityLevel: IntegrityLevel, createdAt?: string }
+export interface IntegritySignal { key: string, label: string, count: number }
+export interface AdminInterviewDetail { id: number, track: string, candidateName: string | null, status: string, score: number, weightedScore: number | null, reviewStatus: string, rubric: { id: number, name: string } | null, breakdown: { key: string, label: string, weight: number, score: number }[], integrity: { score: number, level: IntegrityLevel, signals: IntegritySignal[] }, reviewedAt: string | null, createdAt?: string }
+export interface InterviewQualityStats { total: number, avgScore: number, flagged: number, pending: number, highRisk: number, byStatus: { label: string, value: number }[], byIntegrity: { label: string, value: number }[] }
+export interface InterviewCalibrationRow { track: string, count: number, avgScore: number, minScore: number, maxScore: number, highRiskRate: number, bias: number }
+export interface InterviewCalibration { overallAvg: number, tracks: InterviewCalibrationRow[] }
+export interface RubricPayload { name: string, track: string, criteria: RubricCriterion[], active?: boolean }
 // ——— هويّة المنصّة (Branding) ———
 export interface Branding {
   platformName: string
@@ -678,6 +697,16 @@ export const api = {
     archiveStats: () => get<ArchiveStats>(API_PATHS.admin.archiveStats),
     restoreArchive: (type: string, id: number) => post<{ restored: boolean }>(API_PATHS.admin.archiveRestore, { type, id }),
     purgeArchive: (type: string, id: number) => post<{ purged: boolean }>(API_PATHS.admin.archivePurge, { type, id }),
+    // جودة المقابلات (B3)
+    interviewQuality: (params?: Record<string, unknown>) => getPage<AdminInterviewRow>(API_PATHS.admin.interviewQuality, params),
+    interviewDetail: (id: number) => get<AdminInterviewDetail>(API_PATHS.admin.interviewQualityItem(id)),
+    reviewInterview: (id: number, status: string) => post<AdminInterviewRow>(API_PATHS.admin.interviewQualityReview(id), { status }),
+    interviewQualityStats: () => get<InterviewQualityStats>(API_PATHS.admin.interviewQualityStats),
+    interviewCalibration: () => get<InterviewCalibration>(API_PATHS.admin.interviewCalibration),
+    interviewRubrics: () => get<AdminInterviewRubric[]>(API_PATHS.admin.interviewRubrics),
+    createRubric: (body: RubricPayload) => post<AdminInterviewRubric>(API_PATHS.admin.interviewRubrics, body),
+    updateRubric: (id: number, body: Partial<RubricPayload>) => put<AdminInterviewRubric>(API_PATHS.admin.interviewRubricItem(id), body),
+    deleteRubric: (id: number) => del(API_PATHS.admin.interviewRubricItem(id)),
     toggleAiCapability: (id: number) => post<AiCapability>(API_PATHS.admin.aiCapabilityToggle(id)),
     addAiKnowledge: (body: AiKnowledgePayload) => post<AiKnowledgeEntry>(API_PATHS.admin.aiKnowledge, body),
     updateAiKnowledge: (id: number, body: Partial<AiKnowledgePayload>) => put<AiKnowledgeEntry>(API_PATHS.admin.aiKnowledgeItem(id), body),

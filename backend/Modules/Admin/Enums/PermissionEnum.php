@@ -24,7 +24,7 @@ class PermissionEnum
 
             // المقيّمون والمقابلات (حوكمة الاعتماد)
             'view_interviewers', 'update_interviewers', 'approve_interviewers', 'reject_interviewers',
-            'view_interviews',
+            'view_interviews', 'manage_interview_quality',
 
             // الاستبيانات
             'view_surveys', 'update_surveys', 'delete_surveys', 'close_surveys',

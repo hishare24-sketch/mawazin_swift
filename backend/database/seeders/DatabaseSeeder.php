@@ -10,6 +10,8 @@ use Modules\Account\Database\Seeders\PlatformAccountSeeder;
 use Modules\Ai\Database\Seeders\AiSeeder;
 use Modules\Chat\Database\Seeders\ChatSeeder;
 use Modules\Governance\Database\Seeders\ModerationSeeder;
+use Modules\Interview\Database\Seeders\InterviewQualitySeeder;
+use Modules\Interview\Database\Seeders\InterviewRubricSeeder;
 use Modules\Support\Database\Seeders\TicketSeeder;
 use Modules\Settings\Database\Seeders\BrandingSettingSeeder;
 use Modules\Settings\Database\Seeders\PlatformSettingSeeder;
@@ -40,5 +42,7 @@ class DatabaseSeeder extends Seeder
         $this->call(TicketSeeder::class);
         $this->call(AiSeeder::class);
         $this->call(ChatSeeder::class);
+        $this->call(InterviewRubricSeeder::class);
+        $this->call(InterviewQualitySeeder::class);
     }
 }
