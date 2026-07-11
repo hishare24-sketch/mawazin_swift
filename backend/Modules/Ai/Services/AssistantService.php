@@ -155,12 +155,112 @@ class AssistantService
     }
 
     /**
-     * تأليف الردّ — محكوم بالمستوى، بشخصيّة حسب النوع، يحقن المعرفة، مبادر وتحفيزيّ.
-     * محاكاة عربيّة (مزوّد simulation) — سياقيّ فعليًّا لأنّه يستند إلى دور المستخدم ونشاطه.
+     * تأليف الردّ — يفوّض لمزوّد حيّ (Claude) حين يكون مهيّأً بمفتاح، وإلّا محاكاة محكومة.
+     * أيّ فشل للمزوّد يعود للمحاكاة بأمان (fallback) مع وسم meta.
      */
     public function compose(string $message, array $context): array
     {
         $ai = AiSetting::current();
+        $provider = $this->providerFor($ai);
+
+        if ($provider !== null) {
+            try {
+                $result = $provider->generate($this->systemPrompt($ai, $context), $message);
+
+                return $this->composeFromProvider($result, $ai, $context);
+            } catch (\Throwable $e) {
+                // مزوّد حيّ فشل/رفض → محاكاة آمنة موسومة (لا ينقطع المساعد على المستخدم).
+                $sim = $this->simulate($message, $context, $ai);
+                $sim['meta']['fallback'] = true;
+                $sim['meta']['fallbackReason'] = $e->getMessage();
+
+                return $sim;
+            }
+        }
+
+        return $this->simulate($message, $context, $ai);
+    }
+
+    /** يختار مزوّدًا حيًّا حين المفتاح مهيّأ، وإلّا null (محاكاة). */
+    private function providerFor(AiSetting $ai): ?\Modules\Ai\Services\Providers\LlmProvider
+    {
+        if ($ai->provider === 'claude' && filled($ai->api_key)) {
+            return new \Modules\Ai\Services\Providers\ClaudeProvider($ai);
+        }
+
+        return null; // simulation | مزوّد غير مهيّأ
+    }
+
+    /** يبني توجيه النظام من الحوكمة + الشخصيّة + المعرفة المفعّلة + سياق النشاط. */
+    private function systemPrompt(AiSetting $ai, array $context): string
+    {
+        $level = (int) $ai->assistant_level;
+        $depth = match ($level) {
+            1 => 'أجب بإيجاز ومباشرة، خطوة عمليّة واحدة.',
+            3 => 'حلّل حالة المستخدم بعمق، ورتّب مسارًا عمليًّا بالأولويّة عبر أقسام المنصّة، واختم بسؤال يقوده للخطوة التالية.',
+            default => 'أجب بوضوح مع خطوة استباقيّة واحدة تخدم هدف المستخدم.',
+        };
+
+        $roleWord = match ($context['persona']) {
+            'organization' => 'منشأة توظيف',
+            'interviewer' => 'مقيّم',
+            'expert' => 'خبير',
+            default => 'باحث عن عمل',
+        };
+
+        $lines = [
+            'أنت مساعد ذكيّ لمنصّة توظيف عربيّة. تخاطب مستخدمًا دوره: '.$roleWord.'.',
+            $depth,
+            'احترم خصوصيّة المستخدم ولا تفترض بيانات لم تُعطَ لك. كن مبادرًا وتحفيزيًّا وعمليًّا.',
+        ];
+
+        if (filled($ai->system_prompt)) {
+            $lines[] = trim($ai->system_prompt);
+        }
+
+        if (! empty($context['activity'])) {
+            $a = $context['activity'];
+            $lines[] = "سياق المستخدم: تقديمات={$a['applications']}، فرص={$a['opportunities']}، استبيانات={$a['surveys']}.";
+        }
+
+        $knowledge = AiKnowledge::where('enabled', true)->get(['title', 'content']);
+        if ($knowledge->count()) {
+            $kb = $knowledge->map(fn ($k) => "- {$k->title}: ".Str::limit($k->content, 300))->implode("\n");
+            $lines[] = "استرشد بمعرفة المنصّة التالية:\n".$kb;
+        }
+
+        return implode("\n\n", $lines);
+    }
+
+    /** يشكّل ردّ المزوّد الحيّ في بنية meta الموحّدة (بأرقام توكن حقيقيّة). */
+    private function composeFromProvider(array $result, AiSetting $ai, array $context): array
+    {
+        $nudges = $this->nudges($context);
+        $knowledge = AiKnowledge::where('enabled', true)->pluck('title')->values()->all();
+
+        return [
+            'reply' => $result['text'],
+            'meta' => [
+                'level' => (int) $ai->assistant_level,
+                'provider' => $ai->provider,
+                'model' => $ai->model,
+                'simulated' => false,
+                'persona' => $context['persona'],
+                'usedKnowledge' => $knowledge,
+                'nudges' => $nudges,
+                'usage' => [
+                    'request' => (int) ($result['usage']['input'] ?? 0),
+                    'response' => (int) ($result['usage']['output'] ?? 0),
+                ],
+            ],
+        ];
+    }
+
+    /**
+     * محاكاة عربيّة محكومة — سياقيّة فعليًّا (دور المستخدم ونشاطه)، مبادرة تحفيزيّة.
+     */
+    public function simulate(string $message, array $context, AiSetting $ai): array
+    {
         $level = (int) $ai->assistant_level;
         $tokensCap = (int) ($ai->level_tokens[$level] ?? [1 => 600, 2 => 1200, 3 => 2400][$level] ?? 1200);
         $knowledge = AiKnowledge::where('enabled', true)->get(['title']);

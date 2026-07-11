@@ -3,6 +3,7 @@
 namespace Tests\Feature\Api;
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Http;
 use Laravel\Sanctum\Sanctum;
 use Modules\Ai\Database\Seeders\AiSeeder;
 use Modules\Ai\Entities\AiCapability;
@@ -194,5 +195,61 @@ class AssistantTest extends TestCase
             ->assertOk()
             ->assertJsonPath('data.blocked', true)
             ->assertJsonPath('data.quotaBlocked', 'perRequest');
+    }
+
+    private function useClaudeProvider(): void
+    {
+        AiSetting::query()->where('id', 1)->update(['provider' => 'claude', 'api_key' => 'sk-test-key', 'model' => 'claude-opus-4-8']);
+    }
+
+    public function test_uses_live_claude_provider_and_records_real_tokens(): void
+    {
+        $this->seed(AiSeeder::class);
+        $this->useClaudeProvider();
+        Http::fake(['api.anthropic.com/*' => Http::response([
+            'content' => [['type' => 'text', 'text' => 'ردّ كلود الحقيقيّ للمستخدم.']],
+            'stop_reason' => 'end_turn',
+            'usage' => ['input_tokens' => 42, 'output_tokens' => 17],
+        ], 200)]);
+        $user = $this->user(['role' => 'seeker']);
+
+        $this->postJson('/api/v1/assistant/message', ['message' => 'ساعدني'])
+            ->assertOk()
+            ->assertJsonPath('data.blocked', false)
+            ->assertJsonPath('data.reply', 'ردّ كلود الحقيقيّ للمستخدم.')
+            ->assertJsonPath('data.meta.simulated', false);
+
+        $row = \Modules\Ai\Entities\AiUsage::where('user_id', $user->id)->first();
+        $this->assertSame(42, $row->request_tokens);
+        $this->assertSame(17, $row->response_tokens);
+    }
+
+    public function test_falls_back_to_simulation_on_provider_error(): void
+    {
+        $this->seed(AiSeeder::class);
+        $this->useClaudeProvider();
+        Http::fake(['api.anthropic.com/*' => Http::response('upstream down', 500)]);
+        $this->user(['role' => 'seeker']);
+
+        $this->postJson('/api/v1/assistant/message', ['message' => 'ساعدني'])
+            ->assertOk()
+            ->assertJsonPath('data.blocked', false)
+            ->assertJsonPath('data.meta.fallback', true);
+    }
+
+    public function test_falls_back_to_simulation_on_refusal(): void
+    {
+        $this->seed(AiSeeder::class);
+        $this->useClaudeProvider();
+        Http::fake(['api.anthropic.com/*' => Http::response([
+            'content' => [], 'stop_reason' => 'refusal', 'usage' => ['input_tokens' => 5, 'output_tokens' => 0],
+        ], 200)]);
+        $this->user(['role' => 'seeker']);
+
+        $this->postJson('/api/v1/assistant/message', ['message' => 'ساعدني'])
+            ->assertOk()
+            ->assertJsonPath('data.blocked', false)
+            ->assertJsonPath('data.meta.fallback', true)
+            ->assertJsonPath('data.meta.fallbackReason', 'claude_refusal');
     }
 }
