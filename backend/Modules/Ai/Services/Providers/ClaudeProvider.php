@@ -12,7 +12,7 @@ use Modules\Ai\Entities\AiSetting;
  * ملاحظة نموذج Opus 4.8/4.7 وما يماثلها: معاملات المعاينة (temperature) مرفوضة (400)،
  * فلا تُرسَل إلّا لنماذج قديمة لا ترفضها.
  */
-class ClaudeProvider implements LlmProvider
+class ClaudeProvider implements LlmProvider, ToolCallingProvider
 {
     private const DEFAULT_ENDPOINT = 'https://api.anthropic.com/v1/messages';
 
@@ -140,6 +140,19 @@ class ClaudeProvider implements LlmProvider
                 'input' => (int) ($data['usage']['input_tokens'] ?? 0),
                 'output' => (int) ($data['usage']['output_tokens'] ?? 0),
             ],
+        ];
+    }
+
+    /** يشكّل دور المساعد (كتل tool_use) + نتائج الأدوات (كتل tool_result) بلغة Anthropic. */
+    public function formatToolResultTurn(mixed $assistant, array $toolResults): array
+    {
+        return [
+            ['role' => 'assistant', 'content' => $assistant],
+            ['role' => 'user', 'content' => array_map(fn ($r) => [
+                'type' => 'tool_result',
+                'tool_use_id' => $r['id'],
+                'content' => $r['output'],
+            ], $toolResults)],
         ];
     }
 

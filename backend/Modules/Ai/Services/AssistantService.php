@@ -7,7 +7,7 @@ use Modules\Ai\Entities\AiCapability;
 use Modules\Ai\Entities\AiKnowledge;
 use Modules\Ai\Entities\AiSetting;
 use Modules\Ai\Entities\AssistantPreference;
-use Modules\Ai\Services\Providers\ClaudeProvider;
+use Modules\Ai\Services\Providers\ToolCallingProvider;
 use Modules\Chat\Entities\ChatSetting;
 use Modules\User\Entities\User;
 
@@ -167,9 +167,9 @@ class AssistantService
 
         if ($provider !== null) {
             try {
-                // مسار الأدوات الحيّة (function-calling) متاح لكلود حين نعرف المستخدم؛
+                // مسار الأدوات الحيّة (function-calling) متاح لأيّ مزوّد يدعمها حين نعرف المستخدم؛
                 // غيره يبقى على التوليد النصّيّ مع ذاكرة المحادثة.
-                if ($provider instanceof ClaudeProvider && $user !== null) {
+                if ($provider instanceof ToolCallingProvider && $user !== null) {
                     return $this->composeWithTools($provider, $ai, $context, $message, $history, $user);
                 }
 
@@ -193,7 +193,7 @@ class AssistantService
      * تأليف مع أدوات المنصّة الحيّة — حلقة function-calling بجولات محدودة:
      * يطلب المزوّد أداة → ننفّذها ونُعيد نتيجتها → يُنتج الردّ النهائيّ. أرقام التوكن تُجمَع عبر الجولات.
      */
-    private function composeWithTools(ClaudeProvider $provider, AiSetting $ai, array $context, string $message, array $history, User $user): array
+    private function composeWithTools(ToolCallingProvider $provider, AiSetting $ai, array $context, string $message, array $history, User $user): array
     {
         $tools = new PlatformTools;
         $defs = $tools->definitions();
@@ -208,19 +208,15 @@ class AssistantService
         $rounds = 0;
         while (($resp['stopReason'] ?? '') === 'tool_use' && $rounds < 2) {
             $rounds++;
-            $messages[] = ['role' => 'assistant', 'content' => $resp['assistant']];
 
             $toolResults = [];
             foreach ($resp['toolUses'] as $tu) {
                 $usedTools[] = $tu['name'];
                 $out = $tools->execute($tu['name'], $tu['input'], $user);
-                $toolResults[] = [
-                    'type' => 'tool_result',
-                    'tool_use_id' => $tu['id'],
-                    'content' => json_encode($out, JSON_UNESCAPED_UNICODE),
-                ];
+                $toolResults[] = ['id' => $tu['id'], 'output' => json_encode($out, JSON_UNESCAPED_UNICODE)];
             }
-            $messages[] = ['role' => 'user', 'content' => $toolResults];
+            // شكل دورة الأدوات (المساعد + النتائج) يملكه المزوّد — Anthropic/OpenAI مختلفان.
+            $messages = array_merge($messages, $provider->formatToolResultTurn($resp['assistant'], $toolResults));
 
             $resp = $provider->chatWithTools($system, $messages, $defs);
             $inTok += (int) $resp['usage']['input'];

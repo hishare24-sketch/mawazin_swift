@@ -298,6 +298,32 @@ class AssistantTest extends TestCase
         $this->assertSame(30, $row->response_tokens);
     }
 
+    public function test_assistant_uses_platform_tools_via_openai(): void
+    {
+        $this->seed(AiSeeder::class);
+        $this->useOpenAiProvider();
+        $user = $this->user(['role' => 'seeker']);
+
+        $emp = User::create(['name' => 'Emp', 'email' => 'emp'.uniqid().'@rec.test', 'password' => 'secret123']);
+        $opp = Opportunity::create(['user_id' => $emp->id, 'title' => 'محلّل بيانات', 'company' => 'بيان', 'location' => 'الرياض', 'salary' => '—', 'category' => 'data']);
+        Application::create(['user_id' => $user->id, 'opportunity_id' => $opp->id, 'stage' => 'screening']);
+
+        Http::fake(['api.openai.com/*' => Http::sequence()
+            ->push(['choices' => [['message' => ['content' => null, 'tool_calls' => [['id' => 'call_1', 'type' => 'function', 'function' => ['name' => 'get_my_applications', 'arguments' => '{}']]]], 'finish_reason' => 'tool_calls']], 'usage' => ['prompt_tokens' => 30, 'completion_tokens' => 10]], 200)
+            ->push(['choices' => [['message' => ['content' => 'تقديمك على «محلّل بيانات» في مرحلة الفرز.'], 'finish_reason' => 'stop']], 'usage' => ['prompt_tokens' => 50, 'completion_tokens' => 20]], 200),
+        ]);
+
+        $this->postJson('/api/v1/assistant/message', ['message' => 'أين وصلت تقديماتي؟'])
+            ->assertOk()
+            ->assertJsonPath('data.meta.simulated', false)
+            ->assertJsonPath('data.reply', 'تقديمك على «محلّل بيانات» في مرحلة الفرز.')
+            ->assertJsonPath('data.meta.usedTools', ['get_my_applications']);
+
+        $row = AiUsage::where('user_id', $user->id)->first();
+        $this->assertSame(80, $row->request_tokens);
+        $this->assertSame(30, $row->response_tokens);
+    }
+
     public function test_falls_back_to_simulation_on_provider_error(): void
     {
         $this->seed(AiSeeder::class);

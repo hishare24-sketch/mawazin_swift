@@ -205,6 +205,9 @@ async function saveSettings() {
 
 function toneColor(tone: string) { return `rgb(var(--v-theme-${tone === 'amber' ? 'warning' : tone}))` }
 
+// اسم ودّيّ لأداة المنصّة التي استعان بها المساعد (function-calling)
+function toolLabel(key: string) { const k = `assistant.tool_${key}`; const l = t(k); return l === k ? key : l }
+
 // بثّ لحظيّ: ردود الدعم تصل مباشرةً للتذكرة المفتوحة والقائمة.
 let unsubscribeTickets: (() => void) | null = null
 onMounted(async () => {
@@ -316,9 +319,10 @@ onUnmounted(() => unsubscribeTickets?.())
                 <BaseAvatar :color="m.role === 'user' ? 'brand' : 'emerald'" tonal :size="32"><BaseIcon :name="m.role === 'user' ? 'mdi-account' : 'mdi-robot-happy-outline'" :size="17" /></BaseAvatar>
                 <div class="rounded-ui-lg p-3 text-sm" :class="m.role === 'user' ? 'bg-brand text-on-brand' : 'border-ui bg-surfalt text-content'">
                   <span class="whitespace-pre-line">{{ m.body }}</span>
-                  <div v-if="m.meta && !m.meta.blocked && (m.meta.usedKnowledge?.length || m.meta.level)" class="mt-2 flex flex-wrap items-center gap-1 border-t border-ui pt-1.5">
+                  <div v-if="m.meta && !m.meta.blocked && (m.meta.usedKnowledge?.length || m.meta.usedTools?.length || m.meta.level)" class="mt-2 flex flex-wrap items-center gap-1 border-t border-ui pt-1.5">
                     <BaseChip v-if="m.meta.level" color="neutral">{{ t(`assistant.level${m.meta.level}`) }}</BaseChip>
                     <span v-for="k in (m.meta.usedKnowledge || [])" :key="k" class="rounded-full px-1.5 py-0.5 text-[10px] text-brand" style="background: rgba(var(--v-theme-primary),0.1)">{{ k }}</span>
+                    <span v-for="tl in (m.meta.usedTools || [])" :key="`t-${tl}`" class="inline-flex items-center gap-1 rounded-full px-1.5 py-0.5 text-[10px] text-success" style="background: rgba(var(--v-theme-success),0.12)"><BaseIcon name="mdi-database-search-outline" :size="11" />{{ toolLabel(tl) }}</span>
                   </div>
                 </div>
               </div>

@@ -15,7 +15,7 @@ use Modules\Ai\Entities\AiSetting;
  *
  * يدعم أيضًا مزوّد «custom» (نقطة نهاية متوافقة مع OpenAI) عبر AiSetting::endpoint.
  */
-class OpenAiProvider implements LlmProvider
+class OpenAiProvider implements LlmProvider, ToolCallingProvider
 {
     private const DEFAULT_ENDPOINT = 'https://api.openai.com/v1/chat/completions';
 
@@ -72,6 +72,74 @@ class OpenAiProvider implements LlmProvider
             ],
             'stopReason' => $choice['finish_reason'] ?? null,
         ];
+    }
+
+    /**
+     * محادثة مع أدوات (function-calling، جولة واحدة يديرها المنسّق) بلغة OpenAI:
+     * tools من نوع function + رسائل، وتُطبَّع tool_calls إلى {id,name,input}.
+     *
+     * @return array{stopReason:?string, text:string, toolUses:array, assistant:array, usage:array}
+     */
+    public function chatWithTools(string $systemPrompt, array $messages, array $tools, array $options = []): array
+    {
+        $key = $this->cleanApiKey((string) $this->setting->api_key);
+        if ($key === '') {
+            throw new \RuntimeException('openai_missing_key');
+        }
+
+        $model = $this->setting->model ?: self::DEFAULT_MODEL;
+        $maxTokens = max(256, min(8192, (int) ($options['maxTokens'] ?? $this->setting->max_tokens ?? 1024)));
+
+        $response = Http::withToken($key)->timeout(40)
+            ->post($this->setting->endpoint ?: self::DEFAULT_ENDPOINT, [
+                'model' => $model,
+                'max_completion_tokens' => $maxTokens,
+                'messages' => array_merge([['role' => 'system', 'content' => $systemPrompt]], $messages),
+                'tools' => array_map(fn ($t) => [
+                    'type' => 'function',
+                    'function' => ['name' => $t['name'], 'description' => $t['description'], 'parameters' => $t['schema']],
+                ], $tools),
+            ]);
+
+        if (! $response->successful()) {
+            throw new \RuntimeException('openai_http_'.$response->status());
+        }
+
+        $data = $response->json() ?? [];
+        $choice = $data['choices'][0] ?? [];
+        $msg = $choice['message'] ?? [];
+
+        if (! empty($msg['refusal']) || ($choice['finish_reason'] ?? null) === 'content_filter') {
+            throw new \RuntimeException('openai_refusal');
+        }
+
+        $toolUses = collect($msg['tool_calls'] ?? [])
+            ->filter(fn ($c) => ($c['type'] ?? 'function') === 'function')
+            ->map(fn ($c) => [
+                'id' => $c['id'] ?? '',
+                'name' => $c['function']['name'] ?? '',
+                'input' => is_array($d = json_decode($c['function']['arguments'] ?? '{}', true)) ? $d : [],
+            ])->values()->all();
+
+        return [
+            'stopReason' => ($choice['finish_reason'] ?? null) === 'tool_calls' ? 'tool_use' : ($choice['finish_reason'] ?? null),
+            'text' => trim((string) ($msg['content'] ?? '')),
+            'toolUses' => $toolUses,
+            'assistant' => $msg, // رسالة المساعد الخام (تحوي tool_calls) تُلحَق كما هي
+            'usage' => [
+                'input' => (int) ($data['usage']['prompt_tokens'] ?? 0),
+                'output' => (int) ($data['usage']['completion_tokens'] ?? 0),
+            ],
+        ];
+    }
+
+    /** يشكّل دور المساعد (tool_calls) + رسائل الأدوار «tool» بنتائجها بلغة OpenAI. */
+    public function formatToolResultTurn(mixed $assistant, array $toolResults): array
+    {
+        return array_merge(
+            [$assistant], // رسالة المساعد كما هي (بحقل tool_calls)
+            array_map(fn ($r) => ['role' => 'tool', 'tool_call_id' => $r['id'], 'content' => $r['output']], $toolResults),
+        );
     }
 
     /**
