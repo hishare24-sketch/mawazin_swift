@@ -4,6 +4,7 @@ import { api, type CvExtractionData } from '@/services/api'
 import { useProfileStore } from '@/stores/ProfileStore'
 import { useAuthStore } from '@/stores/AuthStore'
 import { useResumesStore } from '@/stores/ResumesStore'
+import { qrSvg } from '@/services/qr'
 import PageHeader from '@/components/shared/PageHeader.vue'
 import BaseCard from '@/components/ui/BaseCard.vue'
 import BaseButton from '@/components/ui/BaseButton.vue'
@@ -61,29 +62,36 @@ async function compose(len: Length) {
 function lengthLabel(l: Length) { return l === 'short' ? 'مختصر' : l === 'expanded' ? 'موسّع' : 'متوسّط' }
 onMounted(() => compose('medium'))
 
-// ——— الثيمات ———
-interface Theme { key: string, name: string, layout: 'single' | 'sidebar' | 'band' }
-const THEMES: Theme[] = [
-  { key: 'classic', name: 'كلاسيكيّ', layout: 'single' },
-  { key: 'modern', name: 'عصريّ', layout: 'single' },
-  { key: 'minimal', name: 'مينيمال', layout: 'single' },
-  { key: 'timeline', name: 'خطّ زمنيّ', layout: 'single' },
-  { key: 'elegant', name: 'أنيق (Serif)', layout: 'single' },
-  { key: 'sidebar', name: 'جانبيّ ملوّن', layout: 'sidebar' },
-  { key: 'sidebarSoft', name: 'جانبيّ ناعم', layout: 'sidebar' },
-  { key: 'band', name: 'ترويسة داكنة', layout: 'band' },
-  { key: 'bandAccent', name: 'ترويسة ملوّنة', layout: 'band' },
+// ——— معماريّة الثيمات: تخطيط أساسيّ × نمط عرض (variant) × ضوابط مستقلّة ———
+interface BaseLayout { key: 'single' | 'sidebar' | 'band' | 'timeline', name: string, icon: string, desc: string }
+const BASE_LAYOUTS: BaseLayout[] = [
+  { key: 'single', name: 'عموديّ', icon: 'mdi-view-sequential-outline', desc: 'عمود واحد كلاسيكيّ' },
+  { key: 'sidebar', name: 'جانبيّ', icon: 'mdi-view-split-vertical', desc: 'عمود جانبيّ ملوّن' },
+  { key: 'band', name: 'ترويسة', icon: 'mdi-view-headline', desc: 'شريط ترويسة بارز' },
+  { key: 'timeline', name: 'خطّ زمنيّ', icon: 'mdi-timeline-outline', desc: 'الخبرات كخطّ زمنيّ' },
 ]
-const theme = ref<Theme>(THEMES[5])
+const baseLayout = ref<BaseLayout>(BASE_LAYOUTS[1])
+// نمط العرض داخل كلّ تخطيط — يغيّر معالجة العناوين والترويسة والفواصل
+interface Variant { key: 'minimal' | 'classic' | 'bold' | 'outline', name: string }
+const VARIANTS: Variant[] = [
+  { key: 'minimal', name: 'مينيمال' },
+  { key: 'classic', name: 'كلاسيكيّ' },
+  { key: 'bold', name: 'جريء' },
+  { key: 'outline', name: 'مؤطّر' },
+]
+const variant = ref<Variant>(VARIANTS[1])
+
+// ——— ضوابط مستقلّة: لون · خطّ · كثافة · تنسيق ———
 const ACCENTS = ['#0f6e56', '#185fa5', '#534ab7', '#993c1d', '#0d9488', '#b45309', '#be185d', '#111827']
 const accent = ref(ACCENTS[0])
-
-// ——— نمط العرض (ديناميكيّة الهويّة) ———
 const DENSITIES = [{ key: 'compact', name: 'مضغوط', scale: 0.88 }, { key: 'cozy', name: 'متوسّط', scale: 1 }, { key: 'spacious', name: 'مريح', scale: 1.12 }]
 const density = ref(DENSITIES[1])
 const FONTS = [{ key: 'tajawal', name: 'Tajawal', css: `'Tajawal', sans-serif` }, { key: 'cairo', name: 'Cairo', css: `'Cairo', 'Tajawal', sans-serif` }, { key: 'amiri', name: 'Amiri', css: `'Amiri', 'Tajawal', serif` }]
 const font = ref(FONTS[0])
 const headerAlign = ref<'start' | 'center'>('start')
+// التنسيق: شكل شرائح المهارات
+const CHIP_STYLES = [{ key: 'pill', name: 'حبّة' }, { key: 'plain', name: 'بسيط' }, { key: 'bar', name: 'شريط' }]
+const chipStyle = ref(CHIP_STYLES[0])
 const pageStyle = computed(() => ({
   '--accent': accent.value,
   '--scale': String(density.value.scale),
@@ -117,20 +125,36 @@ function removeLang(id: number) { languages.value = languages.value.filter(l => 
 
 // ——— محتوى قابل للتحرير داخل الاستوديو (مبذور من الملف، مع إضافة لكلّ قسم) ———
 interface SkillItem { id: number, name: string, level: number }
-interface ExpItem { id: number, title: string, org: string, period: string, desc: string }
-interface CertItem { id: number, name: string, issuer: string, date: string }
+interface ExpItem { id: number, title: string, org: string, period: string, desc: string, link?: string }
+interface CertItem { id: number, name: string, issuer: string, date: string, link?: string }
 const skills = ref<SkillItem[]>(profile.skills.map(s => ({ id: s.id, name: s.name, level: s.selfLevel })))
 const experiences = ref<ExpItem[]>(profile.experiences.map(e => ({ id: e.id, title: e.title, org: e.company, period: e.period, desc: e.desc })))
 const certificates = ref<CertItem[]>(profile.certificates.map(c => ({ id: c.id, name: c.name, issuer: c.issuer, date: c.date })))
 const newSkill = reactive({ name: '', level: 3 })
-const newExp = reactive({ title: '', org: '', period: '', desc: '' })
-const newCert = reactive({ name: '', issuer: '', date: '' })
+const newExp = reactive({ title: '', org: '', period: '', desc: '', link: '' })
+const newCert = reactive({ name: '', issuer: '', date: '', link: '' })
 function addSkill() { if (!newSkill.name.trim()) return; skills.value.push({ id: Date.now(), name: newSkill.name.trim(), level: Number(newSkill.level) || 3 }); newSkill.name = '' }
-function addExp() { if (!newExp.title.trim()) return; experiences.value.push({ id: Date.now(), title: newExp.title.trim(), org: newExp.org.trim(), period: newExp.period.trim(), desc: newExp.desc.trim() }); newExp.title = ''; newExp.org = ''; newExp.period = ''; newExp.desc = '' }
-function addCert() { if (!newCert.name.trim()) return; certificates.value.push({ id: Date.now(), name: newCert.name.trim(), issuer: newCert.issuer.trim(), date: newCert.date.trim() }); newCert.name = ''; newCert.issuer = ''; newCert.date = '' }
+function addExp() { if (!newExp.title.trim()) return; experiences.value.push({ id: Date.now(), title: newExp.title.trim(), org: newExp.org.trim(), period: newExp.period.trim(), desc: newExp.desc.trim(), link: newExp.link.trim() || undefined }); newExp.title = ''; newExp.org = ''; newExp.period = ''; newExp.desc = ''; newExp.link = '' }
+function addCert() { if (!newCert.name.trim()) return; certificates.value.push({ id: Date.now(), name: newCert.name.trim(), issuer: newCert.issuer.trim(), date: newCert.date.trim(), link: newCert.link.trim() || undefined }); newCert.name = ''; newCert.issuer = ''; newCert.date = ''; newCert.link = '' }
 function removeSkill(id: number) { skills.value = skills.value.filter(s => s.id !== id) }
 function removeExp(id: number) { experiences.value = experiences.value.filter(e => e.id !== id) }
 function removeCert(id: number) { certificates.value = certificates.value.filter(c => c.id !== id) }
+
+// ——— الصورة الشخصيّة + QR للمرفقات ———
+const photo = ref<string>('') // base64 data-URL
+const showPhoto = ref(true)
+const photoInput = ref<HTMLInputElement | null>(null)
+function pickPhoto() { photoInput.value?.click() }
+function onPhoto(e: Event) {
+  const file = (e.target as HTMLInputElement).files?.[0]
+  if (!file) return
+  if (file.size > 3 * 1024 * 1024) { toast('حجم الصورة يتجاوز 3 ميجابايت'); return }
+  const reader = new FileReader()
+  reader.onload = () => { photo.value = String(reader.result) }
+  reader.readAsDataURL(file)
+  if (photoInput.value) photoInput.value.value = ''
+}
+function qr(url?: string) { return url ? qrSvg(url, 64) : '' }
 const dragIndex = ref<number | null>(null)
 function onDragStart(i: number) { dragIndex.value = i }
 function onDrop(i: number) {
@@ -183,15 +207,16 @@ const resumes = useResumesStore()
 const versionName = ref('')
 function buildConfig() {
   return {
-    length: length.value, theme: theme.value.key, accent: accent.value,
-    density: density.value.key, font: font.value.key, headerAlign: headerAlign.value,
+    length: length.value, layout: baseLayout.value.key, variant: variant.value.key, accent: accent.value,
+    density: density.value.key, font: font.value.key, headerAlign: headerAlign.value, chip: chipStyle.value.key,
+    photo: photo.value, showPhoto: showPhoto.value,
     sections: sections.value, links: links.value, education: education.value, languages: languages.value,
     skills: skills.value, experiences: experiences.value, certificates: certificates.value,
     draft: { headline: draft.headline, summary: draft.summary, highlights: draft.highlights },
   }
 }
 function saveVersion() {
-  const name = versionName.value.trim() || `سيرة ${lengthLabel(length.value)} · ${theme.value.name}`
+  const name = versionName.value.trim() || `سيرة ${baseLayout.value.name} · ${variant.value.name}`
   resumes.saveVersion(name, buildConfig())
   versionName.value = ''
   toast(`حُفظت النسخة: ${name}`)
@@ -200,11 +225,15 @@ function loadVersion(r: { id: number, name: string, config?: unknown }) {
   const c = r.config as ReturnType<typeof buildConfig> | undefined
   if (!c) { toast('نسخة قديمة بلا إعداد استوديو'); return }
   length.value = c.length
-  theme.value = THEMES.find(t => t.key === c.theme) ?? theme.value
+  baseLayout.value = BASE_LAYOUTS.find(l => l.key === (c as { layout?: string }).layout) ?? baseLayout.value
+  variant.value = VARIANTS.find(v => v.key === (c as { variant?: string }).variant) ?? variant.value
   accent.value = c.accent
   density.value = DENSITIES.find(d => d.key === (c as { density?: string }).density) ?? density.value
   font.value = FONTS.find(f => f.key === (c as { font?: string }).font) ?? font.value
+  chipStyle.value = CHIP_STYLES.find(s => s.key === (c as { chip?: string }).chip) ?? chipStyle.value
   headerAlign.value = (c as { headerAlign?: 'start' | 'center' }).headerAlign ?? headerAlign.value
+  photo.value = (c as { photo?: string }).photo ?? photo.value
+  showPhoto.value = (c as { showPhoto?: boolean }).showPhoto ?? showPhoto.value
   sections.value = c.sections
   links.value = c.links
   education.value = c.education ?? education.value
@@ -262,17 +291,45 @@ function exportWord() {
           </div>
         </BaseCard>
 
-        <!-- الثيم واللون -->
+        <!-- الصورة الشخصيّة -->
         <BaseCard>
-          <div class="ctl-head"><BaseIcon name="mdi-palette-swatch-outline" :size="18" class="text-brand" /><h3>الثيم والهويّة</h3></div>
-          <div class="theme-grid">
-            <button v-for="t in THEMES" :key="t.key" class="theme-chip" :class="{ active: theme.key === t.key }" @click="theme = t">{{ t.name }}</button>
+          <div class="ctl-head"><BaseIcon name="mdi-account-circle-outline" :size="18" class="text-brand" /><h3>الصورة الشخصيّة</h3></div>
+          <div class="photo-ctl">
+            <div class="photo-prev" :style="photo ? { backgroundImage: `url(${photo})` } : {}">
+              <BaseIcon v-if="!photo" name="mdi-account" :size="26" class="text-muted" />
+            </div>
+            <div class="photo-actions">
+              <BaseButton variant="tonal-accent" size="sm" @click="pickPhoto"><BaseIcon name="mdi-upload-outline" :size="16" />{{ photo ? 'تغيير' : 'رفع صورة' }}</BaseButton>
+              <label class="photo-toggle"><input type="checkbox" v-model="showPhoto"> إظهار في السيرة</label>
+              <button v-if="photo" class="mini" @click="photo = ''"><BaseIcon name="mdi-delete-outline" :size="16" /> حذف</button>
+            </div>
+            <input ref="photoInput" type="file" accept="image/*" class="hidden" @change="onPhoto">
           </div>
+        </BaseCard>
+
+        <!-- التخطيط الأساسيّ + نمط العرض -->
+        <BaseCard>
+          <div class="ctl-head"><BaseIcon name="mdi-view-dashboard-outline" :size="18" class="text-brand" /><h3>التخطيط والهويّة</h3></div>
+
+          <div class="disp-tag mb">التخطيط الأساسيّ</div>
+          <div class="layout-grid">
+            <button v-for="l in BASE_LAYOUTS" :key="l.key" class="layout-tile" :class="{ active: baseLayout.key === l.key }" @click="baseLayout = l">
+              <BaseIcon :name="l.icon" :size="22" />
+              <span>{{ l.name }}</span>
+            </button>
+          </div>
+
+          <div class="disp-tag mb mt">نمط العرض</div>
+          <div class="seg sm wrap">
+            <button v-for="v in VARIANTS" :key="v.key" class="seg-btn" :class="{ active: variant.key === v.key }" @click="variant = v">{{ v.name }}</button>
+          </div>
+
+          <div class="disp-tag mb mt">اللون</div>
           <div class="swatches">
             <button v-for="c in ACCENTS" :key="c" class="swatch" :class="{ active: accent === c }" :style="{ background: c }" @click="accent = c" :aria-label="c" />
           </div>
 
-          <div class="disp-label">نمط العرض</div>
+          <div class="disp-label">التحكّم بالتنسيق</div>
           <div class="disp-row">
             <span class="disp-tag">الكثافة</span>
             <div class="seg sm">
@@ -283,6 +340,12 @@ function exportWord() {
             <span class="disp-tag">الخطّ</span>
             <div class="seg sm">
               <button v-for="f in FONTS" :key="f.key" class="seg-btn" :class="{ active: font.key === f.key }" @click="font = f">{{ f.name }}</button>
+            </div>
+          </div>
+          <div class="disp-row">
+            <span class="disp-tag">المهارات</span>
+            <div class="seg sm">
+              <button v-for="cs in CHIP_STYLES" :key="cs.key" class="seg-btn" :class="{ active: chipStyle.key === cs.key }" @click="chipStyle = cs">{{ cs.name }}</button>
             </div>
           </div>
           <div class="disp-row">
@@ -336,6 +399,7 @@ function exportWord() {
             <BaseInput v-model="newExp.org" placeholder="الجهة" />
             <BaseInput v-model="newExp.period" placeholder="المدّة (2022 - الآن)" />
             <BaseInput v-model="newExp.desc" placeholder="وصف موجز" />
+            <BaseInput v-model="newExp.link" placeholder="مرفق/رابط (يظهر كـQR) https://" dir="ltr" />
             <BaseButton variant="tonal-accent" size="sm" @click="addExp"><BaseIcon name="mdi-plus" :size="16" />إضافة خبرة</BaseButton>
           </div>
         </BaseCard>
@@ -352,6 +416,7 @@ function exportWord() {
             <BaseInput v-model="newCert.name" placeholder="اسم الشهادة" />
             <BaseInput v-model="newCert.issuer" placeholder="الجهة المانحة" />
             <BaseInput v-model="newCert.date" placeholder="السنة" />
+            <BaseInput v-model="newCert.link" placeholder="رابط تحقّق (يظهر كـQR) https://" dir="ltr" />
             <BaseButton variant="tonal-accent" size="sm" @click="addCert"><BaseIcon name="mdi-plus" :size="16" />إضافة شهادة</BaseButton>
           </div>
         </BaseCard>
@@ -421,22 +486,23 @@ function exportWord() {
 
       <!-- المعاينة الحيّة (A4) -->
       <div class="preview-wrap">
-        <div class="page" :class="[`theme-${theme.key}`, `layout-${theme.layout}`, `hdr-${headerAlign}`]" :style="pageStyle">
+        <div class="page" :class="[`layout-${baseLayout.key}`, `variant-${variant.key}`, `hdr-${headerAlign}`, `chip-${chipStyle.key}`]" :style="pageStyle">
           <!-- ترويسة -->
           <header class="cv-head">
+            <div v-if="showPhoto && photo" class="cv-photo" :style="{ backgroundImage: `url(${photo})` }" />
             <div class="cv-identity">
               <h1 class="cv-name">{{ person.name }}</h1>
               <p class="cv-headline">{{ draft.headline || profile.headline }}</p>
-            </div>
-            <div v-if="person.email || person.phone" class="cv-contact">
-              <span v-if="person.email" dir="ltr"><BaseIcon name="mdi-email-outline" :size="13" /> {{ person.email }}</span>
-              <span v-if="person.phone" dir="ltr"><BaseIcon name="mdi-phone-outline" :size="13" /> {{ person.phone }}</span>
+              <div v-if="person.email || person.phone" class="cv-contact">
+                <span v-if="person.email" dir="ltr"><BaseIcon name="mdi-email-outline" :size="13" /> {{ person.email }}</span>
+                <span v-if="person.phone" dir="ltr"><BaseIcon name="mdi-phone-outline" :size="13" /> {{ person.phone }}</span>
+              </div>
             </div>
           </header>
 
           <div class="cv-body">
             <!-- عمود جانبيّ (للثيم الجانبيّ) -->
-            <aside v-if="theme.layout === 'sidebar'" class="cv-aside">
+            <aside v-if="baseLayout.key === 'sidebar'" class="cv-aside">
               <template v-for="s in visibleOrdered" :key="`a-${s.key}`">
                 <section v-if="s.key === 'skills' && skills.length" class="cv-sec">
                   <h2>المهارات</h2>
@@ -454,7 +520,10 @@ function exportWord() {
                 </section>
                 <section v-else-if="s.key === 'certificates' && certificates.length" class="cv-sec">
                   <h2>الشهادات</h2>
-                  <div v-for="c in certificates" :key="c.id" class="cert"><b>{{ c.name }}</b><span>{{ c.issuer }} · {{ c.date }}</span></div>
+                  <div v-for="c in certificates" :key="c.id" class="cert">
+                    <div class="cert-body"><b>{{ c.name }}</b><span>{{ c.issuer }} · {{ c.date }}</span><a v-if="c.link" class="cv-link sm" :href="c.link" target="_blank" rel="noopener"><BaseIcon name="mdi-shield-check-outline" :size="12" /> تحقّق</a></div>
+                    <a v-if="c.link" class="cv-qr sm" :href="c.link" target="_blank" rel="noopener" v-html="qr(c.link)" />
+                  </div>
                 </section>
                 <section v-else-if="s.key === 'links' && links.length" class="cv-sec">
                   <h2>روابط</h2>
@@ -481,37 +550,44 @@ function exportWord() {
                 <section v-else-if="s.key === 'experiences' && experiences.length" class="cv-sec">
                   <h2>الخبرات</h2>
                   <div v-for="e in experiences" :key="e.id" class="cv-exp">
-                    <div class="cv-exp-top"><b>{{ e.title }}</b><span class="cv-exp-org">{{ e.org }}</span></div>
-                    <span class="cv-exp-period">{{ e.period }}</span>
-                    <p v-if="e.desc">{{ e.desc }}</p>
+                    <div class="cv-exp-body">
+                      <div class="cv-exp-top"><b>{{ e.title }}</b><span class="cv-exp-org">{{ e.org }}</span></div>
+                      <span class="cv-exp-period">{{ e.period }}</span>
+                      <p v-if="e.desc">{{ e.desc }}</p>
+                      <a v-if="e.link" class="cv-link sm" :href="e.link" target="_blank" rel="noopener"><BaseIcon name="mdi-paperclip" :size="12" /> مرفق / رابط</a>
+                    </div>
+                    <a v-if="e.link" class="cv-qr" :href="e.link" target="_blank" rel="noopener" v-html="qr(e.link)" />
                   </div>
                 </section>
 
                 <!-- في الثيمات غير الجانبيّة تظهر المهارات/الشهادات/الروابط في الرئيس -->
-                <section v-else-if="s.key === 'skills' && theme.layout !== 'sidebar' && skills.length" class="cv-sec">
+                <section v-else-if="s.key === 'skills' && baseLayout.key !== 'sidebar' && skills.length" class="cv-sec">
                   <h2>المهارات</h2>
                   <div class="chips">
                     <span v-for="sk in skills" :key="sk.id" class="chip">{{ sk.name }}</span>
                   </div>
                 </section>
-                <section v-else-if="s.key === 'education' && theme.layout !== 'sidebar' && education.length" class="cv-sec">
+                <section v-else-if="s.key === 'education' && baseLayout.key !== 'sidebar' && education.length" class="cv-sec">
                   <h2>التعليم</h2>
                   <div v-for="e in education" :key="e.id" class="cv-exp">
                     <div class="cv-exp-top"><b>{{ e.degree }}</b><span class="cv-exp-org">{{ e.org }}</span></div>
                     <span class="cv-exp-period">{{ e.year }}</span>
                   </div>
                 </section>
-                <section v-else-if="s.key === 'languages' && theme.layout !== 'sidebar' && languages.length" class="cv-sec">
+                <section v-else-if="s.key === 'languages' && baseLayout.key !== 'sidebar' && languages.length" class="cv-sec">
                   <h2>اللغات</h2>
                   <div class="chips">
                     <span v-for="l in languages" :key="l.id" class="chip">{{ l.name }} · {{ l.level }}</span>
                   </div>
                 </section>
-                <section v-else-if="s.key === 'certificates' && theme.layout !== 'sidebar' && certificates.length" class="cv-sec">
+                <section v-else-if="s.key === 'certificates' && baseLayout.key !== 'sidebar' && certificates.length" class="cv-sec">
                   <h2>الشهادات</h2>
-                  <div v-for="c in certificates" :key="c.id" class="cert"><b>{{ c.name }}</b><span>{{ c.issuer }} · {{ c.date }}</span></div>
+                  <div v-for="c in certificates" :key="c.id" class="cert">
+                    <div class="cert-body"><b>{{ c.name }}</b><span>{{ c.issuer }} · {{ c.date }}</span><a v-if="c.link" class="cv-link sm" :href="c.link" target="_blank" rel="noopener"><BaseIcon name="mdi-shield-check-outline" :size="12" /> تحقّق</a></div>
+                    <a v-if="c.link" class="cv-qr sm" :href="c.link" target="_blank" rel="noopener" v-html="qr(c.link)" />
+                  </div>
                 </section>
-                <section v-else-if="s.key === 'links' && theme.layout !== 'sidebar' && links.length" class="cv-sec">
+                <section v-else-if="s.key === 'links' && baseLayout.key !== 'sidebar' && links.length" class="cv-sec">
                   <h2>روابط</h2>
                   <div class="link-inline">
                     <a v-for="l in links" :key="l.id" class="cv-link" :href="l.url" target="_blank" rel="noopener"><BaseIcon :name="l.icon" :size="13" /> {{ l.label }}</a>
@@ -599,80 +675,83 @@ function exportWord() {
 .cv-link:hover { text-decoration: underline; }
 .link-inline { display: flex; flex-wrap: wrap; gap: 6px; }
 
-/* الثيم: عصريّ فاتح — عناوين بخطّ سفليّ */
-.theme-modern .cv-sec h2 { border-bottom: 2px solid color-mix(in srgb, var(--accent) 35%, #fff); padding-bottom: 4px; }
-.theme-modern .cv-head { border-bottom: 3px solid var(--accent); }
-
-/* الثيم: كلاسيكيّ — رماديّ هادئ */
-.theme-classic .cv-name { color: var(--ink); }
-.theme-classic .cv-sec h2 { color: var(--ink); border-bottom: 1px solid #e5e7eb; padding-bottom: 4px; }
-.theme-classic .cv-headline { color: var(--accent); font-weight: 600; }
-
-/* الثيم: مكس جانبيّ ملوّن */
-.layout-sidebar .cv-body { display: grid; grid-template-columns: 34% 1fr; }
-.theme-sidebar .cv-head { background: var(--accent); padding-bottom: 22px; }
-.theme-sidebar .cv-name, .theme-sidebar .cv-headline, .theme-sidebar .cv-contact { color: #fff; }
-.theme-sidebar .cv-headline { opacity: .92; }
-.theme-sidebar .cv-contact { opacity: .9; }
-.theme-sidebar .cv-aside { background: color-mix(in srgb, var(--accent) 8%, #fff); padding-top: 24px; }
-.theme-sidebar .cv-aside .cv-sec h2 { color: var(--accent); }
-.theme-sidebar .cv-main { padding-top: 24px; }
-
-/* الثيم: مكس ترويسة داكنة */
-.theme-band .cv-head { background: #111827; padding-bottom: 24px; }
-.theme-band .cv-name { color: #fff; }
-.theme-band .cv-headline { color: var(--accent); font-weight: 700; }
-.theme-band .cv-contact { color: #cbd5e1; }
-.theme-band .cv-main { padding-top: 24px; }
-
-/* الثيم: مينيمال — نظيف بلا خلفيّات، عناوين رفيعة */
-.theme-minimal .cv-name { color: var(--ink); font-weight: 800; }
-.theme-minimal .cv-headline { color: var(--accent); font-weight: 600; }
-.theme-minimal .cv-sec h2 { color: var(--muted); font-weight: 700; letter-spacing: 1.5px; font-size: 11px; }
-.theme-minimal .cv-head { border-bottom: 1px solid #eee; }
-
-/* الثيم: خطّ زمنيّ — الخبرات على تايم لاين */
-.theme-timeline .cv-name { color: var(--accent); }
-.theme-timeline .cv-main .cv-exp { position: relative; padding-inline-start: 16px; border-inline-start: 2px solid color-mix(in srgb, var(--accent) 30%, #fff); padding-bottom: 6px; }
-.theme-timeline .cv-main .cv-exp::before { content: ''; position: absolute; inline-size: 9px; block-size: 9px; border-radius: 50%; background: var(--accent); inset-inline-start: -5px; inset-block-start: 4px; }
-
-/* الثيم: أنيق — عناوين Serif ومحاذاة رقيقة */
-.theme-elegant .cv-name { font-family: 'Amiri', serif; color: var(--ink); }
-.theme-elegant .cv-sec h2 { font-family: 'Amiri', serif; color: var(--accent); border-bottom: 1px solid color-mix(in srgb, var(--accent) 25%, #fff); padding-bottom: 4px; text-transform: none; letter-spacing: 0; font-size: 15px; }
-.theme-elegant .cv-head { border-bottom: 2px double color-mix(in srgb, var(--accent) 40%, #fff); }
-
-/* الثيم: جانبيّ ناعم — عمود فاتح وترويسة بيضاء */
-.theme-sidebarSoft .cv-head { background: #fff; }
-.theme-sidebarSoft .cv-name { color: var(--accent); }
-.theme-sidebarSoft .cv-headline, .theme-sidebarSoft .cv-contact { color: var(--muted); }
-.theme-sidebarSoft .cv-aside { background: #f6f8fa; padding-top: 24px; }
-.theme-sidebarSoft .cv-aside .cv-sec h2 { color: var(--accent); }
-.theme-sidebarSoft .cv-main { padding-top: 24px; }
-
-/* الثيم: ترويسة ملوّنة */
-.theme-bandAccent .cv-head { background: var(--accent); padding-bottom: 24px; }
-.theme-bandAccent .cv-name { color: #fff; }
-.theme-bandAccent .cv-headline { color: rgba(255, 255, 255, 0.92); }
-.theme-bandAccent .cv-contact { color: rgba(255, 255, 255, 0.88); }
-.theme-bandAccent .cv-main { padding-top: 24px; }
-
-/* محاذاة الترويسة */
-.hdr-center .cv-head { text-align: center; }
+/* ===== الترويسة: صورة + هويّة ===== */
+.cv-head { display: flex; align-items: center; gap: 18px; }
+.cv-identity { min-width: 0; }
+.cv-photo { inline-size: 78px; block-size: 78px; border-radius: 50%; background-size: cover; background-position: center; flex: none; border: 3px solid rgba(255, 255, 255, 0.55); }
+.hdr-center .cv-head { flex-direction: column; text-align: center; }
 .hdr-center .cv-contact { justify-content: center; }
 
-/* الكثافة (نمط العرض) — تُقاس نسبةً إلى --scale */
+/* ===== التخطيطات الأساسيّة (بنية + معالجة لون) ===== */
+.layout-single .cv-name, .layout-timeline .cv-name { color: var(--accent); }
+.layout-single .cv-photo, .layout-timeline .cv-photo { border-color: color-mix(in srgb, var(--accent) 35%, #fff); }
+
+.layout-sidebar .cv-body { display: grid; grid-template-columns: 34% 1fr; }
+.layout-sidebar .cv-head { background: var(--accent); }
+.layout-sidebar .cv-name, .layout-sidebar .cv-headline, .layout-sidebar .cv-contact { color: #fff; }
+.layout-sidebar .cv-headline, .layout-sidebar .cv-contact { opacity: 0.92; }
+.layout-sidebar .cv-aside { background: color-mix(in srgb, var(--accent) 8%, #fff); padding-top: 24px; }
+.layout-sidebar .cv-aside .cv-sec h2 { color: var(--accent); }
+.layout-sidebar .cv-main { padding-top: 24px; }
+
+.layout-band .cv-head { background: var(--accent); }
+.layout-band .cv-name { color: #fff; }
+.layout-band .cv-headline { color: rgba(255, 255, 255, 0.92); }
+.layout-band .cv-contact { color: rgba(255, 255, 255, 0.86); }
+.layout-band .cv-main { padding-top: 24px; }
+
+.layout-timeline .cv-main .cv-exp { border-inline-start: 2px solid color-mix(in srgb, var(--accent) 30%, #fff); padding-inline-start: 16px; }
+.layout-timeline .cv-main .cv-exp::before { content: ''; position: absolute; inline-size: 9px; block-size: 9px; border-radius: 50%; background: var(--accent); inset-inline-start: -5px; inset-block-start: 4px; }
+.layout-timeline .cv-main .cv-exp { position: relative; }
+
+/* ===== أنماط العرض (variant) — معالجة العناوين ===== */
+.variant-classic .cv-sec h2 { border-bottom: 1px solid color-mix(in srgb, var(--accent) 25%, #e5e7eb); padding-bottom: 4px; }
+.variant-classic .cv-headline { color: var(--accent); font-weight: 600; }
+.variant-minimal .cv-sec h2 { font-weight: 700; letter-spacing: 1.5px; font-size: 11px; opacity: 0.85; }
+.variant-bold .cv-name { font-weight: 800; }
+.variant-bold .cv-sec h2 { font-weight: 800; font-size: 14px; display: flex; align-items: center; gap: 7px; }
+.variant-bold .cv-sec h2::before { content: ''; inline-size: 16px; block-size: 3px; background: var(--accent); border-radius: 2px; }
+.variant-outline .cv-main .cv-sec { border: 1px solid color-mix(in srgb, var(--accent) 18%, #e5e7eb); border-radius: 8px; padding: 10px 12px; }
+.variant-outline .cv-sec h2 { margin-bottom: 6px; }
+
+/* ===== تنسيق شرائح المهارات ===== */
+.chip-plain .chip { background: transparent; padding: 1px 0; color: var(--ink); font-weight: 500; }
+.chip-plain .chip:not(:last-child)::after { content: '•'; margin-inline-start: 8px; color: var(--muted); }
+.chip-bar .chip { background: transparent; border-radius: 0; border-inline-start: 3px solid var(--accent); padding: 1px 8px; color: var(--ink); }
+
+/* ===== الرابط/QR في الخبرات والشهادات ===== */
+.cv-exp { display: flex; gap: 12px; align-items: flex-start; justify-content: space-between; }
+.cv-exp-body { flex: 1; min-width: 0; }
+.cv-qr { flex: none; inline-size: 50px; block-size: 50px; display: block; }
+.cv-qr.sm { inline-size: 42px; block-size: 42px; }
+.cv-qr :deep(svg) { inline-size: 100%; block-size: 100%; display: block; border-radius: 3px; }
+.cv-link.sm { font-size: 11px; margin-top: 3px; }
+.cert { display: flex; justify-content: space-between; gap: 8px; align-items: flex-start; }
+.cert-body { flex: 1; min-width: 0; }
+
+/* الكثافة — تُقاس نسبةً إلى --scale */
 .page .cv-head { padding: calc(28px * var(--scale, 1)) calc(34px * var(--scale, 1)); }
 .page .cv-main, .page .cv-aside { padding-inline: calc(34px * var(--scale, 1)); padding-bottom: calc(30px * var(--scale, 1)); }
 .page .cv-sec { margin-bottom: calc(18px * var(--scale, 1)); }
 .page .cv-name { font-size: calc(30px * var(--scale, 1)); }
 .page .cv-summary, .page .cv-highlights li, .page .cv-exp p { font-size: calc(13px * var(--scale, 1)); }
 
-/* عناصر «نمط العرض» في اللوحة */
+/* ===== عناصر لوحة التحكّم الجديدة ===== */
 .disp-label { margin-top: 14px; margin-bottom: 6px; font-size: 12px; font-weight: 700; color: rgba(var(--v-theme-on-surface), 0.6); }
 .disp-row { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
 .disp-tag { font-size: 11px; color: rgba(var(--v-theme-on-surface), 0.55); min-width: 46px; }
+.disp-tag.mb { display: block; margin-bottom: 6px; }
+.disp-tag.mt { margin-top: 12px; }
 .seg.sm { flex: 1; padding: 3px; }
+.seg.sm.wrap { flex-wrap: wrap; }
 .seg.sm .seg-btn { padding: 5px; font-size: 11.5px; }
+.layout-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+.layout-tile { display: flex; flex-direction: column; align-items: center; gap: 5px; padding: 12px 8px; border-radius: 10px; border: 1.5px solid rgba(var(--v-theme-on-surface), 0.12); color: rgba(var(--v-theme-on-surface), 0.7); font-size: 12px; font-weight: 600; }
+.layout-tile.active { border-color: rgb(var(--v-theme-brand, 16 110 86)); color: rgb(var(--v-theme-brand, 16 110 86)); background: rgba(var(--v-theme-brand, 16 110 86), 0.06); }
+.photo-ctl { display: flex; align-items: center; gap: 14px; }
+.photo-prev { inline-size: 58px; block-size: 58px; border-radius: 50%; background-size: cover; background-position: center; background-color: rgba(var(--v-theme-on-surface), 0.06); display: flex; align-items: center; justify-content: center; flex: none; }
+.photo-actions { display: flex; flex-direction: column; gap: 6px; align-items: flex-start; }
+.photo-toggle { font-size: 12px; display: flex; align-items: center; gap: 6px; color: rgba(var(--v-theme-on-surface), 0.75); }
 
 /* ============ الطباعة ============ */
 @media print {
