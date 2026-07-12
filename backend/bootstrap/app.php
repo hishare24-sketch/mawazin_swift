@@ -33,6 +33,8 @@ return Application::configure(basePath: dirname(__DIR__))
         },
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        // يفرض معاملة كلّ طلبات api/* كـJSON (غير المصادَق → 401 لا 500 login-redirect).
+        $middleware->prepend(\App\Http\Middleware\ForceJsonForApi::class);
         $middleware->alias([
             'admin' => \App\Http\Middleware\AdminMiddleware::class,
         ]);
