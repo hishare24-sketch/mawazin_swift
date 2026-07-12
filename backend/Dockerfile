@@ -32,7 +32,9 @@ ENV APP_ENV=production \
     APP_DEBUG=false \
     LOG_CHANNEL=stderr
 
-# نُلغي ENTRYPOINT الأساس (يتعارض مع تشغيل Render) ونستخدم CMD صيغة exec صريحة
-# بـ /bin/sh -c — لا لبس في التفسير. php artisan serve خفيف يناسب 512MB المجّانيّ.
+# نُلغي ENTRYPOINT الأساس (يتعارض مع تشغيل Render) ونُقلِع عبر خادم FrankenPHP
+# الإنتاجيّ المُدمج (php-server، متعدّد الخيوط، يعالج التزامن) — بديل جذريّ عن
+# php artisan serve (خادم تطوير أحاديّ الطلب). يناسب 512MB (بلا وضع worker).
+# الهجرة + بذر الصلاحيّات غير حاجبين (|| true) كي لا يمنع تعذّر القاعدة الإقلاع.
 ENTRYPOINT []
-CMD ["/bin/sh", "-c", "timeout 60 php artisan migrate --force || true; php artisan permission:insert || true; exec php artisan serve --host=0.0.0.0 --port=${PORT:-10000}"]
+CMD ["/bin/sh", "-c", "timeout 60 php artisan migrate --force || true; php artisan permission:insert || true; exec frankenphp php-server --listen 0.0.0.0:${PORT:-10000} --root public/"]
