@@ -170,7 +170,7 @@ networks:
   # شبكة مشروع nginx المشترك (حاوية ubuntu-nginx-1)
   edge:
     external: true
-    name: ${NGINX_NETWORK:-ubuntu_default}
+    name: ${NGINX_NETWORK:-dashboard-net}
 
 volumes:
   mysql_data:
