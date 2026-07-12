@@ -106,8 +106,10 @@ const sections = ref<Section[]>([
   { key: 'skills', label: 'المهارات', visible: true },
   { key: 'experiences', label: 'الخبرات', visible: true },
   { key: 'education', label: 'التعليم', visible: true },
+  { key: 'projects', label: 'المشاريع', visible: true },
   { key: 'languages', label: 'اللغات', visible: true },
   { key: 'certificates', label: 'الشهادات', visible: true },
+  { key: 'hobbies', label: 'الهوايات', visible: true },
   { key: 'links', label: 'الروابط', visible: true },
 ])
 
@@ -155,6 +157,36 @@ function onPhoto(e: Event) {
   if (photoInput.value) photoInput.value.value = ''
 }
 function qr(url?: string) { return url ? qrSvg(url, 64) : '' }
+
+// ——— المشاريع + الهوايات ———
+interface Project { id: number, name: string, desc: string, link?: string }
+const projects = ref<Project[]>([{ id: 1, name: 'منصّة توظيف ذكيّة', desc: 'تطبيق Vue 3 + Laravel بمطابقة ذكيّة.', link: '' }])
+const hobbies = ref<string[]>(['القراءة', 'التصوير', 'كرة القدم'])
+const newProject = reactive({ name: '', desc: '', link: '' })
+const newHobby = ref('')
+function addProject() { if (!newProject.name.trim()) return; projects.value.push({ id: Date.now(), name: newProject.name.trim(), desc: newProject.desc.trim(), link: newProject.link.trim() || undefined }); newProject.name = ''; newProject.desc = ''; newProject.link = '' }
+function removeProject(id: number) { projects.value = projects.value.filter(p => p.id !== id) }
+function addHobby() { const h = newHobby.value.trim(); if (h && !hobbies.value.includes(h)) hobbies.value.push(h); newHobby.value = '' }
+function removeHobby(h: string) { hobbies.value = hobbies.value.filter(x => x !== h) }
+
+// ——— قوالب بداية جاهزة (تركيبة كاملة بنقرة) ———
+interface Starter { name: string, layout: BaseLayout['key'], variant: Variant['key'], accent: string, font: string, density: string, chip: string }
+const STARTERS: Starter[] = [
+  { name: 'تقنيّ عصريّ', layout: 'sidebar', variant: 'bold', accent: '#185fa5', font: 'tajawal', density: 'cozy', chip: 'pill' },
+  { name: 'تنفيذيّ أنيق', layout: 'band', variant: 'classic', accent: '#111827', font: 'amiri', density: 'spacious', chip: 'plain' },
+  { name: 'إبداعيّ ملوّن', layout: 'timeline', variant: 'bold', accent: '#be185d', font: 'cairo', density: 'cozy', chip: 'bar' },
+  { name: 'أكاديميّ مينيمال', layout: 'single', variant: 'minimal', accent: '#0f6e56', font: 'tajawal', density: 'compact', chip: 'plain' },
+  { name: 'حديث مؤطّر', layout: 'single', variant: 'outline', accent: '#534ab7', font: 'cairo', density: 'cozy', chip: 'pill' },
+]
+function applyStarter(s: Starter) {
+  baseLayout.value = BASE_LAYOUTS.find(l => l.key === s.layout) ?? baseLayout.value
+  variant.value = VARIANTS.find(v => v.key === s.variant) ?? variant.value
+  accent.value = s.accent
+  font.value = FONTS.find(f => f.key === s.font) ?? font.value
+  density.value = DENSITIES.find(d => d.key === s.density) ?? density.value
+  chipStyle.value = CHIP_STYLES.find(c => c.key === s.chip) ?? chipStyle.value
+  toast(`طُبِّق قالب: ${s.name}`)
+}
 const dragIndex = ref<number | null>(null)
 function onDragStart(i: number) { dragIndex.value = i }
 function onDrop(i: number) {
@@ -212,6 +244,7 @@ function buildConfig() {
     photo: photo.value, showPhoto: showPhoto.value,
     sections: sections.value, links: links.value, education: education.value, languages: languages.value,
     skills: skills.value, experiences: experiences.value, certificates: certificates.value,
+    projects: projects.value, hobbies: hobbies.value,
     draft: { headline: draft.headline, summary: draft.summary, highlights: draft.highlights },
   }
 }
@@ -241,6 +274,8 @@ function loadVersion(r: { id: number, name: string, config?: unknown }) {
   skills.value = (c as { skills?: typeof skills.value }).skills ?? skills.value
   experiences.value = (c as { experiences?: typeof experiences.value }).experiences ?? experiences.value
   certificates.value = (c as { certificates?: typeof certificates.value }).certificates ?? certificates.value
+  projects.value = (c as { projects?: typeof projects.value }).projects ?? projects.value
+  hobbies.value = (c as { hobbies?: string[] }).hobbies ?? hobbies.value
   draft.headline = c.draft.headline; draft.summary = c.draft.summary; draft.highlights = c.draft.highlights
   resumes.setActive(r.id)
   toast(`فُتحت النسخة: ${r.name}`)
@@ -277,6 +312,16 @@ function exportWord() {
     <div class="studio-grid">
       <!-- لوحة التحكّم -->
       <div class="controls no-print">
+        <!-- قوالب بداية -->
+        <BaseCard>
+          <div class="ctl-head"><BaseIcon name="mdi-shape-outline" :size="18" class="text-brand" /><h3>قوالب بداية</h3></div>
+          <div class="starter-grid">
+            <button v-for="s in STARTERS" :key="s.name" class="starter-chip" @click="applyStarter(s)">
+              <span class="starter-dot" :style="{ background: s.accent }" />{{ s.name }}
+            </button>
+          </div>
+        </BaseCard>
+
         <!-- الطول -->
         <BaseCard>
           <div class="ctl-head"><BaseIcon name="mdi-robot-outline" :size="18" class="text-brand" /><h3>الصياغة بالذكاء</h3></div>
@@ -421,6 +466,34 @@ function exportWord() {
           </div>
         </BaseCard>
 
+        <!-- المشاريع -->
+        <BaseCard>
+          <div class="ctl-head"><BaseIcon name="mdi-rocket-launch-outline" :size="18" class="text-brand" /><h3>المشاريع</h3></div>
+          <div v-for="p in projects" :key="p.id" class="link-row">
+            <span class="link-label">{{ p.name }}</span>
+            <span class="link-url">{{ p.desc }}</span>
+            <button class="mini" @click="removeProject(p.id)"><BaseIcon name="mdi-close" :size="14" /></button>
+          </div>
+          <div class="link-add">
+            <BaseInput v-model="newProject.name" placeholder="اسم المشروع" />
+            <BaseInput v-model="newProject.desc" placeholder="وصف موجز" />
+            <BaseInput v-model="newProject.link" placeholder="رابط (يظهر كـQR) https://" dir="ltr" />
+            <BaseButton variant="tonal-accent" size="sm" @click="addProject"><BaseIcon name="mdi-plus" :size="16" />إضافة مشروع</BaseButton>
+          </div>
+        </BaseCard>
+
+        <!-- الهوايات -->
+        <BaseCard>
+          <div class="ctl-head"><BaseIcon name="mdi-heart-outline" :size="18" class="text-brand" /><h3>الهوايات</h3></div>
+          <div class="chips" style="margin-bottom: 10px;">
+            <span v-for="h in hobbies" :key="h" class="hobby-chip">{{ h }}<button class="hobby-x" @click="removeHobby(h)"><BaseIcon name="mdi-close" :size="12" /></button></span>
+          </div>
+          <div class="link-add" style="grid-template-columns: 1fr auto;">
+            <BaseInput v-model="newHobby" placeholder="هواية" @keyup.enter="addHobby" />
+            <BaseButton variant="tonal-accent" size="sm" @click="addHobby"><BaseIcon name="mdi-plus" :size="16" /></BaseButton>
+          </div>
+        </BaseCard>
+
         <!-- الروابط -->
         <BaseCard>
           <div class="ctl-head"><BaseIcon name="mdi-link-variant" :size="18" class="text-brand" /><h3>روابط تفاعليّة</h3></div>
@@ -525,6 +598,10 @@ function exportWord() {
                     <a v-if="c.link" class="cv-qr sm" :href="c.link" target="_blank" rel="noopener" v-html="qr(c.link)" />
                   </div>
                 </section>
+                <section v-else-if="s.key === 'hobbies' && hobbies.length" class="cv-sec">
+                  <h2>الهوايات</h2>
+                  <div class="chips"><span v-for="h in hobbies" :key="h" class="chip">{{ h }}</span></div>
+                </section>
                 <section v-else-if="s.key === 'links' && links.length" class="cv-sec">
                   <h2>روابط</h2>
                   <a v-for="l in links" :key="l.id" class="cv-link" :href="l.url" target="_blank" rel="noopener"><BaseIcon :name="l.icon" :size="13" /> {{ l.label }}</a>
@@ -579,6 +656,21 @@ function exportWord() {
                   <div class="chips">
                     <span v-for="l in languages" :key="l.id" class="chip">{{ l.name }} · {{ l.level }}</span>
                   </div>
+                </section>
+                <section v-else-if="s.key === 'projects' && projects.length" class="cv-sec">
+                  <h2>المشاريع</h2>
+                  <div v-for="p in projects" :key="p.id" class="cv-exp">
+                    <div class="cv-exp-body">
+                      <div class="cv-exp-top"><b>{{ p.name }}</b></div>
+                      <p v-if="p.desc">{{ p.desc }}</p>
+                      <a v-if="p.link" class="cv-link sm" :href="p.link" target="_blank" rel="noopener"><BaseIcon name="mdi-link-variant" :size="12" /> عرض المشروع</a>
+                    </div>
+                    <a v-if="p.link" class="cv-qr" :href="p.link" target="_blank" rel="noopener" v-html="qr(p.link)" />
+                  </div>
+                </section>
+                <section v-else-if="s.key === 'hobbies' && baseLayout.key !== 'sidebar' && hobbies.length" class="cv-sec">
+                  <h2>الهوايات</h2>
+                  <div class="chips"><span v-for="h in hobbies" :key="h" class="chip">{{ h }}</span></div>
                 </section>
                 <section v-else-if="s.key === 'certificates' && baseLayout.key !== 'sidebar' && certificates.length" class="cv-sec">
                   <h2>الشهادات</h2>
@@ -752,6 +844,13 @@ function exportWord() {
 .photo-prev { inline-size: 58px; block-size: 58px; border-radius: 50%; background-size: cover; background-position: center; background-color: rgba(var(--v-theme-on-surface), 0.06); display: flex; align-items: center; justify-content: center; flex: none; }
 .photo-actions { display: flex; flex-direction: column; gap: 6px; align-items: flex-start; }
 .photo-toggle { font-size: 12px; display: flex; align-items: center; gap: 6px; color: rgba(var(--v-theme-on-surface), 0.75); }
+.starter-grid { display: flex; flex-wrap: wrap; gap: 6px; }
+.starter-chip { display: inline-flex; align-items: center; gap: 6px; padding: 7px 11px; border-radius: 20px; border: 1.5px solid rgba(var(--v-theme-on-surface), 0.12); font-size: 12px; font-weight: 600; color: rgba(var(--v-theme-on-surface), 0.8); }
+.starter-chip:hover { border-color: rgb(var(--v-theme-brand, 16 110 86)); }
+.starter-dot { inline-size: 12px; block-size: 12px; border-radius: 50%; flex: none; }
+.hobby-chip { display: inline-flex; align-items: center; gap: 4px; padding: 3px 6px 3px 10px; border-radius: 20px; background: rgba(var(--v-theme-on-surface), 0.06); font-size: 12px; }
+.hobby-x { display: inline-flex; align-items: center; justify-content: center; inline-size: 16px; block-size: 16px; border-radius: 50%; color: rgba(var(--v-theme-on-surface), 0.5); }
+.hobby-x:hover { background: rgba(var(--v-theme-on-surface), 0.1); }
 
 /* ============ الطباعة ============ */
 @media print {
