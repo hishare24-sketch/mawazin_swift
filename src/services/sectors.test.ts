@@ -91,6 +91,9 @@ describe('sectors — lookup & skills', () => {
     expect(sectorForSkill('التفاوض')).toBe('S04')
     expect(sectorForSkill('نشاط غير معروف تمامًا')).toBeUndefined()
     expect(sectorForSkill('')).toBeUndefined()
+    // اسم غائب (مهارة آتية من الباك-إند بلا name) — يجب ألّا يرمي
+    expect(() => sectorForSkill(undefined as unknown as string)).not.toThrow()
+    expect(sectorForSkill(undefined as unknown as string)).toBeUndefined()
   })
 
   it('preserves EVERY legacy taxonomy skill (no skill lost in the merge)', () => {

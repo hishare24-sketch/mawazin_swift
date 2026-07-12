@@ -36,7 +36,8 @@ export const PROOF_META: Record<ProofType, { label: string, icon: string, weight
 }
 
 export function skillConfidence(skill: Skill): number {
-  const raw = skill.proofs.reduce((sum, p) => sum + PROOF_META[p.type].weight, 0)
+  // المهارات الآتية من الباك-إند (استخراج CV/مزامنة) قد تصل بلا مصفوفة proofs — تحصّن.
+  const raw = (skill.proofs ?? []).reduce((sum, p) => sum + (PROOF_META[p.type]?.weight ?? 0), 0)
   return Math.min(100, raw)
 }
 
@@ -148,7 +149,7 @@ export const useProfileStore = defineStore('profile', () => {
   // Skills that lack strong verification (confidence below 50 or self-assessment only)
   const unverifiedSkills = computed(() =>
     skills.value
-      .filter(s => skillConfidence(s) < 50 || s.proofs.every(p => p.type === 'self'))
+      .filter(s => skillConfidence(s) < 50 || (s.proofs ?? []).every(p => p.type === 'self'))
       .map(s => s.name),
   )
 

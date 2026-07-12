@@ -521,7 +521,7 @@ export const ALL_SECTOR_SKILLS: string[]
 
 /** تصنيف مهارة نصّية حرّة إلى كود قطاع (مطابقة تامّة ثم احتواء) */
 export function sectorForSkill(name: string): string | undefined {
-  const n = name.trim().toLowerCase()
+  const n = (name ?? '').trim().toLowerCase()
   if (!n)
     return undefined
   for (const s of SECTORS) {

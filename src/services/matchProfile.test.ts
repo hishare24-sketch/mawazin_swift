@@ -9,6 +9,12 @@ describe('matchProfile builders', () => {
     expect(dominantSector(['كلمة غير معروفة'])).toBeUndefined()
   })
 
+  it('tolerates undefined/empty skill entries (real-API shapes) without throwing', () => {
+    // مهارات آتية من الباك-إند قد تحوي أسماء غائبة — يجب ألّا تُسقِط الحساب
+    expect(() => dominantSector([undefined as unknown as string, '', 'Vue.js'])).not.toThrow()
+    expect(dominantSector([undefined as unknown as string, 'Vue.js', 'TypeScript'])).toBe('S01')
+  })
+
   it('builds a seeker profile with sector inferred from skills', () => {
     const p = seekerMatchProfile({ skills: ['Vue.js', 'TypeScript'], city: 'الرياض', opportunityType: 'full_time' })
     expect(p.sector).toBe('S01')

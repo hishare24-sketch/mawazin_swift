@@ -24,6 +24,13 @@ describe('skillConfidence', () => {
   it('is 0 for a skill with no proofs', () => {
     expect(skillConfidence(skill([]))).toBe(0)
   })
+
+  it('tolerates a missing proofs array (real-API skills) without throwing', () => {
+    // مهارات الاستخراج/المزامنة قد تصل بلا proofs — يجب ألّا ترمي
+    const bare = { id: 9, name: 'X', selfLevel: 3, proofs: undefined as unknown as Skill['proofs'] }
+    expect(() => skillConfidence(bare)).not.toThrow()
+    expect(skillConfidence(bare)).toBe(0)
+  })
 })
 
 describe('ProfileStore', () => {

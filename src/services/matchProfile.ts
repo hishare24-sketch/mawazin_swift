@@ -10,6 +10,8 @@ import { getSector, sectorForField, sectorForSkill } from '@/services/sectors'
 export function dominantSector(skills: string[]): string | undefined {
   const counts = new Map<string, number>()
   for (const sk of skills) {
+    if (!sk)
+      continue
     const code = sectorForSkill(sk)
     if (code)
       counts.set(code, (counts.get(code) ?? 0) + 1)
