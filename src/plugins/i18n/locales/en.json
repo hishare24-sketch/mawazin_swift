@@ -982,6 +982,7 @@
       "confirm_rejected_title": "Reject item?",
       "confirm_resolved_title": "Resolve item?",
       "confirmMsg": "\"{subject}\"",
+      "liveNew": "New report received: \"{subject}\"",
       "done": "Item reviewed",
       "removed": "Content removed",
       "reason": "Reason",

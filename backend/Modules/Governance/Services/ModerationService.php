@@ -4,6 +4,7 @@ namespace Modules\Governance\Services;
 
 use Illuminate\Support\Carbon;
 use Modules\Governance\Entities\ModerationItem;
+use Modules\Governance\Events\ModerationItemCreated;
 use Modules\Marketplace\Entities\MarketRequest;
 use Modules\Marketplace\Entities\Opportunity;
 use Modules\Notification\Services\NotificationService;
@@ -20,7 +21,7 @@ class ModerationService
     /** بلاغ محتوى من مستخدم → عنصر مراجعة معلّق (لا يُكرَّر لنفس الهدف من نفس المُبلِّغ وهو معلّق). */
     public function report(User $user, array $data): ModerationItem
     {
-        return ModerationItem::firstOrCreate(
+        $item = ModerationItem::firstOrCreate(
             [
                 'submitted_by' => $user->id,
                 'target_ref' => $data['targetRef'],
@@ -33,6 +34,13 @@ class ModerationService
                 'reason' => $data['reason'] ?? null,
             ],
         );
+
+        // بلاغ جديد فعلًا (لا تكرار) → بثّ لحظيّ لكنسول الإشراف.
+        if ($item->wasRecentlyCreated) {
+            event(new ModerationItemCreated(ModerationItemCreated::payloadFor($item)));
+        }
+
+        return $item;
     }
 
     /**

@@ -117,6 +117,25 @@ class AdminGovernanceTest extends TestCase
         $this->assertSame(1, ModerationItem::where('submitted_by', $u->id)->where('target_ref', 'opportunity:9')->count());
     }
 
+    public function test_new_report_broadcasts_live_to_admin_governance_channel(): void
+    {
+        $this->reporter();
+        \Illuminate\Support\Facades\Event::fake([\Modules\Governance\Events\ModerationItemCreated::class]);
+
+        $this->postJson('/api/v1/reports', ['targetRef' => 'opportunity:12', 'subject' => 'بلاغ لحظيّ'])->assertStatus(201);
+
+        \Illuminate\Support\Facades\Event::assertDispatched(
+            \Modules\Governance\Events\ModerationItemCreated::class,
+            fn ($e) => $e->payload['targetRef'] === 'opportunity:12'
+                && $e->payload['subject'] === 'بلاغ لحظيّ'
+                && $e->payload['status'] === 'pending',
+        );
+
+        // تكرار البلاغ نفسه لا يعيد البثّ (dedup).
+        $this->postJson('/api/v1/reports', ['targetRef' => 'opportunity:12', 'subject' => 'مكرّر'])->assertStatus(201);
+        \Illuminate\Support\Facades\Event::assertDispatchedTimes(\Modules\Governance\Events\ModerationItemCreated::class, 1);
+    }
+
     public function test_approving_content_report_takes_down_target_and_notifies_reporter(): void
     {
         $reporter = $this->reporter();

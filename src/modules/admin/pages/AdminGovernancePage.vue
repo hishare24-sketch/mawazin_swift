@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue'
+import { computed, onMounted, onUnmounted, ref } from 'vue'
 import { useI18n } from 'vue-i18n'
 import PageHeader from '@/components/shared/PageHeader.vue'
 import StatCard from '@/components/shared/StatCard.vue'
@@ -16,6 +16,7 @@ import ResourceScaffold from '@/modules/admin/components/ResourceScaffold.vue'
 import type { FilterDef } from '@/modules/admin/components/ResourceScaffold.vue'
 import type { TableColumn } from '@/components/ui/BaseTable.vue'
 import { useAdminResource } from '@/modules/admin/composables/useAdminResource'
+import { subscribeAdminModeration } from '@/services/adminRealtime'
 import { confirm } from '@/components/ui/confirm'
 import { type AdminModerationDetail, type AdminModerationItem, type AdminModerationStats, api } from '@/services/api'
 import { useAuthStore } from '@/stores/AuthStore'
@@ -28,8 +29,18 @@ const { items, meta, loading, sortKey, search, filters, selected } = r
 
 const stats = ref<AdminModerationStats | null>(null)
 async function loadStats() { try { stats.value = await api.admin.moderationStats() } catch { /* تجاهل */ } }
-onMounted(loadStats)
 function refreshAll() { r.refresh(); loadStats() }
+
+// بثّ لحظيّ: بلاغ جديد يظهر فور وروده (تنبيه خفيف + تحديث القائمة، بلا مقاطعة)
+let unsub: (() => void) | null = null
+onMounted(() => {
+  loadStats()
+  unsub = subscribeAdminModeration((e) => {
+    toast(t('admin.governance.liveNew', { subject: e.subject }), 'info')
+    refreshAll()
+  })
+})
+onUnmounted(() => unsub?.())
 
 const TYPES = ['expert_application', 'skill_verification', 'content_report', 'endorsement']
 const typeLabel = (x: string) => t(`admin.governance.type_${x}`)

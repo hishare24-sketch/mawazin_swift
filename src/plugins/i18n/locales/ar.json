@@ -982,6 +982,7 @@
       "confirm_rejected_title": "رفض العنصر؟",
       "confirm_resolved_title": "إغلاق العنصر؟",
       "confirmMsg": "«{subject}»",
+      "liveNew": "بلاغ جديد وصل: «{subject}»",
       "done": "تمّ البتّ في العنصر",
       "removed": "أُزيل المحتوى",
       "reason": "السبب",

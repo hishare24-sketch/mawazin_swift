@@ -19,3 +19,12 @@ Broadcast::channel('support.admin', function ($user) {
         return false;
     }
 });
+
+// قناة الأدمن للإشراف — بلاغات المحتوى الجديدة لحظيًّا (تخويل بصلاحية view_governance على guard admin)
+Broadcast::channel('admin.governance', function ($user) {
+    try {
+        return $user->hasPermissionTo('view_governance', 'admin');
+    } catch (\Throwable) {
+        return false;
+    }
+});
