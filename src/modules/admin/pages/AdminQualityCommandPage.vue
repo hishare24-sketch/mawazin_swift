@@ -18,7 +18,7 @@ import ResourceScaffold from '@/modules/admin/components/ResourceScaffold.vue'
 import type { FilterDef } from '@/modules/admin/components/ResourceScaffold.vue'
 import type { TableColumn } from '@/components/ui/BaseTable.vue'
 import { useAdminResource } from '@/modules/admin/composables/useAdminResource'
-import { type QualityAtom, type QualityBoard, type QualityDispatchCard, type QualityOverview, api } from '@/services/api'
+import { type QualityAtom, type QualityBoard, type QualityDispatchCard, type QualityOverview, type QualityRuntimeError, api } from '@/services/api'
 import { useAuthStore } from '@/stores/AuthStore'
 
 const { t } = useI18n()
@@ -40,6 +40,8 @@ const DEPT_META: Record<string, { icon: string, color: ChipColor }> = {
   filters: { icon: 'mdi-filter-variant', color: 'emerald' },
 }
 const STATE_COLOR: Record<string, ChipColor> = { todo: 'neutral', doing: 'info', review: 'warning', done: 'success' }
+const SEVERITY_COLOR: Record<string, ChipColor> = { critical: 'error', high: 'error', warning: 'warning', info: 'info' }
+const RT_STATE_COLOR: Record<string, ChipColor> = { new: 'error', ongoing: 'warning', regressed: 'error', resolved: 'success' }
 const statusLabel = (s: string) => t(`admin.qcc.status_${s}`)
 const priorityLabel = (p: string) => t(`admin.qcc.priority_${p}`)
 const layerLabel = (l: string) => t(`admin.qcc.layer_${l}`)
@@ -109,8 +111,16 @@ async function removeCard(card: QualityDispatchCard) {
 const r = useAdminResource<QualityAtom>({ fetcher: params => api.admin.qualityAtoms(params), initialSort: 'caseId', perPage: 20 })
 const { items, meta, loading, sortKey, search, filters } = r
 
-function refreshAll() { r.refresh(); loadOverview(); loadBoard() }
-onMounted(() => { loadOverview(); loadBoard() })
+// ——— رصد وقت-التشغيل ———
+const runtimeErrors = ref<QualityRuntimeError[]>([])
+async function loadRuntime() {
+  try { runtimeErrors.value = (await api.admin.qualityRuntime({ perPage: 12 })).items }
+  catch { /* تجاهل */ }
+}
+function fmtTime(s: string | null) { return s ? new Date(s).toLocaleString() : '—' }
+
+function refreshAll() { r.refresh(); loadOverview(); loadBoard(); loadRuntime() }
+onMounted(() => { loadOverview(); loadBoard(); loadRuntime() })
 
 const columns: TableColumn[] = [
   { key: 'caseId', label: t('admin.qcc.colId'), sortable: true },
@@ -242,6 +252,47 @@ const filterDefs = computed<FilterDef[]>(() => [
             <p v-if="!(board?.lanes[dept]?.length)" class="rounded-ui border border-dashed border-ui py-3 text-center text-[11px] text-muted">—</p>
           </div>
         </div>
+      </div>
+    </BaseCard>
+
+    <!-- رصد وقت-التشغيل -->
+    <BaseCard class="mb-5">
+      <div class="mb-3 flex flex-wrap items-center gap-2">
+        <BaseIcon name="mdi-pulse" :size="18" class="text-brand" />
+        <h2 class="text-sm font-bold text-content">{{ t('admin.qcc.runtimeTitle') }}</h2>
+        <div class="ms-auto flex items-center gap-3 text-xs">
+          <span class="text-muted">{{ t('admin.qcc.rtOpen') }}: <b class="text-content">{{ overview?.runtime?.open ?? 0 }}</b></span>
+          <span class="text-muted">{{ t('admin.qcc.rtCritical') }}: <b :style="{ color: 'rgb(var(--v-theme-error))' }">{{ overview?.runtime?.critical ?? 0 }}</b></span>
+          <span class="text-muted">{{ t('admin.qcc.rtToday') }}: <b class="text-content">{{ overview?.runtime?.today ?? 0 }}</b></span>
+        </div>
+      </div>
+      <div class="overflow-x-auto">
+        <table class="w-full text-sm">
+          <thead class="text-xs text-muted">
+            <tr class="border-b border-ui">
+              <th class="py-2 text-start font-medium">{{ t('admin.qcc.rtSeverity') }}</th>
+              <th class="py-2 text-start font-medium">{{ t('admin.qcc.rtType') }}</th>
+              <th class="py-2 text-start font-medium">{{ t('admin.qcc.rtMessage') }}</th>
+              <th class="py-2 text-center font-medium">{{ t('admin.qcc.rtCount') }}</th>
+              <th class="py-2 text-center font-medium">{{ t('admin.qcc.rtStatus') }}</th>
+              <th class="py-2 text-start font-medium">{{ t('admin.qcc.rtLastSeen') }}</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr v-for="e in runtimeErrors" :key="e.id" class="border-b border-ui/50">
+              <td class="py-2"><BaseChip :color="SEVERITY_COLOR[e.severity] || 'neutral'">{{ e.severity }}</BaseChip></td>
+              <td class="py-2"><span class="font-mono text-[11px] text-muted" dir="ltr">{{ e.type }}</span></td>
+              <td class="max-w-sm py-2">
+                <div class="truncate text-content" :title="e.message" dir="ltr">{{ e.message }}</div>
+                <div v-if="e.route" class="truncate text-[11px] text-muted" dir="ltr">{{ e.route }}</div>
+              </td>
+              <td class="py-2 text-center font-mono text-content">{{ e.count }}</td>
+              <td class="py-2 text-center"><BaseChip :color="RT_STATE_COLOR[e.status] || 'neutral'">{{ e.status }}</BaseChip></td>
+              <td class="py-2 text-[11px] text-muted" dir="ltr">{{ fmtTime(e.lastSeen) }}</td>
+            </tr>
+            <tr v-if="!runtimeErrors.length"><td colspan="6" class="py-6 text-center text-xs text-muted">{{ t('admin.qcc.rtEmpty') }}</td></tr>
+          </tbody>
+        </table>
       </div>
     </BaseCard>
 

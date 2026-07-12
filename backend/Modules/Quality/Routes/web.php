@@ -8,6 +8,7 @@ use Modules\Quality\Http\Controllers\Admin\AdminQualityController;
 
 Route::get('quality/overview', [AdminQualityController::class, 'overview']);
 Route::get('quality/atoms', [AdminQualityController::class, 'atoms']);
+Route::get('quality/runtime', [AdminQualityController::class, 'runtime']);
 
 // التحويل (لوحة الأقسام / kanban) — ف2
 Route::get('quality/board', [AdminQualityController::class, 'board']);

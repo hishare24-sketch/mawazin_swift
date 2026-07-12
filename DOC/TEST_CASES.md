@@ -534,6 +534,17 @@
 | QCC-16 | destroy يزيل البطاقة من اللوحة | F | 🟠 | ✅ | AdminQualityTest |
 | QCC-17 | dispatch بقسم غير صالح → 422 | F | 🟠 | ✅ | AdminQualityTest |
 | QCC-18 | عارض (view_quality فقط) يقرأ اللوحة لكن لا يحوّل → 403 | F | 🔴 | ✅ | AdminQualityTest |
+| QCC-19 | RuleEngine: البصمة تجمّع رسائل تختلف بالأرقام فقط | U | 🔴 | ✅ | RuleEngineTest |
+| QCC-20 | البصمة تختلف باختلاف النوع أو المسار | U | 🟠 | ✅ | RuleEngineTest |
+| QCC-21 | قواعد الخطورة الثابتة (5xx/unhandled=high · 401=info · 403=warning · render+blank=critical) | U | 🔴 | ✅ | RuleEngineTest |
+| QCC-22 | نوع مجهول → console + اشتقاق النطاق (/admin → admin) | U | 🟠 | ✅ | RuleEngineTest |
+| QCC-23 | استيعاب عامّ POST /v1/observe ينشئ خطأً مجمّعًا (new · count 1) | F | 🔴 | ✅ | ObserveTest |
+| QCC-24 | تكرار (رسالة تختلف بالأرقام) → count++ + ongoing | F | 🔴 | ✅ | ObserveTest |
+| QCC-25 | خطأ محلول يعود عند تكراره → regressed | F | 🟠 | ✅ | ObserveTest |
+| QCC-26 | استيعاب بلا type/message → 422 | F | 🟠 | ✅ | ObserveTest |
+| QCC-27 | أدمن runtime → قائمة مقسّمة + فلترة الخطورة | F | 🔴 | ✅ | ObserveTest |
+| QCC-28 | overview يضمّ ملخّص runtime (open/critical/today) | F | 🟠 | ✅ | ObserveTest |
+| QCC-29 | غير أدمن → runtime → 403 | F | 🔴 | ✅ | ObserveTest |
 
 ---
 # الواجهة (Frontend)

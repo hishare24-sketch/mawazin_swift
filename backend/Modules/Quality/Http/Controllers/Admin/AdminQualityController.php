@@ -4,9 +4,11 @@ namespace Modules\Quality\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Validation\Rule;
 use Modules\Quality\Entities\QualityDispatch;
 use Modules\Quality\Entities\QualitySnapshot;
+use Modules\Quality\Entities\RuntimeError;
 use Modules\Quality\Entities\TestCase as TestCaseAtom;
 
 /**
@@ -44,7 +46,43 @@ class AdminQualityController extends Controller
             'byStatus' => $this->countBy('status'),
             'topGapSections' => $this->topGapSections(),
             'series' => $this->series(),
+            'runtime' => [
+                'open' => RuntimeError::open()->count(),
+                'critical' => RuntimeError::open()->whereIn('severity', ['critical', 'high'])->count(),
+                'today' => RuntimeError::whereDate('last_seen_at', Carbon::now()->toDateString())->count(),
+            ],
         ]);
+    }
+
+    /** إشارات وقت-التشغيل المرصودة (مجمّعة بالبصمة) — ف3. */
+    public function runtime(Request $request)
+    {
+        $this->authorize('view_quality');
+
+        $query = RuntimeError::query();
+
+        if ($q = trim((string) $request->query('q', ''))) {
+            $query->where(function ($sub) use ($q): void {
+                $sub->where('message', 'like', "%{$q}%")->orWhere('route', 'like', "%{$q}%");
+            });
+        }
+        foreach (['type', 'layer', 'scope', 'severity', 'status'] as $filter) {
+            if ($value = $request->query($filter)) {
+                $query->where($filter, $value);
+            }
+        }
+
+        [$column, $direction] = $this->parseSort(
+            (string) $request->query('sort', '-last_seen_at'),
+            ['last_seen_at', 'first_seen_at', 'count', 'severity', 'type', 'status'],
+            'last_seen_at',
+        );
+        $query->orderBy($column, $direction);
+
+        $page = $query->paginate($this->perPage($request));
+        $page->getCollection()->transform(fn (RuntimeError $e) => $this->presentError($e));
+
+        return $this->dashboardResponse($page);
     }
 
     /** قائمة الذرّات مصفّاة/مقسّمة صفحات — يقابل useAdminResource/ResourceScaffold. */
@@ -165,6 +203,24 @@ class AdminQualityController extends Controller
     }
 
     // ═══ مساعدات ═══
+
+    private function presentError(RuntimeError $e): array
+    {
+        return [
+            'id' => $e->id,
+            'fingerprint' => $e->fingerprint,
+            'type' => $e->type,
+            'message' => $e->message,
+            'layer' => $e->layer,
+            'scope' => $e->scope,
+            'route' => $e->route,
+            'severity' => $e->severity,
+            'status' => $e->status,
+            'count' => $e->count,
+            'firstSeen' => optional($e->first_seen_at)->toISOString(),
+            'lastSeen' => optional($e->last_seen_at)->toISOString(),
+        ];
+    }
 
     private function presentDispatch(QualityDispatch $d): array
     {

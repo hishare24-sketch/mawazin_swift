@@ -776,7 +776,18 @@
       "state_todo": "To do",
       "state_doing": "Doing",
       "state_review": "Review",
-      "state_done": "Done"
+      "state_done": "Done",
+      "runtimeTitle": "Runtime observation",
+      "rtOpen": "Open",
+      "rtCritical": "Critical",
+      "rtToday": "Today",
+      "rtSeverity": "Severity",
+      "rtType": "Type",
+      "rtMessage": "Message",
+      "rtCount": "Count",
+      "rtStatus": "Status",
+      "rtLastSeen": "Last seen",
+      "rtEmpty": "No signals captured yet"
     },
     "iquality": {
       "title": "Interview Quality",

@@ -2,6 +2,7 @@ import axios from 'axios'
 import { useAuthStore } from '@/stores/AuthStore'
 import { i18n } from '@/plugins/i18n'
 import router from '@/router'
+import { reportSignal } from '@/services/observer'
 
 axios.defaults.baseURL = import.meta.env.VITE_BASE_API_URL || '/api'
 
@@ -39,6 +40,16 @@ axios.interceptors.response.use(
           query: { redirect: current.fullPath },
         })
       }
+    }
+
+    // رصد أخطاء الـAPI (ف3) — نتجاهل نقطة الاستيعاب نفسها منعًا لأيّ حلقة
+    const url = String(error?.config?.url ?? '')
+    if (typeof status === 'number' && status >= 400 && !url.includes('/observe')) {
+      reportSignal({
+        type: status >= 500 ? 'api_5xx' : 'api_4xx',
+        message: `${String(error?.config?.method ?? '').toUpperCase()} ${url} → ${status} ${error?.response?.data?.message ?? ''}`.trim(),
+        status,
+      })
     }
 
     return Promise.reject(error)

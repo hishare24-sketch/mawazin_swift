@@ -236,11 +236,14 @@ export const API_PATHS = {
     qualityOverview: '/admin/quality/overview',
     qualityAtoms: '/admin/quality/atoms',
     qualityBoard: '/admin/quality/board',
+    qualityRuntime: '/admin/quality/runtime',
     qualityDispatch: (atomId: number) => `/admin/quality/atoms/${atomId}/dispatch`,
     qualityDispatchItem: (id: number) => `/admin/quality/dispatches/${id}`,
   },
   /** بلاغ محتوى من المستخدم → طابور الإشراف (مصادَق) */
   reports: '/v1/reports',
+  /** استيعاب إشارات وقت-التشغيل (عامّ، بلا مصادقة) — مركز قيادة الجودة ف3 */
+  observe: '/v1/observe',
   /** هويّة المنصّة العامّة (بلا مصادقة) */
   brandingPublic: '/v1/branding',
   /** وسيط Claude — المفتاح يبقى في الخادم، والعقد يطابق أسماء src/services/ai/types.ts */
@@ -560,7 +563,23 @@ export interface QualityOverview {
   byStatus: QualityCount[]
   topGapSections: QualityGapSection[]
   series: { date: string, coverage: number, total: number, automated: number }[]
+  runtime: { open: number, critical: number, today: number }
 }
+export interface QualityRuntimeError {
+  id: number
+  fingerprint: string
+  type: string
+  message: string
+  layer: string
+  scope: string | null
+  route: string | null
+  severity: 'critical' | 'high' | 'warning' | 'info'
+  status: 'new' | 'ongoing' | 'resolved' | 'regressed'
+  count: number
+  firstSeen: string | null
+  lastSeen: string | null
+}
+export interface QualityRuntimeQuery { page?: number, perPage?: number, sort?: string, q?: string, type?: string, layer?: string, scope?: string, severity?: string, status?: string }
 export interface QualityAtom {
   id: number
   caseId: string
@@ -698,6 +717,9 @@ export const api = {
     create: (body: { targetRef: string, subject: string, reason?: string }) =>
       post<{ id: number, status: string }>(API_PATHS.reports, body),
   },
+  /** استيعاب إشارة خطأ وقت-تشغيل (عامّ، fire-and-forget) — مركز قيادة الجودة ف3 */
+  observe: (body: { type: string, message: string, route?: string, status?: number, layer?: string, scope?: string, stack?: string, url?: string, blank?: boolean }) =>
+    post<{ fingerprint: string, status: string, severity: string }>(API_PATHS.observe, body),
   /** هويّة المنصّة العامّة — تُطبَّق عند الإقلاع (بلا مصادقة) */
   branding: () => get<Branding | null>(API_PATHS.brandingPublic),
   /** المساعد الذكيّ للمستخدم — محكوم بحوكمة الذكاء، سياقيّ، مبادر */
@@ -844,6 +866,7 @@ export const api = {
     qualityOverview: () => get<QualityOverview>(API_PATHS.admin.qualityOverview),
     qualityAtoms: (params?: QualityAtomQuery) => getPage<QualityAtom>(API_PATHS.admin.qualityAtoms, params as Record<string, unknown>),
     qualityBoard: () => get<QualityBoard>(API_PATHS.admin.qualityBoard),
+    qualityRuntime: (params?: QualityRuntimeQuery) => getPage<QualityRuntimeError>(API_PATHS.admin.qualityRuntime, params as Record<string, unknown>),
     qualityDispatch: (atomId: number, body: QualityDispatchPayload) => post<QualityDispatchCard>(API_PATHS.admin.qualityDispatch(atomId), body),
     qualityMoveDispatch: (id: number, body: QualityDispatchPayload) => patch<QualityDispatchCard>(API_PATHS.admin.qualityDispatchItem(id), body),
     qualityRemoveDispatch: (id: number) => del(API_PATHS.admin.qualityDispatchItem(id)),

@@ -776,7 +776,18 @@
       "state_todo": "قيد الانتظار",
       "state_doing": "جارٍ",
       "state_review": "مراجعة",
-      "state_done": "منجَز"
+      "state_done": "منجَز",
+      "runtimeTitle": "رصد وقت-التشغيل",
+      "rtOpen": "مفتوحة",
+      "rtCritical": "حرِجة",
+      "rtToday": "اليوم",
+      "rtSeverity": "الخطورة",
+      "rtType": "النوع",
+      "rtMessage": "الرسالة",
+      "rtCount": "التكرار",
+      "rtStatus": "الحالة",
+      "rtLastSeen": "آخر ظهور",
+      "rtEmpty": "لا إشارات مرصودة بعد"
     },
     "iquality": {
       "title": "جودة المقابلات",
