@@ -324,4 +324,136 @@ class AssistantService
             ],
         ];
     }
+
+    // ═══════════════════ استخراج السيرة الذاتيّة بالذكاء ═══════════════════
+
+    /**
+     * يستخرج حقول ملفّ مهنيّ من سيرة ذاتيّة (صورة/PDF) عبر مزوّد حيّ (Claude/OpenAI).
+     * بلا مزوّد مهيّأ → اقتراح فارغ موسوم (live=false) — لا يكسر التدفّق.
+     *
+     * @return array{live:bool, data:array, meta:array}
+     */
+    public function extractCv(string $base64, string $mediaType): array
+    {
+        $ai = AiSetting::current();
+        $provider = $this->providerFor($ai);
+
+        if ($provider === null) {
+            return ['live' => false, 'data' => $this->emptyCvSuggestion(), 'meta' => ['simulated' => true]];
+        }
+
+        try {
+            $result = $provider->extract($this->cvPrompt(), $base64, $mediaType, $this->cvTool(), ['maxTokens' => 1500]);
+
+            return [
+                'live' => true,
+                'data' => $this->normalizeCv(is_array($result['raw']) ? $result['raw'] : []),
+                'meta' => [
+                    'simulated' => false,
+                    'provider' => $ai->provider,
+                    'model' => $ai->model,
+                    'usage' => [
+                        'request' => (int) ($result['usage']['input'] ?? 0),
+                        'response' => (int) ($result['usage']['output'] ?? 0),
+                    ],
+                ],
+            ];
+        } catch (\Throwable $e) {
+            return ['live' => false, 'data' => $this->emptyCvSuggestion(), 'meta' => ['simulated' => true, 'fallback' => true, 'fallbackReason' => $e->getMessage()]];
+        }
+    }
+
+    private function cvPrompt(): string
+    {
+        return 'أنت مساعد توظيف. استخرج من هذه السيرة الذاتيّة الحقول المهنيّة المنظّمة بدقّة: '
+            .'الاسم، المسمّى المهنيّ (headline)، نبذة موجزة، الموقع، البريد، الهاتف، المهارات (بمستوى تقديريّ 1..5)، '
+            .'الخبرات (المسمّى/الجهة/سنوات/وصف)، الشهادات (الاسم/الجهة/السنة). '
+            .'لا تختلق بيانات غير موجودة — اترك أيّ حقل مجهول فارغًا (null). أعِد النتيجة عبر الأداة فقط.';
+    }
+
+    /** مخطّط أداة الاستخراج — حقول ملفّ منصّة التوظيف. */
+    private function cvTool(): array
+    {
+        $nullableStr = ['type' => ['string', 'null']];
+
+        return [
+            'name' => 'extract_cv',
+            'description' => 'سجّل الحقول المهنيّة المنظّمة المستخرَجة من السيرة الذاتيّة.',
+            'schema' => [
+                'type' => 'object',
+                'properties' => [
+                    'name' => $nullableStr,
+                    'headline' => array_merge($nullableStr, ['description' => 'المسمّى المهنيّ']),
+                    'summary' => array_merge($nullableStr, ['description' => 'نبذة موجزة']),
+                    'location' => $nullableStr,
+                    'email' => $nullableStr,
+                    'phone' => $nullableStr,
+                    'skills' => [
+                        'type' => 'array',
+                        'description' => 'المهارات مع مستوى تقديريّ 1..5',
+                        'items' => [
+                            'type' => 'object',
+                            'properties' => ['name' => ['type' => 'string'], 'level' => ['type' => ['integer', 'null']]],
+                            'required' => ['name'],
+                        ],
+                    ],
+                    'experiences' => [
+                        'type' => 'array',
+                        'items' => [
+                            'type' => 'object',
+                            'properties' => ['title' => ['type' => 'string'], 'org' => $nullableStr, 'years' => ['type' => ['number', 'null']], 'summary' => $nullableStr],
+                            'required' => ['title'],
+                        ],
+                    ],
+                    'certificates' => [
+                        'type' => 'array',
+                        'items' => [
+                            'type' => 'object',
+                            'properties' => ['name' => ['type' => 'string'], 'issuer' => $nullableStr, 'year' => ['type' => ['integer', 'null']]],
+                            'required' => ['name'],
+                        ],
+                    ],
+                    'confidence' => ['type' => 'number', 'description' => 'ثقة الاستخراج 0..100'],
+                ],
+                'required' => ['skills', 'confidence'],
+            ],
+        ];
+    }
+
+    /** يطبّع مخرَج الأداة إلى شكل ثابت آمن يستهلكه العميل (يحصر الأنواع والحدود). */
+    private function normalizeCv(array $raw): array
+    {
+        $str = fn ($v) => is_string($v) && trim($v) !== '' ? trim($v) : null;
+
+        $skills = collect($raw['skills'] ?? [])->filter(fn ($s) => is_array($s) && ! empty($s['name']))
+            ->map(fn ($s) => ['name' => (string) $s['name'], 'level' => max(1, min(5, (int) ($s['level'] ?? 3)))])
+            ->values()->all();
+        $experiences = collect($raw['experiences'] ?? [])->filter(fn ($e) => is_array($e) && ! empty($e['title']))
+            ->map(fn ($e) => ['title' => (string) $e['title'], 'org' => $str($e['org'] ?? null), 'years' => is_numeric($e['years'] ?? null) ? (float) $e['years'] : null, 'summary' => $str($e['summary'] ?? null)])
+            ->values()->all();
+        $certificates = collect($raw['certificates'] ?? [])->filter(fn ($c) => is_array($c) && ! empty($c['name']))
+            ->map(fn ($c) => ['name' => (string) $c['name'], 'issuer' => $str($c['issuer'] ?? null), 'year' => is_numeric($c['year'] ?? null) ? (int) $c['year'] : null])
+            ->values()->all();
+
+        return [
+            'name' => $str($raw['name'] ?? null),
+            'headline' => $str($raw['headline'] ?? null),
+            'summary' => $str($raw['summary'] ?? null),
+            'location' => $str($raw['location'] ?? null),
+            'email' => $str($raw['email'] ?? null),
+            'phone' => $str($raw['phone'] ?? null),
+            'skills' => $skills,
+            'experiences' => $experiences,
+            'certificates' => $certificates,
+            'confidence' => max(0, min(100, (int) ($raw['confidence'] ?? 0))),
+        ];
+    }
+
+    private function emptyCvSuggestion(): array
+    {
+        return [
+            'name' => null, 'headline' => null, 'summary' => null, 'location' => null,
+            'email' => null, 'phone' => null, 'skills' => [], 'experiences' => [], 'certificates' => [], 'confidence' => 0,
+        ];
+    }
 }

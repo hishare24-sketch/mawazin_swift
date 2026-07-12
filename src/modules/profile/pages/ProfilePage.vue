@@ -9,6 +9,7 @@ import type { ProofType, Skill } from '@/stores/ProfileStore'
 import { useResumesStore } from '@/stores/ResumesStore'
 import { useTrustStore } from '@/stores/TrustStore'
 import { ai } from '@/services/ai'
+import CvImport from '@/modules/profile/components/CvImport.vue'
 import TrustScoreCard from '@/components/shared/TrustScoreCard.vue'
 import ReviewsPanel from '@/components/shared/ReviewsPanel.vue'
 import { useReviewsStore } from '@/stores/ReviewsStore'
@@ -429,6 +430,14 @@ const heroStats = computed(() => [
           <BaseChip v-if="tb.value === 'reviews' && reviewsCount" color="warning" class="ms-1">{{ reviewsCount }}</BaseChip>
         </button>
       </div>
+
+      <!-- استيراد السيرة الذاتيّة بالذكاء -->
+      <CvImport
+        v-if="tab === 'skills'"
+        class="mb-4"
+        @applied="c => toast(`تمّ استيراد سيرتك: ${c}`)"
+        @error="m => toast(m)"
+      />
 
       <!-- Skills -->
       <BaseCard v-if="tab === 'skills'">

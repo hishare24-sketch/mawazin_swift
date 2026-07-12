@@ -116,6 +116,7 @@ export const API_PATHS = {
     conversation: (id: number) => `/v1/assistant/conversations/${id}`,
     settings: '/v1/assistant/settings',
     escalate: '/v1/assistant/escalate',
+    extractCv: '/v1/assistant/extract-cv',
   },
   support: {
     tickets: '/v1/support/tickets',
@@ -549,6 +550,23 @@ export interface SupportTicketRow { id: number, subject: string, category: strin
 export interface SupportTicketReply { id: number, author: string, isStaff: boolean, body: string, at: string | null }
 export interface SupportTicketDetail extends SupportTicketRow { assignee: string | null, replies: SupportTicketReply[] }
 export interface SupportTicketCreate { subject: string, body: string, category?: string, priority?: string }
+// ——— استخراج السيرة الذاتيّة بالذكاء ———
+export interface CvSkillSuggestion { name: string, level: number }
+export interface CvExperienceSuggestion { title: string, org: string | null, years: number | null, summary: string | null }
+export interface CvCertificateSuggestion { name: string, issuer: string | null, year: number | null }
+export interface CvExtractionData {
+  name: string | null
+  headline: string | null
+  summary: string | null
+  location: string | null
+  email: string | null
+  phone: string | null
+  skills: CvSkillSuggestion[]
+  experiences: CvExperienceSuggestion[]
+  certificates: CvCertificateSuggestion[]
+  confidence: number
+}
+export interface CvExtractionResult { live: boolean, data: CvExtractionData, meta: { simulated: boolean, provider?: string, model?: string | null, fallback?: boolean, fallbackReason?: string } }
 
 export const api = {
   auth: {
@@ -641,6 +659,8 @@ export const api = {
     settings: () => get<AssistantSettings>(API_PATHS.assistant.settings),
     updateSettings: (body: Partial<{ data_access: boolean, proactive: boolean }>) => put<AssistantSettings>(API_PATHS.assistant.settings, body),
     escalate: (body: { conversationId?: number, subject?: string, body?: string, category?: string, priority?: string }) => post<{ id: number, subject: string, status: string }>(API_PATHS.assistant.escalate, body),
+    /** استخراج بيانات الملف من سيرة ذاتيّة (base64 صورة/PDF) لتعبئة الملف تلقائيًّا. */
+    extractCv: (base64: string, mediaType: string) => post<CvExtractionResult>(API_PATHS.assistant.extractCv, { base64, mediaType }),
   },
   /** تذاكر/محادثات الدعم من جهة المستخدم */
   support: {

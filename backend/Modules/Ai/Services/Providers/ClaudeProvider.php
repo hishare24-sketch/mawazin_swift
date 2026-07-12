@@ -83,4 +83,61 @@ class ClaudeProvider implements LlmProvider
     {
         return (bool) preg_match('/(opus-4-[678]|sonnet-5|fable-5|mythos-5)/i', $model);
     }
+
+    /**
+     * استخراج منظّم عبر tool_use (input_schema) — رؤية الصور/PDF عبر document/image source.
+     * منقول عن نهج «موازين» (AnthropicDriver::extract).
+     */
+    public function extract(string $prompt, string $base64, string $mediaType, array $tool, array $options = []): array
+    {
+        $model = $this->setting->model ?: self::DEFAULT_MODEL;
+        $maxTokens = (int) ($options['maxTokens'] ?? 1500);
+        $source = ['type' => 'base64', 'media_type' => $mediaType, 'data' => $base64];
+        $fileBlock = $mediaType === 'application/pdf'
+            ? ['type' => 'document', 'source' => $source]
+            : ['type' => 'image', 'source' => $source];
+
+        $response = Http::withHeaders([
+            'x-api-key' => (string) $this->setting->api_key,
+            'anthropic-version' => self::API_VERSION,
+            'content-type' => 'application/json',
+        ])->timeout(60)->post($this->setting->endpoint ?: self::DEFAULT_ENDPOINT, [
+            'model' => $model,
+            'max_tokens' => max(256, min(8192, $maxTokens)),
+            'tools' => [[
+                'name' => $tool['name'],
+                'description' => $tool['description'],
+                'input_schema' => $tool['schema'],
+            ]],
+            'tool_choice' => ['type' => 'tool', 'name' => $tool['name']],
+            'messages' => [[
+                'role' => 'user',
+                'content' => [$fileBlock, ['type' => 'text', 'text' => $prompt]],
+            ]],
+        ]);
+
+        if (! $response->successful()) {
+            throw new \RuntimeException('claude_http_'.$response->status());
+        }
+
+        $data = $response->json();
+        $raw = null;
+        foreach ($data['content'] ?? [] as $block) {
+            if (($block['type'] ?? null) === 'tool_use' && ($block['name'] ?? null) === $tool['name']) {
+                $raw = $block['input'] ?? null;
+                break;
+            }
+        }
+        if (! is_array($raw)) {
+            throw new \RuntimeException('claude_extract_empty');
+        }
+
+        return [
+            'raw' => $raw,
+            'usage' => [
+                'input' => (int) ($data['usage']['input_tokens'] ?? 0),
+                'output' => (int) ($data['usage']['output_tokens'] ?? 0),
+            ],
+        ];
+    }
 }

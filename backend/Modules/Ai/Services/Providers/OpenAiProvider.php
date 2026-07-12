@@ -73,6 +73,70 @@ class OpenAiProvider implements LlmProvider
         ];
     }
 
+    /**
+     * استخراج منظّم عبر function tool_choice — رؤية عبر image_url (صورة) أو file (PDF).
+     * منقول عن نهج «موازين» (OpenAiDriver::extract).
+     */
+    public function extract(string $prompt, string $base64, string $mediaType, array $tool, array $options = []): array
+    {
+        $key = $this->cleanApiKey((string) $this->setting->api_key);
+        if ($key === '') {
+            throw new \RuntimeException('openai_missing_key');
+        }
+
+        $model = $this->setting->model ?: self::DEFAULT_MODEL;
+        $maxTokens = (int) ($options['maxTokens'] ?? 1500);
+        $dataUrl = "data:{$mediaType};base64,{$base64}";
+        $filePart = $mediaType === 'application/pdf'
+            ? ['type' => 'file', 'file' => ['filename' => 'cv.pdf', 'file_data' => $dataUrl]]
+            : ['type' => 'image_url', 'image_url' => ['url' => $dataUrl]];
+
+        $response = Http::withToken($key)
+            ->timeout(60)
+            ->post($this->setting->endpoint ?: self::DEFAULT_ENDPOINT, [
+                'model' => $model,
+                'max_completion_tokens' => max(256, min(8192, $maxTokens)),
+                'tools' => [[
+                    'type' => 'function',
+                    'function' => ['name' => $tool['name'], 'description' => $tool['description'], 'parameters' => $tool['schema']],
+                ]],
+                'tool_choice' => ['type' => 'function', 'function' => ['name' => $tool['name']]],
+                'messages' => [[
+                    'role' => 'user',
+                    'content' => [$filePart, ['type' => 'text', 'text' => $prompt]],
+                ]],
+            ]);
+
+        if (! $response->successful()) {
+            throw new \RuntimeException('openai_http_'.$response->status());
+        }
+
+        $data = $response->json() ?? [];
+        $arguments = null;
+        foreach ($data['choices'][0]['message']['tool_calls'] ?? [] as $call) {
+            if (($call['function']['name'] ?? null) === $tool['name']) {
+                $arguments = $call['function']['arguments'] ?? null;
+                break;
+            }
+        }
+        if ($arguments === null || $arguments === '') {
+            throw new \RuntimeException('openai_extract_empty');
+        }
+
+        $raw = json_decode($arguments, true);
+        if (json_last_error() !== JSON_ERROR_NONE || ! is_array($raw)) {
+            throw new \RuntimeException('openai_extract_parse');
+        }
+
+        return [
+            'raw' => $raw,
+            'usage' => [
+                'input' => (int) ($data['usage']['prompt_tokens'] ?? 0),
+                'output' => (int) ($data['usage']['completion_tokens'] ?? 0),
+            ],
+        ];
+    }
+
     /** تنظيف المفتاح: إزالة أيّ محرف خارج ASCII المطبوع (يمنع كسر ترويسة Authorization). */
     private function cleanApiKey(?string $raw): string
     {

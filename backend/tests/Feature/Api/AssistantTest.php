@@ -305,4 +305,81 @@ class AssistantTest extends TestCase
             ->assertJsonPath('data.blocked', false)
             ->assertJsonPath('data.meta.fallback', true);
     }
+
+    // ═══ استخراج السيرة الذاتيّة ═══
+
+    public function test_extract_cv_via_openai_returns_structured_profile(): void
+    {
+        $this->seed(AiSeeder::class);
+        $this->useOpenAiProvider();
+        Http::fake(['api.openai.com/*' => Http::response([
+            'choices' => [['message' => ['tool_calls' => [[
+                'function' => ['name' => 'extract_cv', 'arguments' => json_encode([
+                    'name' => 'أحمد المنصور',
+                    'headline' => 'مطوّر واجهات أمامية',
+                    'skills' => [['name' => 'Vue.js', 'level' => 5], ['name' => 'TypeScript', 'level' => 4]],
+                    'experiences' => [['title' => 'مطوّر أول', 'org' => 'شركة تقنية', 'years' => 3]],
+                    'certificates' => [],
+                    'confidence' => 88,
+                ])],
+            ]]]]],
+            'usage' => ['prompt_tokens' => 300, 'completion_tokens' => 120],
+        ], 200)]);
+        $user = $this->user(['role' => 'seeker']);
+
+        $this->postJson('/api/v1/assistant/extract-cv', ['base64' => base64_encode('fake-image-bytes'), 'mediaType' => 'image/png'])
+            ->assertOk()
+            ->assertJsonPath('data.live', true)
+            ->assertJsonPath('data.data.name', 'أحمد المنصور')
+            ->assertJsonPath('data.data.headline', 'مطوّر واجهات أمامية')
+            ->assertJsonPath('data.data.skills.0.name', 'Vue.js')
+            ->assertJsonPath('data.data.skills.0.level', 5)
+            ->assertJsonPath('data.data.confidence', 88);
+
+        $row = \Modules\Ai\Entities\AiUsage::where('user_id', $user->id)->first();
+        $this->assertSame(300, $row->request_tokens);
+    }
+
+    public function test_extract_cv_via_claude_returns_structured_profile(): void
+    {
+        $this->seed(AiSeeder::class);
+        $this->useClaudeProvider();
+        Http::fake(['api.anthropic.com/*' => Http::response([
+            'content' => [['type' => 'tool_use', 'name' => 'extract_cv', 'input' => [
+                'name' => 'سارة العتيبي',
+                'skills' => [['name' => 'Laravel', 'level' => 4]],
+                'confidence' => 76,
+            ]]],
+            'usage' => ['input_tokens' => 210, 'output_tokens' => 90],
+        ], 200)]);
+        $this->user(['role' => 'seeker']);
+
+        $this->postJson('/api/v1/assistant/extract-cv', ['base64' => base64_encode('x'), 'mediaType' => 'application/pdf'])
+            ->assertOk()
+            ->assertJsonPath('data.live', true)
+            ->assertJsonPath('data.data.name', 'سارة العتيبي')
+            ->assertJsonPath('data.data.skills.0.name', 'Laravel')
+            ->assertJsonPath('data.meta.simulated', false);
+    }
+
+    public function test_extract_cv_returns_empty_suggestion_without_provider(): void
+    {
+        $this->seed(AiSeeder::class); // البذرة: provider=simulation، بلا مفتاح
+        $this->user(['role' => 'seeker']);
+
+        $this->postJson('/api/v1/assistant/extract-cv', ['base64' => base64_encode('x'), 'mediaType' => 'image/png'])
+            ->assertOk()
+            ->assertJsonPath('data.live', false)
+            ->assertJsonPath('data.data.confidence', 0)
+            ->assertJsonPath('data.data.skills', []);
+    }
+
+    public function test_extract_cv_validates_media_type(): void
+    {
+        $this->seed(AiSeeder::class);
+        $this->user(['role' => 'seeker']);
+
+        $this->postJson('/api/v1/assistant/extract-cv', ['base64' => 'x', 'mediaType' => 'application/zip'])
+            ->assertStatus(422);
+    }
 }

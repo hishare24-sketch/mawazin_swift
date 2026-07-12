@@ -205,6 +205,28 @@ class AssistantController extends Controller
         ]);
     }
 
+    /**
+     * استخراج بيانات ملفّ من سيرة ذاتيّة مرفوعة (صورة/PDF) عبر الذكاء — لتعبئة الملف تلقائيًّا.
+     * body: { base64, mediaType }. محكوم بالحصّة؛ يعود live=false بلا مزوّد مهيّأ (اقتراح فارغ).
+     */
+    public function extractCv(Request $request)
+    {
+        $user = $request->user();
+        $data = $request->validate([
+            'base64' => ['required', 'string', 'max:14000000'],
+            'mediaType' => ['required', 'in:image/jpeg,image/png,image/webp,application/pdf'],
+        ]);
+
+        $result = $this->service->extractCv($data['base64'], $data['mediaType']);
+
+        if (! empty($result['live'])) {
+            $usage = $result['meta']['usage'] ?? [];
+            $this->usage->record($user, (int) ($usage['request'] ?? 0), (int) ($usage['response'] ?? 0), $result['meta']['provider'] ?? null, $result['meta']['model'] ?? null);
+        }
+
+        return $this->dataResponse($result);
+    }
+
     /** يحضر/ينشئ محادثة يملكها المستخدم. */
     private function resolveConversation($user, ?int $id, string $firstMessage): AssistantConversation
     {
