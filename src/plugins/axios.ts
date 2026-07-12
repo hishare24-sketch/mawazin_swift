@@ -13,6 +13,10 @@ axios.interceptors.request.use((config) => {
   if (token)
     config.headers.Authorization = `Bearer ${token}`
 
+  // نطلب استجابة JSON دائمًا: بدونها يُعامِل Laravel الطلب كطلب متصفّح،
+  // فيحاول تحويل غير المصادَق لمسار login (غير موجود في API) → 500 بدل 401،
+  // ويعيد أخطاء التحقّق كإعادة توجيه بدل JSON. هذا يجعل 401/422 يُعالَجان صحيحًا.
+  config.headers.Accept = 'application/json'
   config.headers['Accept-Language'] = i18n.global.locale.value
   config.headers.platform = 'dashboard'
 
