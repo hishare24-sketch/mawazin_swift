@@ -7,15 +7,23 @@ import BaseButton from '@/components/ui/BaseButton.vue'
 import BaseCard from '@/components/ui/BaseCard.vue'
 import BaseChip from '@/components/ui/BaseChip.vue'
 import BaseIcon from '@/components/ui/BaseIcon.vue'
+import BaseInput from '@/components/ui/BaseInput.vue'
+import BaseModal from '@/components/ui/BaseModal.vue'
+import BaseSelect from '@/components/ui/BaseSelect.vue'
+import BaseSnackbar from '@/components/ui/BaseSnackbar.vue'
+import BaseTooltip from '@/components/ui/BaseTooltip.vue'
 import DonutChart from '@/components/charts/DonutChart.vue'
 import LineChart from '@/components/charts/LineChart.vue'
 import ResourceScaffold from '@/modules/admin/components/ResourceScaffold.vue'
 import type { FilterDef } from '@/modules/admin/components/ResourceScaffold.vue'
 import type { TableColumn } from '@/components/ui/BaseTable.vue'
 import { useAdminResource } from '@/modules/admin/composables/useAdminResource'
-import { type QualityAtom, type QualityOverview, api } from '@/services/api'
+import { type QualityAtom, type QualityBoard, type QualityDispatchCard, type QualityOverview, api } from '@/services/api'
+import { useAuthStore } from '@/stores/AuthStore'
 
 const { t } = useI18n()
+const auth = useAuthStore()
+const canManage = computed(() => auth.hasPermission('manage_quality'))
 
 type ChipColor = 'brand' | 'accent' | 'emerald' | 'success' | 'info' | 'warning' | 'error' | 'neutral'
 const STATUS_COLOR: Record<string, ChipColor> = { automated: 'success', gap: 'warning', failing: 'error' }
@@ -23,10 +31,21 @@ const STATUS_ICON: Record<string, string> = { automated: 'mdi-check-circle-outli
 const PRIORITY_COLOR: Record<string, ChipColor> = { critical: 'error', important: 'warning', normal: 'neutral' }
 const LAYER_COLOR: Record<string, ChipColor> = { backend: 'info', frontend: 'brand', ops: 'accent', filters: 'emerald' }
 const STATUS_THEME: Record<string, string> = { automated: 'success', gap: 'warning', failing: 'error' }
+const DEPT_META: Record<string, { icon: string, color: ChipColor }> = {
+  triage: { icon: 'mdi-inbox-outline', color: 'neutral' },
+  ops: { icon: 'mdi-cog-outline', color: 'accent' },
+  testing: { icon: 'mdi-test-tube', color: 'info' },
+  backend: { icon: 'mdi-server-outline', color: 'info' },
+  frontend: { icon: 'mdi-monitor-dashboard', color: 'brand' },
+  filters: { icon: 'mdi-filter-variant', color: 'emerald' },
+}
+const STATE_COLOR: Record<string, ChipColor> = { todo: 'neutral', doing: 'info', review: 'warning', done: 'success' }
 const statusLabel = (s: string) => t(`admin.qcc.status_${s}`)
 const priorityLabel = (p: string) => t(`admin.qcc.priority_${p}`)
 const layerLabel = (l: string) => t(`admin.qcc.layer_${l}`)
 const typeLabel = (t2: string) => t(`admin.qcc.type_${t2}`)
+const deptLabel = (d: string) => t(`admin.qcc.dept_${d}`)
+const stateLabel = (s: string) => t(`admin.qcc.state_${s}`)
 
 // ——— النظرة العامّة (KPIs + توزيعات + اتّجاه) ———
 const overview = ref<QualityOverview | null>(null)
@@ -44,12 +63,54 @@ const statusDonut = computed(() => (overview.value?.byStatus ?? []).map(s => ({
 const coverageSeries = computed(() => (overview.value?.series ?? []).map(s => ({ label: s.date.slice(5), value: s.coverage })))
 const maxLayer = computed(() => Math.max(1, ...(overview.value?.byLayer ?? []).map(l => l.count)))
 
+// ——— لوحة التحويل (الأقسام / kanban) ———
+const board = ref<QualityBoard | null>(null)
+async function loadBoard() {
+  try { board.value = await api.admin.qualityBoard() }
+  catch { /* تجاهل */ }
+}
+const deptOptions = computed(() => (board.value?.departments ?? []).map(d => ({ value: d, title: deptLabel(d) })))
+const stateOptions = computed(() => (board.value?.states ?? []).map(s => ({ value: s, title: stateLabel(s) })))
+
+const snack = ref({ show: false, text: '', color: 'success' })
+function toast(text: string, color = 'success') { snack.value = { show: true, text, color } }
+function fail(e: unknown) { toast((e as { message?: string })?.message ?? t('admin.toast.failed'), 'error') }
+
+// حوار التحويل من جدول الذرّات
+const dispatchOpen = ref(false)
+const dispatchTarget = ref<QualityAtom | null>(null)
+const dispatchForm = ref({ department: 'triage', state: 'todo', note: '' })
+function openDispatch(atom: QualityAtom) {
+  dispatchTarget.value = atom
+  dispatchForm.value = { department: 'triage', state: 'todo', note: '' }
+  dispatchOpen.value = true
+}
+async function submitDispatch() {
+  if (!dispatchTarget.value)
+    return
+  try {
+    await api.admin.qualityDispatch(dispatchTarget.value.id, { ...dispatchForm.value })
+    toast(t('admin.qcc.dispatched'))
+    dispatchOpen.value = false
+    loadBoard()
+  }
+  catch (e) { fail(e) }
+}
+async function moveCard(card: QualityDispatchCard, patch: { department?: string, state?: string }) {
+  try { await api.admin.qualityMoveDispatch(card.id, patch); loadBoard() }
+  catch (e) { fail(e) }
+}
+async function removeCard(card: QualityDispatchCard) {
+  try { await api.admin.qualityRemoveDispatch(card.id); toast(t('admin.toast.updated')); loadBoard() }
+  catch (e) { fail(e) }
+}
+
 // ——— مستكشف الذرّات (خادميّ التقسيم) ———
 const r = useAdminResource<QualityAtom>({ fetcher: params => api.admin.qualityAtoms(params), initialSort: 'caseId', perPage: 20 })
 const { items, meta, loading, sortKey, search, filters } = r
 
-function refreshAll() { r.refresh(); loadOverview() }
-onMounted(loadOverview)
+function refreshAll() { r.refresh(); loadOverview(); loadBoard() }
+onMounted(() => { loadOverview(); loadBoard() })
 
 const columns: TableColumn[] = [
   { key: 'caseId', label: t('admin.qcc.colId'), sortable: true },
@@ -147,6 +208,43 @@ const filterDefs = computed<FilterDef[]>(() => [
       </BaseCard>
     </div>
 
+    <!-- لوحة التحويل (الأقسام / kanban) -->
+    <BaseCard class="mb-5">
+      <div class="mb-3 flex items-center gap-2">
+        <BaseIcon name="mdi-directions-fork" :size="18" class="text-brand" />
+        <h2 class="text-sm font-bold text-content">{{ t('admin.qcc.boardTitle') }}</h2>
+        <span class="text-xs text-muted">· {{ board?.total ?? 0 }}</span>
+        <span class="ms-auto text-[11px] text-muted">{{ t('admin.qcc.boardHint') }}</span>
+      </div>
+      <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-6">
+        <div v-for="dept in board?.departments ?? []" :key="dept" class="rounded-ui border border-ui bg-ui/20 p-2">
+          <div class="mb-2 flex items-center gap-1.5">
+            <BaseIcon :name="DEPT_META[dept]?.icon || 'mdi-folder-outline'" :size="16" :style="{ color: `rgb(var(--v-theme-${DEPT_META[dept]?.color || 'neutral'}))` }" />
+            <span class="flex-1 truncate text-xs font-bold text-content">{{ deptLabel(dept) }}</span>
+            <BaseChip :color="DEPT_META[dept]?.color || 'neutral'">{{ board?.counts[dept] ?? 0 }}</BaseChip>
+          </div>
+          <div class="space-y-2">
+            <div v-for="card in board?.lanes[dept] ?? []" :key="card.id" class="rounded-ui border border-ui bg-surface p-2">
+              <div class="mb-0.5 flex items-center gap-1">
+                <span class="font-mono text-[11px] font-medium text-content">{{ card.atom?.caseId }}</span>
+                <BaseChip v-if="card.atom" :color="PRIORITY_COLOR[card.atom.priority] || 'neutral'" class="ms-auto">{{ priorityLabel(card.atom.priority) }}</BaseChip>
+              </div>
+              <div class="mb-1.5 line-clamp-2 text-[11px] text-muted" :title="card.atom?.title">{{ card.atom?.title }}</div>
+              <div v-if="canManage" class="flex items-center gap-1">
+                <BaseSelect :model-value="card.state" :items="stateOptions" class="flex-1" @update:model-value="v => moveCard(card, { state: String(v) })" />
+                <BaseSelect :model-value="card.department" :items="deptOptions" class="flex-1" @update:model-value="v => moveCard(card, { department: String(v) })" />
+                <BaseTooltip :text="t('admin.qcc.removeCard')">
+                  <button class="row-act" style="color: rgb(var(--v-theme-error))" :aria-label="t('admin.qcc.removeCard')" @click="removeCard(card)"><BaseIcon name="mdi-close" :size="15" /></button>
+                </BaseTooltip>
+              </div>
+              <BaseChip v-else :color="STATE_COLOR[card.state] || 'neutral'">{{ stateLabel(card.state) }}</BaseChip>
+            </div>
+            <p v-if="!(board?.lanes[dept]?.length)" class="rounded-ui border border-dashed border-ui py-3 text-center text-[11px] text-muted">—</p>
+          </div>
+        </div>
+      </div>
+    </BaseCard>
+
     <!-- مستكشف الذرّات -->
     <ResourceScaffold
       :columns="columns"
@@ -193,6 +291,49 @@ const filterDefs = computed<FilterDef[]>(() => [
         <span v-if="row.testFile" class="font-mono text-[11px] text-muted" dir="ltr">{{ row.testFile }}</span>
         <span v-else class="text-muted">—</span>
       </template>
+      <template #actions="{ row }">
+        <BaseTooltip v-if="canManage" :text="t('admin.qcc.dispatch')">
+          <button class="row-act text-brand" :aria-label="t('admin.qcc.dispatch')" @click="openDispatch(row)"><BaseIcon name="mdi-directions-fork" :size="17" /></button>
+        </BaseTooltip>
+      </template>
     </ResourceScaffold>
+
+    <!-- حوار التحويل -->
+    <BaseModal v-model="dispatchOpen" :title="t('admin.qcc.dispatchTitle', { id: dispatchTarget?.caseId })" :max-width="480">
+      <div class="space-y-3">
+        <div>
+          <label class="mb-1 block text-xs font-medium text-muted">{{ t('admin.qcc.fieldDept') }}</label>
+          <BaseSelect v-model="dispatchForm.department" :items="deptOptions" />
+        </div>
+        <div>
+          <label class="mb-1 block text-xs font-medium text-muted">{{ t('admin.qcc.fieldState') }}</label>
+          <BaseSelect v-model="dispatchForm.state" :items="stateOptions" />
+        </div>
+        <BaseInput v-model="dispatchForm.note" :label="t('admin.qcc.fieldNote')" />
+      </div>
+      <template #actions>
+        <BaseButton variant="ghost" @click="dispatchOpen = false">{{ t('admin.users.cancel') }}</BaseButton>
+        <BaseButton variant="brand" :disabled="!dispatchForm.department" @click="submitDispatch">
+          <BaseIcon name="mdi-check" :size="18" />{{ t('admin.qcc.dispatch') }}
+        </BaseButton>
+      </template>
+    </BaseModal>
+
+    <BaseSnackbar v-model="snack.show" :color="snack.color">{{ snack.text }}</BaseSnackbar>
   </div>
 </template>
+
+<style scoped>
+.row-act {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  transition: background-color 0.15s ease;
+}
+.row-act:hover {
+  background: rgba(var(--v-theme-on-surface), 0.08);
+}
+</style>

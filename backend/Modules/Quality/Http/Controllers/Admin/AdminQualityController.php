@@ -4,15 +4,22 @@ namespace Modules\Quality\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
+use Modules\Quality\Entities\QualityDispatch;
 use Modules\Quality\Entities\QualitySnapshot;
 use Modules\Quality\Entities\TestCase as TestCaseAtom;
 
 /**
- * مركز قيادة الجودة (الأدمن) — قراءة ذرّات حالات الاختبار وإحصاءاتها.
- * تحت /api/admin (auth:sanctum + admin). الصلاحيّة: view_quality.
+ * مركز قيادة الجودة (الأدمن) — قراءة ذرّات حالات الاختبار وإحصاءاتها + التحويل.
+ * تحت /api/admin (auth:sanctum + admin). القراءة: view_quality · التحويل: manage_quality.
  */
 class AdminQualityController extends Controller
 {
+    /** أقسام التحويل (لوحة kanban). */
+    public const DEPARTMENTS = ['triage', 'ops', 'testing', 'backend', 'frontend', 'filters'];
+
+    /** دورة حياة البطاقة داخل القسم. */
+    public const STATES = ['todo', 'doing', 'review', 'done'];
     /** بطاقات + توزيعات + اتّجاه التغطية. */
     public function overview()
     {
@@ -74,7 +81,102 @@ class AdminQualityController extends Controller
         return $this->dashboardResponse($page);
     }
 
+    // ═══ التحويل (لوحة الأقسام / kanban) ═══
+
+    /** لوحة الأقسام: الأعمدة + البطاقات المحوّلة لكلّ قسم + العدّادات. */
+    public function board()
+    {
+        $this->authorize('view_quality');
+
+        $dispatches = QualityDispatch::with('testCase')->orderByDesc('updated_at')->get();
+
+        $lanes = [];
+        $counts = [];
+        foreach (self::DEPARTMENTS as $dept) {
+            $lanes[$dept] = [];
+            $counts[$dept] = 0;
+        }
+        foreach ($dispatches as $d) {
+            if (! isset($lanes[$d->department]) || $d->testCase === null) {
+                continue;
+            }
+            $lanes[$d->department][] = $this->presentDispatch($d);
+            $counts[$d->department]++;
+        }
+
+        return $this->dataResponse([
+            'departments' => self::DEPARTMENTS,
+            'states' => self::STATES,
+            'lanes' => $lanes,
+            'counts' => $counts,
+            'total' => $dispatches->count(),
+        ]);
+    }
+
+    /** تحويل ذرّة إلى قسم (إنشاء/تحديث — تحويل واحد لكلّ ذرّة). */
+    public function dispatchAtom(Request $request, TestCaseAtom $testCase)
+    {
+        $this->authorize('manage_quality');
+
+        $data = $request->validate([
+            'department' => ['required', Rule::in(self::DEPARTMENTS)],
+            'state' => ['nullable', Rule::in(self::STATES)],
+            'assignee' => ['nullable', 'string', 'max:120'],
+            'note' => ['nullable', 'string', 'max:2000'],
+        ]);
+
+        $dispatch = QualityDispatch::updateOrCreate(
+            ['test_case_id' => $testCase->id],
+            [
+                'department' => $data['department'],
+                'state' => $data['state'] ?? 'todo',
+                'assignee' => $data['assignee'] ?? null,
+                'note' => $data['note'] ?? null,
+            ],
+        );
+
+        return $this->dataResponse($this->presentDispatch($dispatch->load('testCase')));
+    }
+
+    /** حركة البطاقة: تغيير القسم/الحالة/المكلَّف. */
+    public function moveDispatch(Request $request, QualityDispatch $dispatch)
+    {
+        $this->authorize('manage_quality');
+
+        $data = $request->validate([
+            'department' => ['nullable', Rule::in(self::DEPARTMENTS)],
+            'state' => ['nullable', Rule::in(self::STATES)],
+            'assignee' => ['nullable', 'string', 'max:120'],
+            'note' => ['nullable', 'string', 'max:2000'],
+        ]);
+
+        $dispatch->fill(array_filter($data, fn ($v) => $v !== null))->save();
+
+        return $this->updatedResponse($this->presentDispatch($dispatch->load('testCase')));
+    }
+
+    /** إزالة البطاقة من اللوحة (تعود الذرّة غير محوّلة). */
+    public function destroyDispatch(QualityDispatch $dispatch)
+    {
+        $this->authorize('manage_quality');
+        $dispatch->delete();
+
+        return $this->updatedResponse();
+    }
+
     // ═══ مساعدات ═══
+
+    private function presentDispatch(QualityDispatch $d): array
+    {
+        return [
+            'id' => $d->id,
+            'department' => $d->department,
+            'state' => $d->state,
+            'assignee' => $d->assignee,
+            'note' => $d->note,
+            'atom' => $d->testCase ? $this->present($d->testCase) : null,
+        ];
+    }
 
     private function present(TestCaseAtom $a): array
     {

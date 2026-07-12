@@ -4,6 +4,7 @@ namespace Tests\Feature\Api\Admin;
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Laravel\Sanctum\Sanctum;
+use Modules\Quality\Entities\QualityDispatch;
 use Modules\Quality\Entities\TestCase as TestCaseAtom;
 use Modules\User\Entities\User;
 use Spatie\Permission\Models\Role;
@@ -113,5 +114,105 @@ class AdminQualityTest extends TestCase
         Sanctum::actingAs(User::create(['name' => 'U', 'email' => 'u'.uniqid().'@rec.test', 'password' => 'secret123']));
         $this->getJson('/api/admin/quality/overview')->assertStatus(403);
         $this->getJson('/api/admin/quality/atoms')->assertStatus(403);
+    }
+
+    // ═══ التحويل (ف2) ═══
+
+    private function atom(string $caseId = 'X-01'): TestCaseAtom
+    {
+        return TestCaseAtom::create([
+            'case_id' => $caseId, 'title' => 'حالة', 'layer' => 'backend',
+            'section' => 'S', 'module' => 'M', 'type' => 'F', 'priority' => 'critical',
+            'status' => 'gap', 'lifecycle' => 'new',
+        ]);
+    }
+
+    public function test_board_returns_all_lanes_and_states(): void
+    {
+        $this->admin();
+
+        $res = $this->getJson('/api/admin/quality/board')
+            ->assertOk()
+            ->assertJsonStructure(['data' => ['departments', 'states', 'lanes', 'counts', 'total']]);
+
+        $this->assertSame(['triage', 'ops', 'testing', 'backend', 'frontend', 'filters'], $res->json('data.departments'));
+        $this->assertSame(['todo', 'doing', 'review', 'done'], $res->json('data.states'));
+        $this->assertSame(0, $res->json('data.total'));
+    }
+
+    public function test_dispatch_atom_creates_card_on_lane(): void
+    {
+        $this->admin();
+        $atom = $this->atom();
+
+        $this->postJson("/api/admin/quality/atoms/{$atom->id}/dispatch", ['department' => 'testing'])
+            ->assertOk()
+            ->assertJsonPath('data.department', 'testing')
+            ->assertJsonPath('data.state', 'todo')
+            ->assertJsonPath('data.atom.caseId', 'X-01');
+
+        $board = $this->getJson('/api/admin/quality/board')->assertOk();
+        $this->assertSame(1, $board->json('data.counts.testing'));
+        $this->assertSame(1, $board->json('data.total'));
+    }
+
+    public function test_dispatch_is_single_per_atom(): void
+    {
+        $this->admin();
+        $atom = $this->atom();
+
+        $this->postJson("/api/admin/quality/atoms/{$atom->id}/dispatch", ['department' => 'testing'])->assertOk();
+        $this->postJson("/api/admin/quality/atoms/{$atom->id}/dispatch", ['department' => 'backend', 'state' => 'doing'])->assertOk();
+
+        $this->assertSame(1, QualityDispatch::where('test_case_id', $atom->id)->count());
+        $this->assertSame('backend', QualityDispatch::where('test_case_id', $atom->id)->first()->department);
+    }
+
+    public function test_move_dispatch_changes_department_and_state(): void
+    {
+        $this->admin();
+        $atom = $this->atom();
+        $id = $this->postJson("/api/admin/quality/atoms/{$atom->id}/dispatch", ['department' => 'triage'])->json('data.id');
+
+        $this->patchJson("/api/admin/quality/dispatches/{$id}", ['department' => 'frontend', 'state' => 'review'])
+            ->assertOk();
+
+        $d = QualityDispatch::find($id);
+        $this->assertSame('frontend', $d->department);
+        $this->assertSame('review', $d->state);
+    }
+
+    public function test_destroy_dispatch_removes_card(): void
+    {
+        $this->admin();
+        $atom = $this->atom();
+        $id = $this->postJson("/api/admin/quality/atoms/{$atom->id}/dispatch", ['department' => 'ops'])->json('data.id');
+
+        $this->deleteJson("/api/admin/quality/dispatches/{$id}")->assertOk();
+        $this->assertNull(QualityDispatch::find($id));
+    }
+
+    public function test_dispatch_rejects_invalid_department(): void
+    {
+        $this->admin();
+        $atom = $this->atom();
+
+        $this->postJson("/api/admin/quality/atoms/{$atom->id}/dispatch", ['department' => 'nowhere'])
+            ->assertStatus(422);
+    }
+
+    public function test_viewer_without_manage_cannot_dispatch(): void
+    {
+        // مستخدم بدور أدمن يحمل view_quality فقط (بلا manage_quality)
+        $role = Role::create(['name' => 'q_viewer', 'guard_name' => 'admin']);
+        $role->givePermissionTo('view_quality');
+        $user = User::create(['name' => 'V', 'email' => 'v'.uniqid().'@rec.test', 'password' => 'secret123']);
+        $user->assignRole($role);
+        Sanctum::actingAs($user);
+
+        $atom = $this->atom();
+        // يقرأ اللوحة (view_quality) لكن لا يحوّل (يفتقر manage_quality)
+        $this->getJson('/api/admin/quality/board')->assertOk();
+        $this->postJson("/api/admin/quality/atoms/{$atom->id}/dispatch", ['department' => 'testing'])->assertStatus(403);
     }
 }

@@ -235,6 +235,9 @@ export const API_PATHS = {
     complianceAuditTrail: '/admin/compliance/audit-trail',
     qualityOverview: '/admin/quality/overview',
     qualityAtoms: '/admin/quality/atoms',
+    qualityBoard: '/admin/quality/board',
+    qualityDispatch: (atomId: number) => `/admin/quality/atoms/${atomId}/dispatch`,
+    qualityDispatchItem: (id: number) => `/admin/quality/dispatches/${id}`,
   },
   /** بلاغ محتوى من المستخدم → طابور الإشراف (مصادَق) */
   reports: '/v1/reports',
@@ -572,6 +575,9 @@ export interface QualityAtom {
   testFile: string | null
 }
 export interface QualityAtomQuery { page?: number, perPage?: number, sort?: string, q?: string, layer?: string, section?: string, module?: string, type?: string, priority?: string, status?: string }
+export interface QualityDispatchCard { id: number, department: string, state: string, assignee: string | null, note: string | null, atom: QualityAtom | null }
+export interface QualityBoard { departments: string[], states: string[], lanes: Record<string, QualityDispatchCard[]>, counts: Record<string, number>, total: number }
+export interface QualityDispatchPayload { department?: string, state?: string, assignee?: string | null, note?: string | null }
 // ——— المساعد الذكيّ للمستخدم + الدعم ———
 export interface AssistantGovernanceState { aiEnabled: boolean, capabilityEnabled: boolean, assistantEnabled: boolean, effectiveEnabled: boolean, level: number, provider: string, model: string | null }
 export interface AssistantActivity { wallet: number, opportunities: number, applications: number, surveys: number }
@@ -837,6 +843,10 @@ export const api = {
     // مركز قيادة الجودة (اللوحة الذرّية — ف1)
     qualityOverview: () => get<QualityOverview>(API_PATHS.admin.qualityOverview),
     qualityAtoms: (params?: QualityAtomQuery) => getPage<QualityAtom>(API_PATHS.admin.qualityAtoms, params as Record<string, unknown>),
+    qualityBoard: () => get<QualityBoard>(API_PATHS.admin.qualityBoard),
+    qualityDispatch: (atomId: number, body: QualityDispatchPayload) => post<QualityDispatchCard>(API_PATHS.admin.qualityDispatch(atomId), body),
+    qualityMoveDispatch: (id: number, body: QualityDispatchPayload) => patch<QualityDispatchCard>(API_PATHS.admin.qualityDispatchItem(id), body),
+    qualityRemoveDispatch: (id: number) => del(API_PATHS.admin.qualityDispatchItem(id)),
     toggleAiCapability: (id: number) => post<AiCapability>(API_PATHS.admin.aiCapabilityToggle(id)),
     addAiKnowledge: (body: AiKnowledgePayload) => post<AiKnowledgeEntry>(API_PATHS.admin.aiKnowledge, body),
     updateAiKnowledge: (id: number, body: Partial<AiKnowledgePayload>) => put<AiKnowledgeEntry>(API_PATHS.admin.aiKnowledgeItem(id), body),

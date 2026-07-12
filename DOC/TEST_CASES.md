@@ -527,6 +527,13 @@
 | QCC-09 | atoms → تقسيم صفحات + فلترة layer/status | F | 🔴 | ✅ | AdminQualityTest |
 | QCC-10 | atoms → بحث بالمعرّف (q) | F | 🟠 | ✅ | AdminQualityTest |
 | QCC-11 | غير أدمن → overview/atoms → 403 | F | 🔴 | ✅ | AdminQualityTest |
+| QCC-12 | board → كلّ الأقسام (6) والحالات (4) + total=0 ابتداءً | F | 🔴 | ✅ | AdminQualityTest |
+| QCC-13 | dispatch ينشئ بطاقة على مسار القسم + عدّاد يزيد | F | 🔴 | ✅ | AdminQualityTest |
+| QCC-14 | تحويل واحد نشط لكلّ ذرّة (تكرار → تحديث لا تكرار) | F | 🟠 | ✅ | AdminQualityTest |
+| QCC-15 | move يغيّر القسم والحالة | F | 🔴 | ✅ | AdminQualityTest |
+| QCC-16 | destroy يزيل البطاقة من اللوحة | F | 🟠 | ✅ | AdminQualityTest |
+| QCC-17 | dispatch بقسم غير صالح → 422 | F | 🟠 | ✅ | AdminQualityTest |
+| QCC-18 | عارض (view_quality فقط) يقرأ اللوحة لكن لا يحوّل → 403 | F | 🔴 | ✅ | AdminQualityTest |
 
 ---
 # الواجهة (Frontend)
