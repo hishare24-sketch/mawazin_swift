@@ -183,20 +183,11 @@ class AssistantService
 
     /**
      * يختار مزوّدًا حيًّا حين المفتاح مهيّأ، وإلّا null (محاكاة).
-     * claude → Anthropic · openai → OpenAI · custom → نقطة نهاية متوافقة مع OpenAI (عبر endpoint).
+     * يفوّض للمصنع المشترك ProviderFactory (مصدر توجيه واحد لكلّ الوحدات).
      */
     private function providerFor(AiSetting $ai): ?\Modules\Ai\Services\Providers\LlmProvider
     {
-        if (! filled($ai->api_key)) {
-            return null; // بلا مفتاح → محاكاة آمنة
-        }
-
-        return match ($ai->provider) {
-            'claude' => new \Modules\Ai\Services\Providers\ClaudeProvider($ai),
-            'openai' => new \Modules\Ai\Services\Providers\OpenAiProvider($ai),
-            'custom' => new \Modules\Ai\Services\Providers\OpenAiProvider($ai),
-            default => null, // simulation | مزوّد غير معروف
-        };
+        return (new ProviderFactory)->for($ai);
     }
 
     /** يبني توجيه النظام من الحوكمة + الشخصيّة + المعرفة المفعّلة + سياق النشاط. */

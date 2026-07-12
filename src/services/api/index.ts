@@ -215,6 +215,7 @@ export const API_PATHS = {
     pipelineBulkMove: '/admin/pipeline/bulk-move',
     matchingSettings: '/admin/matching/settings',
     matchingShortlist: '/admin/matching/shortlist',
+    matchingExplain: '/admin/matching/explain',
     branding: '/admin/branding',
     archive: '/admin/archive',
     archiveStats: '/admin/archive/stats',
@@ -523,6 +524,7 @@ export interface MatchShortlistItem { applicationId: number, candidate: string, 
 export interface MatchShortlist { opportunity: { id: number, title: string, company: string | null, skills: string[] }, aiActive: boolean, threshold: number, shortlist: MatchShortlistItem[] }
 export interface MatchSettingsResponse { settings: MatchSettings, aiActive: boolean }
 export interface MatchSettingsPatch { skills_weight?: number, experience_weight?: number, category_weight?: number, threshold?: number, ai_boost?: boolean }
+export interface MatchExplain { applicationId: number, candidate: string, live: boolean, score: number, verdict: string, reasons: string[], redFlags: string[], summary: string, matchedSkills: string[], meta: { simulated?: boolean, provider?: string, model?: string, fallback?: boolean, fallbackReason?: string } }
 // ——— صحّة النظام ———
 export interface HealthService { key: string, label: string, status: 'ok' | 'warn' | 'down', detail: string, metric: number | null, driver: string | null }
 export interface HealthMetrics { users: number, pendingJobs: number, failedJobs: number, requestsToday: number, errorsToday: number, php: string, laravel: string, env: string, debug: boolean }
@@ -773,6 +775,7 @@ export const api = {
     matchingSettings: () => get<MatchSettingsResponse>(API_PATHS.admin.matchingSettings),
     updateMatchingSettings: (body: MatchSettingsPatch) => put<MatchSettings>(API_PATHS.admin.matchingSettings, body),
     matchingShortlist: (opportunityId: number) => get<MatchShortlist>(API_PATHS.admin.matchingShortlist, { opportunity_id: opportunityId }),
+    explainMatch: (opportunityId: number, applicationId: number) => post<MatchExplain>(API_PATHS.admin.matchingExplain, { opportunity_id: opportunityId, application_id: applicationId }),
     branding: () => get<Branding>(API_PATHS.admin.branding),
     updateBranding: (body: BrandingPatch) => put<Branding>(API_PATHS.admin.branding, body),
     archive: (params?: { type?: string, page?: number }) => getPage<ArchiveItem>(API_PATHS.admin.archive, params as Record<string, unknown>),

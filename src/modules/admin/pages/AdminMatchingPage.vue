@@ -11,7 +11,7 @@ import BaseSelect from '@/components/ui/BaseSelect.vue'
 import BaseSlider from '@/components/ui/BaseSlider.vue'
 import BaseSnackbar from '@/components/ui/BaseSnackbar.vue'
 import BaseSwitch from '@/components/ui/BaseSwitch.vue'
-import { type MatchSettings, type MatchShortlist, type PipelineOpportunity, api } from '@/services/api'
+import { type MatchExplain, type MatchSettings, type MatchShortlist, type PipelineOpportunity, api } from '@/services/api'
 import { useAuthStore } from '@/stores/AuthStore'
 
 const { t } = useI18n()
@@ -52,7 +52,19 @@ async function loadShortlist() {
   catch (e) { fail(e) }
   finally { loading.value = false }
 }
-function onOppChange(v: number | null) { selectedOpp.value = v; loadShortlist() }
+function onOppChange(v: number | null) { selectedOpp.value = v; explanations.value = {}; loadShortlist() }
+
+// تفسير الترشيح بالذكاء (عند الطلب، لكلّ مرشّح على حدة)
+const explanations = ref<Record<number, MatchExplain>>({})
+const explaining = ref<Record<number, boolean>>({})
+async function explainRow(applicationId: number) {
+  if (!selectedOpp.value)
+    return
+  explaining.value = { ...explaining.value, [applicationId]: true }
+  try { explanations.value = { ...explanations.value, [applicationId]: await api.admin.explainMatch(selectedOpp.value, applicationId) } }
+  catch (e) { fail(e) }
+  finally { explaining.value = { ...explaining.value, [applicationId]: false } }
+}
 
 const saving = ref(false)
 async function saveSettings() {
@@ -159,6 +171,34 @@ onMounted(loadInit)
                 <div class="text-lg font-bold" :style="{ color: `rgb(var(--v-theme-${scoreColor(row.score)}))` }">{{ row.score }}</div>
                 <div class="text-[10px] text-muted">{{ t('admin.matching.score') }}</div>
               </div>
+            </div>
+
+            <!-- تفسير الترشيح بالذكاء -->
+            <div class="mt-2 flex justify-end">
+              <BaseButton variant="ghost" size="sm" :loading="explaining[row.applicationId]" @click="explainRow(row.applicationId)">
+                <BaseIcon name="mdi-brain" :size="15" />{{ explanations[row.applicationId] ? t('admin.matching.reanalyze') : t('admin.matching.analyze') }}
+              </BaseButton>
+            </div>
+
+            <div v-if="explanations[row.applicationId]" class="mt-1 rounded-ui border-ui bg-surface-2 p-3 text-sm">
+              <div class="mb-2 flex flex-wrap items-center gap-2">
+                <BaseChip :color="scoreColor(explanations[row.applicationId].score)">{{ explanations[row.applicationId].verdict }} · {{ explanations[row.applicationId].score }}</BaseChip>
+                <BaseChip :color="explanations[row.applicationId].live ? 'brand' : 'neutral'">
+                  <BaseIcon :name="explanations[row.applicationId].live ? 'mdi-check-decagram' : 'mdi-flask-outline'" :size="13" />
+                  {{ explanations[row.applicationId].live ? t('admin.matching.live') : t('admin.matching.heuristic') }}
+                </BaseChip>
+              </div>
+              <p v-if="explanations[row.applicationId].summary" class="mb-2 text-content">{{ explanations[row.applicationId].summary }}</p>
+              <ul v-if="explanations[row.applicationId].reasons.length" class="space-y-1">
+                <li v-for="(r, ri) in explanations[row.applicationId].reasons" :key="`r${ri}`" class="flex items-start gap-1.5 text-muted">
+                  <BaseIcon name="mdi-check-circle-outline" :size="15" class="mt-0.5 shrink-0 text-success" /><span>{{ r }}</span>
+                </li>
+              </ul>
+              <ul v-if="explanations[row.applicationId].redFlags.length" class="mt-1 space-y-1">
+                <li v-for="(f, fi) in explanations[row.applicationId].redFlags" :key="`f${fi}`" class="flex items-start gap-1.5 text-muted">
+                  <BaseIcon name="mdi-alert-outline" :size="15" class="mt-0.5 shrink-0 text-warning" /><span>{{ f }}</span>
+                </li>
+              </ul>
             </div>
           </div>
           <p v-if="!result.shortlist.length && !loading" class="py-8 text-center text-sm text-muted">{{ t('admin.matching.noApplicants') }}</p>

@@ -4,6 +4,7 @@ namespace Modules\Marketplace\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Modules\Ai\Services\AiUsageService;
 use Modules\Marketplace\Entities\Application;
 use Modules\Marketplace\Entities\MatchSetting;
 use Modules\Marketplace\Entities\Opportunity;
@@ -16,7 +17,10 @@ use Modules\Profile\Entities\Profile;
  */
 class AdminMatchController extends Controller
 {
-    public function __construct(private readonly MatchService $service) {}
+    public function __construct(
+        private readonly MatchService $service,
+        private readonly AiUsageService $usage,
+    ) {}
 
     /** أوزان المطابقة + حالة تعزيز الذكاء الحيّة. */
     public function settings()
@@ -79,6 +83,48 @@ class AdminMatchController extends Controller
             'aiActive' => $aiActive,
             'threshold' => $weights->threshold,
             'shortlist' => $rows,
+        ]);
+    }
+
+    /** تفسير ترشيح مرشّح واحد بالذكاء (عند الطلب) — درجة + حكم + أسباب + إشارات تحفّظ. */
+    public function explain(Request $request)
+    {
+        $this->authorize('view_matching');
+
+        $data = $request->validate([
+            'opportunity_id' => ['required', 'integer'],
+            'application_id' => ['required', 'integer'],
+        ]);
+
+        $opp = Opportunity::findOrFail($data['opportunity_id']);
+        $app = Application::where('opportunity_id', $opp->id)->with('user:id,name')->findOrFail($data['application_id']);
+        $profile = Profile::where('user_id', $app->user_id)->first();
+        $weights = MatchSetting::current();
+
+        $ex = $this->service->explain($profile, $opp, $weights, $this->service->aiActive());
+
+        // تسجيل استهلاك التوكن عند التحليل الحيّ فقط (بأرقام المزوّد الحقيقيّة).
+        if (($ex['live'] ?? false) && ($u = $request->user())) {
+            $this->usage->record(
+                $u,
+                (int) data_get($ex, 'meta.usage.request', 0),
+                (int) data_get($ex, 'meta.usage.response', 0),
+                data_get($ex, 'meta.provider'),
+                data_get($ex, 'meta.model'),
+            );
+        }
+
+        return $this->dataResponse([
+            'applicationId' => $app->id,
+            'candidate' => $app->user?->name ?? '—',
+            'live' => $ex['live'],
+            'score' => $ex['score'],
+            'verdict' => $ex['verdict'],
+            'reasons' => $ex['reasons'],
+            'redFlags' => $ex['redFlags'],
+            'summary' => $ex['summary'],
+            'matchedSkills' => $ex['matchedSkills'],
+            'meta' => $ex['meta'],
         ]);
     }
 

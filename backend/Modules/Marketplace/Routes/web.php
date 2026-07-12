@@ -23,6 +23,7 @@ Route::post('pipeline/bulk-move', [AdminApplicationController::class, 'bulkMove'
 Route::get('matching/settings', [AdminMatchController::class, 'settings']);
 Route::put('matching/settings', [AdminMatchController::class, 'updateSettings']);
 Route::get('matching/shortlist', [AdminMatchController::class, 'shortlist']);
+Route::post('matching/explain', [AdminMatchController::class, 'explain']);
 
 Route::get('requests/stats', [AdminRequestController::class, 'stats']);
 Route::get('requests', [AdminRequestController::class, 'index']);
