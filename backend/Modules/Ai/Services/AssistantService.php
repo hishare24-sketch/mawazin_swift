@@ -196,7 +196,8 @@ class AssistantService
     private function composeWithTools(ToolCallingProvider $provider, AiSetting $ai, array $context, string $message, array $history, User $user): array
     {
         $tools = new PlatformTools;
-        $defs = $tools->definitions();
+        // احترام الخصوصيّة: الأدوات الشخصيّة تُتاح فقط حين يسمح المستخدم باستخدام بياناته.
+        $defs = $tools->definitions(! empty($context['dataAccess']));
         $system = $this->systemPrompt($ai, $context)."\n\nلديك أدوات للوصول لبيانات المنصّة الحيّة — استعملها عند الحاجة لحقائق دقيقة عن المستخدم أو الفرص بدل التخمين.";
         $messages = array_merge($this->sanitizeHistory($history), [['role' => 'user', 'content' => $message]]);
 

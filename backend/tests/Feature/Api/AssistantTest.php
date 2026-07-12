@@ -11,6 +11,7 @@ use Modules\Ai\Entities\AiSetting;
 use Modules\Ai\Entities\AiUsage;
 use Modules\Marketplace\Entities\Application;
 use Modules\Marketplace\Entities\Opportunity;
+use Modules\Profile\Entities\Profile;
 use Modules\User\Entities\User;
 use Tests\Support\Api\AssertsApiJson;
 use Tests\TestCase;
@@ -322,6 +323,50 @@ class AssistantTest extends TestCase
         $row = AiUsage::where('user_id', $user->id)->first();
         $this->assertSame(80, $row->request_tokens);
         $this->assertSame(30, $row->response_tokens);
+    }
+
+    public function test_assistant_recommends_opportunities_via_tool(): void
+    {
+        $this->seed(AiSeeder::class);
+        $this->useClaudeProvider();
+        $user = $this->user(['role' => 'seeker']);
+        Profile::create(['user_id' => $user->id, 'skills' => ['Vue', 'TypeScript'], 'prefs' => ['interestedSectors' => ['tech']]]);
+
+        $emp = User::create(['name' => 'Emp', 'email' => 'emp'.uniqid().'@rec.test', 'password' => 'secret123']);
+        Opportunity::create(['user_id' => $emp->id, 'title' => 'مطوّر Vue', 'company' => 'أفق', 'location' => 'عن بُعد', 'salary' => '—', 'category' => 'tech', 'skills' => ['Vue', 'TypeScript']]);
+
+        Http::fake(['api.anthropic.com/*' => Http::sequence()
+            ->push(['content' => [['type' => 'tool_use', 'id' => 'tu_r', 'name' => 'get_recommended_opportunities', 'input' => []]], 'stop_reason' => 'tool_use', 'usage' => ['input_tokens' => 20, 'output_tokens' => 8]], 200)
+            ->push(['content' => [['type' => 'text', 'text' => 'أنسب فرصة لك: «مطوّر Vue» بتطابق عالٍ.']], 'stop_reason' => 'end_turn', 'usage' => ['input_tokens' => 40, 'output_tokens' => 15]], 200),
+        ]);
+
+        $this->postJson('/api/v1/assistant/message', ['message' => 'اقترح لي فرصًا'])
+            ->assertOk()
+            ->assertJsonPath('data.meta.usedTools', ['get_recommended_opportunities'])
+            ->assertJsonPath('data.reply', 'أنسب فرصة لك: «مطوّر Vue» بتطابق عالٍ.');
+    }
+
+    public function test_personal_tools_hidden_when_data_access_off(): void
+    {
+        $this->seed(AiSeeder::class);
+        $this->useClaudeProvider();
+        $user = $this->user(['role' => 'seeker']);
+        \Modules\Ai\Entities\AssistantPreference::forUser($user->id)->update(['data_access' => false]);
+
+        Http::fake(['api.anthropic.com/*' => Http::response([
+            'content' => [['type' => 'text', 'text' => 'تمام.']], 'stop_reason' => 'end_turn', 'usage' => ['input_tokens' => 5, 'output_tokens' => 3],
+        ], 200)]);
+
+        $this->postJson('/api/v1/assistant/message', ['message' => 'كم رصيدي؟'])->assertOk();
+
+        // بلا سماح ببياناته: تُعرَض الأداة العامّة فقط (بحث الفرص)، وتُخفى الشخصيّة.
+        Http::assertSent(function ($request) {
+            if (! str_contains($request->url(), 'anthropic.com')) {
+                return false;
+            }
+
+            return collect($request['tools'] ?? [])->pluck('name')->all() === ['search_opportunities'];
+        });
     }
 
     public function test_falls_back_to_simulation_on_provider_error(): void
