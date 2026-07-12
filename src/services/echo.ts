@@ -14,18 +14,35 @@ export function serverBase(): string {
   return raw.replace(/\/api\/?$/, '') || window.location.origin
 }
 
+/** مضيف/منفذ Reverb — إن فُرغت متغيّرات Vite يُستنتج من عنوان الصفحة (مناسب لـ Docker/nginx). */
+export function reverbEndpoint() {
+  const scheme
+    = (import.meta.env.VITE_REVERB_SCHEME as string)
+      || (typeof window !== 'undefined' && window.location.protocol === 'https:' ? 'https' : 'http')
+  const host
+    = (import.meta.env.VITE_REVERB_HOST as string)
+      || (typeof window !== 'undefined' ? window.location.hostname : 'localhost')
+  const portRaw = import.meta.env.VITE_REVERB_PORT as string | undefined
+  const port = portRaw !== undefined && portRaw !== ''
+    ? Number(portRaw)
+    : Number(
+      (typeof window !== 'undefined' && window.location.port)
+        || (scheme === 'https' ? 443 : 80),
+    )
+  return { scheme, host, port }
+}
+
 /** ينشئ عميل Echo موصّلًا بـReverb موثّقًا بتوكن الجلسة الحاليّ. */
 export function makeEcho(): Echo<'reverb'> {
   const token = useAuthStore().getToken
   ;(window as unknown as { Pusher: typeof Pusher }).Pusher = Pusher
 
-  const scheme = (import.meta.env.VITE_REVERB_SCHEME as string) || 'http'
-  const port = Number(import.meta.env.VITE_REVERB_PORT || 8091)
+  const { scheme, host, port } = reverbEndpoint()
 
   return new Echo({
     broadcaster: 'reverb',
     key: import.meta.env.VITE_REVERB_APP_KEY as string,
-    wsHost: (import.meta.env.VITE_REVERB_HOST as string) || 'localhost',
+    wsHost: host,
     wsPort: port,
     wssPort: port,
     forceTLS: scheme === 'https',

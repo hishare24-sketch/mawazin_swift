@@ -27,9 +27,30 @@
 
 ## 🚀 التشغيل
 
+### Docker (موصى به — كل شيء بأمر واحد)
+
+```bash
+cp .env.docker.example .env
+docker compose up -d --build
+```
+
+ثم افتح: **http://localhost:8080** (أو `http://<IP-السيرفر>:8080`).
+
+| الخدمة | الدور |
+|--------|------|
+| `web` | واجهة Vue عبر nginx + بروكسي `/api` و WebSocket |
+| `api` | Laravel (FrankenPHP) |
+| `queue` | عامل الطابور |
+| `reverb` | البثّ اللحظي |
+| `mysql` / `redis` | قاعدة البيانات والكاش |
+
+إيقاف: `docker compose down` — مع الإبقاء على البيانات: بدون `-v`.
+
+### تطوير محلي بدون Docker
+
 ```bash
 npm install
-npm run dev        # خادم التطوير على http://localhost:5173
+npm run dev        # خادم التطوير على http://localhost:5273
 npm run build      # بناء الإنتاج
 npm run typecheck  # فحص الأنواع
 ```

@@ -1,7 +1,5 @@
-import Echo from 'laravel-echo'
-import Pusher from 'pusher-js'
 import { USE_REAL_API, api } from '@/services/api'
-import { useAuthStore } from '@/stores/AuthStore'
+import { makeEcho } from '@/services/echo'
 
 /**
  * ===== خدمة الرسائل المباشرة — التسليم الحقيقي بين المستخدمين (Laravel + Reverb) =====
@@ -107,12 +105,6 @@ export async function markThreadRead(_uid: string, peerId: string): Promise<void
   catch { /* المحلي كافٍ */ }
 }
 
-/** أصل الخادم (بلا لاحقة /api) — قاعدة نقطة توثيق البثّ `/broadcasting/auth`. */
-function serverBase(): string {
-  const raw = (import.meta.env.VITE_BASE_API_URL as string) || ''
-  return raw.replace(/\/api\/?$/, '') || window.location.origin
-}
-
 /**
  * يشترك في الرسائل الوارِدة لحظيًّا عبر Reverb (laravel-echo) — يعيد دالة إلغاء.
  * القناة الخاصّة `user.{uuid}` تُوثَّق بتوكن Bearer على `/broadcasting/auth`،
@@ -122,24 +114,7 @@ export function subscribeInbound(uid: string, onMessage: (row: DirectMessageRow)
   if (!USE_REAL_API || !uid)
     return () => {}
 
-  const token = useAuthStore().getToken
-  // laravel-echo (موصّل reverb) يعتمد pusher-js على window
-  ;(window as unknown as { Pusher: typeof Pusher }).Pusher = Pusher
-
-  const scheme = (import.meta.env.VITE_REVERB_SCHEME as string) || 'http'
-  const port = Number(import.meta.env.VITE_REVERB_PORT || 8091)
-
-  const echo = new Echo({
-    broadcaster: 'reverb',
-    key: import.meta.env.VITE_REVERB_APP_KEY as string,
-    wsHost: (import.meta.env.VITE_REVERB_HOST as string) || 'localhost',
-    wsPort: port,
-    wssPort: port,
-    forceTLS: scheme === 'https',
-    enabledTransports: ['ws', 'wss'],
-    authEndpoint: `${serverBase()}/broadcasting/auth`,
-    auth: { headers: { Authorization: `Bearer ${token}` } },
-  })
+  const echo = makeEcho()
 
   echo.private(`user.${uid}`)
     .listen('.message.sent', (e: { message: ApiMessage }) => onMessage(toRow(e.message)))

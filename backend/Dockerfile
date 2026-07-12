@@ -26,15 +26,15 @@ RUN composer install --no-dev --no-scripts --no-autoloader --prefer-dist --no-in
 
 # بقيّة التطبيق + بناء autoload المحسّن
 COPY . .
-RUN composer dump-autoload --optimize --no-dev --classmap-authoritative
+RUN composer dump-autoload --optimize --no-dev --classmap-authoritative \
+    && chmod +x docker/entrypoint.sh
 
 ENV APP_ENV=production \
     APP_DEBUG=false \
     LOG_CHANNEL=stderr
 
-# نُلغي ENTRYPOINT الأساس (يتعارض مع تشغيل Render) ونُقلِع عبر خادم FrankenPHP
-# الإنتاجيّ المُدمج (php-server، متعدّد الخيوط، يعالج التزامن) — بديل جذريّ عن
-# php artisan serve (خادم تطوير أحاديّ الطلب). يناسب 512MB (بلا وضع worker).
-# الهجرة + بذر الصلاحيّات غير حاجبين (|| true) كي لا يمنع تعذّر القاعدة الإقلاع.
-ENTRYPOINT []
-CMD ["/bin/sh", "-c", "timeout 60 php artisan migrate --force || true; php artisan permission:insert || true; exec frankenphp php-server --listen 0.0.0.0:${PORT:-10000} --root public/"]
+# نُلغي ENTRYPOINT الأساس (يتعارض مع تشغيل Render/Compose) ونُقلِع عبر entrypoint
+# الذي ينتظر DB ثم يمرّر الأمر (frankenphp / queue / reverb).
+# الهجرة افتراضيًا مفعّلة؛ عطّلها في queue/reverb عبر RUN_MIGRATIONS=0.
+ENTRYPOINT ["/bin/sh", "/app/docker/entrypoint.sh"]
+CMD ["/bin/sh", "-c", "exec frankenphp php-server --listen 0.0.0.0:${PORT:-10000} --root public/"]

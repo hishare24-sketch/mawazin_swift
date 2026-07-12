@@ -27,6 +27,9 @@ components.d.ts
 .env.development.local
 .env.production.local
 .env.testing.local
+# اترك .env.docker.example و .env.development في المستودع كقوالب
+!.env.docker.example
+!.env.development
 *.pem
 *.key
 

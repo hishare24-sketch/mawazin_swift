@@ -27,7 +27,7 @@ function versionFile(): Plugin {
 //    smart-recruitment-system before the repo was renamed — keep in sync with it).
 //  - Netlify / Vercel (and dev) serve from the root, so assets live at /
 // Netlify sets NETLIFY=true and Vercel sets VERCEL=1 during their builds.
-const isRootHost = !!process.env.NETLIFY || !!process.env.VERCEL
+const isRootHost = !!process.env.NETLIFY || !!process.env.VERCEL || !!process.env.DOCKER
 export default defineConfig(({ command }) => ({
   base: command === 'build' && !isRootHost ? '/mawazin_swift/' : '/',
   define: {
