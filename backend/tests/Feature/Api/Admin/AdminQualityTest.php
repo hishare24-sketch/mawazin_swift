@@ -116,6 +116,23 @@ class AdminQualityTest extends TestCase
         $this->getJson('/api/admin/quality/atoms')->assertStatus(403);
     }
 
+    public function test_snapshot_command_writes_daily_coverage_row(): void
+    {
+        $this->atom('SNAP-A'); // gap (افتراضيّ)
+        TestCaseAtom::create([
+            'case_id' => 'SNAP-B', 'title' => 't', 'layer' => 'backend', 'section' => 'S',
+            'module' => 'M', 'type' => 'F', 'priority' => 'normal', 'status' => 'automated', 'lifecycle' => 'ongoing',
+        ]);
+
+        $this->artisan('quality:snapshot')->assertSuccessful();
+
+        $snap = \Modules\Quality\Entities\QualitySnapshot::first();
+        $this->assertNotNull($snap);
+        $this->assertSame(2, $snap->total);
+        $this->assertSame(1, $snap->automated);
+        $this->assertSame(1, $snap->gap);
+    }
+
     // ═══ توليد الفجوة → اختبار (ف5) ═══
 
     public function test_scaffold_generates_test_code_for_atom(): void

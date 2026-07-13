@@ -562,6 +562,7 @@
 | QCC-44 | L2/L3 diagnose يحفظ التشخيص (سبب/إصلاح/مصدر/ثقة) ويعيده | F | 🔴 | ✅ | ObserveTest |
 | QCC-45 | quality:resolve-stale يحلّ الإشارات الصامتة منذ N ساعة | F | 🟠 | ✅ | ObserveTest |
 | QCC-46 | غير أدمن → diagnose → 403 | F | 🔴 | ✅ | ObserveTest |
+| QCC-47 | quality:snapshot يكتب لقطة تغطية يوميّة من الذرّات (total/automated/gap) | F | 🟠 | ✅ | AdminQualityTest |
 
 ---
 # الواجهة (Frontend)
