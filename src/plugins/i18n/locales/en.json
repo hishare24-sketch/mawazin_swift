@@ -791,7 +791,11 @@
       "ciTitle": "CI status",
       "ciPassRate": "Pass rate",
       "ciRunning": "Running",
-      "ciUnavailable": "CI status unavailable (set GITHUB_TOKEN in the backend)"
+      "ciUnavailable": "CI status unavailable (set GITHUB_TOKEN in the backend)",
+      "scaffold": "Generate test",
+      "scaffoldTitle": "Test scaffold — {id}",
+      "copy": "Copy",
+      "copied": "Scaffold copied"
     },
     "iquality": {
       "title": "Interview Quality",

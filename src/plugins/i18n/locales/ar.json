@@ -791,7 +791,11 @@
       "ciTitle": "حالة CI",
       "ciPassRate": "نسبة النجاح",
       "ciRunning": "جارٍ",
-      "ciUnavailable": "حالة CI غير متاحة (اضبط GITHUB_TOKEN في الباك-إند)"
+      "ciUnavailable": "حالة CI غير متاحة (اضبط GITHUB_TOKEN في الباك-إند)",
+      "scaffold": "ولِّد هيكل اختبار",
+      "scaffoldTitle": "هيكل اختبار — {id}",
+      "copy": "نسخ",
+      "copied": "نُسخ الهيكل"
     },
     "iquality": {
       "title": "جودة المقابلات",

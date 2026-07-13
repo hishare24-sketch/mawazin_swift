@@ -8,6 +8,7 @@ use Modules\Quality\Http\Controllers\Admin\AdminQualityController;
 
 Route::get('quality/overview', [AdminQualityController::class, 'overview']);
 Route::get('quality/atoms', [AdminQualityController::class, 'atoms']);
+Route::get('quality/atoms/{testCase}/scaffold', [AdminQualityController::class, 'scaffold']);
 Route::get('quality/runtime', [AdminQualityController::class, 'runtime']);
 Route::get('quality/ci', [AdminQualityController::class, 'ci']);
 
