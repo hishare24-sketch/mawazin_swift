@@ -238,6 +238,7 @@ export const API_PATHS = {
     qualityBoard: '/admin/quality/board',
     qualityRuntime: '/admin/quality/runtime',
     qualityCi: '/admin/quality/ci',
+    qualityScaffold: (atomId: number) => `/admin/quality/atoms/${atomId}/scaffold`,
     qualityDispatch: (atomId: number) => `/admin/quality/atoms/${atomId}/dispatch`,
     qualityDispatchItem: (id: number) => `/admin/quality/dispatches/${id}`,
   },
@@ -583,6 +584,7 @@ export interface QualityRuntimeError {
 export interface QualityRuntimeQuery { page?: number, perPage?: number, sort?: string, q?: string, type?: string, layer?: string, scope?: string, severity?: string, status?: string }
 export interface QualityCiRun { id: number, name: string, branch: string | null, event: string | null, status: string | null, conclusion: string | null, runNumber: number | null, url: string | null, commit: string, createdAt: string | null, updatedAt: string | null }
 export interface QualityCi { available: boolean, repo?: string, reason?: string, runs?: QualityCiRun[], summary?: { total: number, passRate: number | null, lastConclusion: string | null } }
+export interface QualityScaffold { caseId: string, framework: string, language: string, filename: string, code: string }
 export interface QualityAtom {
   id: number
   caseId: string
@@ -871,6 +873,7 @@ export const api = {
     qualityBoard: () => get<QualityBoard>(API_PATHS.admin.qualityBoard),
     qualityRuntime: (params?: QualityRuntimeQuery) => getPage<QualityRuntimeError>(API_PATHS.admin.qualityRuntime, params as Record<string, unknown>),
     qualityCi: () => get<QualityCi>(API_PATHS.admin.qualityCi),
+    qualityScaffold: (atomId: number) => get<QualityScaffold>(API_PATHS.admin.qualityScaffold(atomId)),
     qualityDispatch: (atomId: number, body: QualityDispatchPayload) => post<QualityDispatchCard>(API_PATHS.admin.qualityDispatch(atomId), body),
     qualityMoveDispatch: (id: number, body: QualityDispatchPayload) => patch<QualityDispatchCard>(API_PATHS.admin.qualityDispatchItem(id), body),
     qualityRemoveDispatch: (id: number) => del(API_PATHS.admin.qualityDispatchItem(id)),

@@ -549,6 +549,12 @@
 | QCC-31 | تدهور لطيف عند خطأ GitHub (5xx) → available=false | F | 🟠 | ✅ | AdminQualityCiTest |
 | QCC-32 | بلا مستودع مضبوط → available=false · reason=no_repo | F | 🟠 | ✅ | AdminQualityCiTest |
 | QCC-33 | غير أدمن → ci → 403 | F | 🔴 | ✅ | AdminQualityCiTest |
+| QCC-34 | مولّد الهيكل: باك F → PHPUnit feature (class + RefreshDatabase + method) | U | 🔴 | ✅ | TestScaffoldGeneratorTest |
+| QCC-35 | باك U → PHPUnit unit نقيّ (بلا RefreshDatabase) | U | 🟠 | ✅ | TestScaffoldGeneratorTest |
+| QCC-36 | واجهة U → هيكل vitest | U | 🟠 | ✅ | TestScaffoldGeneratorTest |
+| QCC-37 | E → هيكل Playwright | U | ⚪ | ✅ | TestScaffoldGeneratorTest |
+| QCC-38 | endpoint scaffold يعيد code+framework+filename من ذرّة | F | 🔴 | ✅ | AdminQualityTest |
+| QCC-39 | غير أدمن → scaffold → 403 | F | 🔴 | ✅ | AdminQualityTest |
 
 ---
 # الواجهة (Frontend)

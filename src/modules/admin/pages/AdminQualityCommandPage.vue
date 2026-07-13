@@ -18,7 +18,7 @@ import ResourceScaffold from '@/modules/admin/components/ResourceScaffold.vue'
 import type { FilterDef } from '@/modules/admin/components/ResourceScaffold.vue'
 import type { TableColumn } from '@/components/ui/BaseTable.vue'
 import { useAdminResource } from '@/modules/admin/composables/useAdminResource'
-import { type QualityAtom, type QualityBoard, type QualityCi, type QualityDispatchCard, type QualityOverview, type QualityRuntimeError, api } from '@/services/api'
+import { type QualityAtom, type QualityBoard, type QualityCi, type QualityDispatchCard, type QualityOverview, type QualityRuntimeError, type QualityScaffold, api } from '@/services/api'
 import { useAuthStore } from '@/stores/AuthStore'
 
 const { t } = useI18n()
@@ -105,6 +105,25 @@ async function moveCard(card: QualityDispatchCard, patch: { department?: string,
 async function removeCard(card: QualityDispatchCard) {
   try { await api.admin.qualityRemoveDispatch(card.id); toast(t('admin.toast.updated')); loadBoard() }
   catch (e) { fail(e) }
+}
+
+// ——— توليد الفجوة → اختبار (ف5) ———
+const scaffoldOpen = ref(false)
+const scaffold = ref<QualityScaffold | null>(null)
+const scaffoldLoading = ref(false)
+async function openScaffold(atom: QualityAtom) {
+  scaffoldOpen.value = true
+  scaffold.value = null
+  scaffoldLoading.value = true
+  try { scaffold.value = await api.admin.qualityScaffold(atom.id) }
+  catch (e) { fail(e) }
+  finally { scaffoldLoading.value = false }
+}
+async function copyScaffold() {
+  if (!scaffold.value)
+    return
+  try { await navigator.clipboard.writeText(scaffold.value.code); toast(t('admin.qcc.copied')) }
+  catch { toast(t('admin.toast.failed'), 'error') }
 }
 
 // ——— مستكشف الذرّات (خادميّ التقسيم) ———
@@ -376,11 +395,31 @@ const filterDefs = computed<FilterDef[]>(() => [
         <span v-else class="text-muted">—</span>
       </template>
       <template #actions="{ row }">
-        <BaseTooltip v-if="canManage" :text="t('admin.qcc.dispatch')">
-          <button class="row-act text-brand" :aria-label="t('admin.qcc.dispatch')" @click="openDispatch(row)"><BaseIcon name="mdi-directions-fork" :size="17" /></button>
-        </BaseTooltip>
+        <div class="flex items-center justify-end gap-1">
+          <BaseTooltip :text="t('admin.qcc.scaffold')">
+            <button class="row-act text-brand" :aria-label="t('admin.qcc.scaffold')" @click="openScaffold(row)"><BaseIcon name="mdi-flask-outline" :size="17" /></button>
+          </BaseTooltip>
+          <BaseTooltip v-if="canManage" :text="t('admin.qcc.dispatch')">
+            <button class="row-act text-brand" :aria-label="t('admin.qcc.dispatch')" @click="openDispatch(row)"><BaseIcon name="mdi-directions-fork" :size="17" /></button>
+          </BaseTooltip>
+        </div>
       </template>
     </ResourceScaffold>
+
+    <!-- حوار هيكل الاختبار (ف5) -->
+    <BaseModal v-model="scaffoldOpen" :title="t('admin.qcc.scaffoldTitle', { id: scaffold?.caseId })" :max-width="720">
+      <div v-if="scaffoldLoading" class="flex h-40 items-center justify-center">
+        <BaseIcon name="mdi-loading" :size="26" class="animate-spin text-brand" />
+      </div>
+      <div v-else-if="scaffold">
+        <div class="mb-2 flex flex-wrap items-center gap-2 text-xs">
+          <BaseChip color="brand">{{ scaffold.framework }}</BaseChip>
+          <span class="font-mono text-muted" dir="ltr">{{ scaffold.filename }}</span>
+          <BaseButton variant="ghost" size="sm" class="ms-auto" @click="copyScaffold"><BaseIcon name="mdi-content-copy" :size="16" />{{ t('admin.qcc.copy') }}</BaseButton>
+        </div>
+        <pre class="max-h-[55vh] overflow-auto rounded-ui border border-ui bg-ui/30 p-3 text-[12px] leading-relaxed text-content" dir="ltr"><code>{{ scaffold.code }}</code></pre>
+      </div>
+    </BaseModal>
 
     <!-- حوار التحويل -->
     <BaseModal v-model="dispatchOpen" :title="t('admin.qcc.dispatchTitle', { id: dispatchTarget?.caseId })" :max-width="480">

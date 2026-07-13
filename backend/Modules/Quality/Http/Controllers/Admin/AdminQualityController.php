@@ -11,6 +11,7 @@ use Modules\Quality\Entities\QualitySnapshot;
 use Modules\Quality\Entities\RuntimeError;
 use Modules\Quality\Entities\TestCase as TestCaseAtom;
 use Modules\Quality\Services\GithubCiService;
+use Modules\Quality\Services\TestScaffoldGenerator;
 
 /**
  * مركز قيادة الجودة (الأدمن) — قراءة ذرّات حالات الاختبار وإحصاءاتها + التحويل.
@@ -118,6 +119,14 @@ class AdminQualityController extends Controller
         $page->getCollection()->transform(fn (TestCaseAtom $a) => $this->present($a));
 
         return $this->dashboardResponse($page);
+    }
+
+    /** يولّد هيكل اختبار من ذرّة فجوة (ف5). */
+    public function scaffold(TestCaseAtom $testCase, TestScaffoldGenerator $generator)
+    {
+        $this->authorize('view_quality');
+
+        return $this->dataResponse($generator->generate($testCase));
     }
 
     /** حالة CI حيًّا من GitHub Actions (ف4). */

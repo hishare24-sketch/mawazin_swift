@@ -116,6 +116,30 @@ class AdminQualityTest extends TestCase
         $this->getJson('/api/admin/quality/atoms')->assertStatus(403);
     }
 
+    // ═══ توليد الفجوة → اختبار (ف5) ═══
+
+    public function test_scaffold_generates_test_code_for_atom(): void
+    {
+        $this->admin();
+        $atom = $this->atom('AUTH-07');
+
+        $res = $this->getJson("/api/admin/quality/atoms/{$atom->id}/scaffold")
+            ->assertOk()
+            ->assertJsonStructure(['data' => ['caseId', 'framework', 'language', 'filename', 'code']]);
+
+        $this->assertSame('AUTH-07', $res->json('data.caseId'));
+        $this->assertSame('phpunit', $res->json('data.framework'));
+        $this->assertStringContainsString('AUTH-07', $res->json('data.code'));
+        $this->assertStringContainsString('class', $res->json('data.code'));
+    }
+
+    public function test_non_admin_cannot_scaffold(): void
+    {
+        $atom = $this->atom();
+        Sanctum::actingAs(User::create(['name' => 'U', 'email' => 'u'.uniqid().'@rec.test', 'password' => 'secret123']));
+        $this->getJson("/api/admin/quality/atoms/{$atom->id}/scaffold")->assertStatus(403);
+    }
+
     // ═══ التحويل (ف2) ═══
 
     private function atom(string $caseId = 'X-01'): TestCaseAtom
