@@ -93,7 +93,7 @@ if [ -z "${SUPER_ADMIN_EMAIL:-}" ]; then
   SUPER_ADMIN_EMAIL="$(grep -E '^SUPER_ADMIN_EMAIL=' .env 2>/dev/null | cut -d= -f2- || true)"
 fi
 if [ -z "${SUPER_ADMIN_PASSWORD:-}" ]; then
-  SUPER_ADMIN_PASSWORD="$(grep -E '^SUPER_ADMIN_PASSWORD=' .env 2>/dev/null | cut -d= -f2- || true)"
+  SUPER_ADMIN_PASSWORD="$(grep -E '^SUPER_ADMIN_PASSWORD=' .env 2>/dev/null | cut -d= -f2- | sed 's/\$\$/$/g' || true)"
 fi
 if [ -z "${SUPER_ADMIN_NAME:-}" ]; then
   SUPER_ADMIN_NAME="$(grep -E '^SUPER_ADMIN_NAME=' .env 2>/dev/null | cut -d= -f2- || true)"
@@ -102,10 +102,16 @@ SUPER_ADMIN_NAME="${SUPER_ADMIN_NAME:-Super Admin}"
 
 if [ -n "${SUPER_ADMIN_EMAIL:-}" ] && [ -n "${SUPER_ADMIN_PASSWORD:-}" ]; then
   echo "Ensuring super admin: $SUPER_ADMIN_EMAIL"
+  RESET_ARGS=""
+  if [ "${RESET_SUPER_ADMIN_PASSWORD:-0}" = "1" ]; then
+    RESET_ARGS="--reset-password"
+    echo "Reset password enabled for existing admin"
+  fi
   dc exec -T api php artisan user:ensure-super-admin \
-    "$SUPER_ADMIN_EMAIL" "$SUPER_ADMIN_PASSWORD" --name="$SUPER_ADMIN_NAME"
+    "$SUPER_ADMIN_EMAIL" "$SUPER_ADMIN_PASSWORD" --name="$SUPER_ADMIN_NAME" $RESET_ARGS
 else
-  echo "Skip ensure-super-admin: set SUPER_ADMIN_EMAIL and SUPER_ADMIN_PASSWORD in .env"
+  echo "ERROR: SUPER_ADMIN_EMAIL/PASSWORD missing — admin was not ensured" >&2
+  exit 1
 fi
 
 if [ -n "$NGINX_CT" ]; then
