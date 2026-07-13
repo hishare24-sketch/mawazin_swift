@@ -22,10 +22,12 @@ pipeline {
           sh '''
             echo ">>> Deploying ${PROJECT} branch=${BRANCH_NAME} host=${TARGET_HOST}"
 
-            # printf %q: يحمي المسافات و$ في القيم عبر ssh (مثل Super Admin و Ss$...)
-            REMOTE_ENV="$(printf 'export APP_DIR=%q GIT_REPO=%q BRANCH=%q SITE=%q SUPER_ADMIN_EMAIL=%q SUPER_ADMIN_PASSWORD=%q SUPER_ADMIN_NAME=%q; exec bash -s' \
-              "$APP_DIR" "$GIT_REPO" "$BRANCH_NAME" "$SITE_URL" \
-              "$SUPER_ADMIN_EMAIL" "$SUPER_ADMIN_PASSWORD" "$SUPER_ADMIN_NAME")"
+            # dash (Jenkins /bin/sh) لا يدعم printf %q — نهرّب بـ sed
+            esc() { printf '%s' "$1" | sed "s/'/'\\\\''/g"; }
+            REMOTE_ENV="export APP_DIR='$(esc "$APP_DIR")' GIT_REPO='$(esc "$GIT_REPO")' BRANCH='$(esc "$BRANCH_NAME")' SITE='$(esc "$SITE_URL")"
+            REMOTE_ENV="$REMOTE_ENV SUPER_ADMIN_EMAIL='$(esc "$SUPER_ADMIN_EMAIL")'"
+            REMOTE_ENV="$REMOTE_ENV SUPER_ADMIN_PASSWORD='$(esc "$SUPER_ADMIN_PASSWORD")'"
+            REMOTE_ENV="$REMOTE_ENV SUPER_ADMIN_NAME='$(esc "$SUPER_ADMIN_NAME")'; exec bash -s"
 
             ssh -o StrictHostKeyChecking=no ${TARGET_USER}@${TARGET_HOST} \
               "$REMOTE_ENV" <<'REMOTE_EOF'
