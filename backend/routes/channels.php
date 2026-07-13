@@ -15,7 +15,7 @@ Broadcast::channel('user.{uuid}', function ($user, string $uuid) {
 Broadcast::channel('support.admin', function ($user) {
     try {
         return $user->hasPermissionTo('view_support', 'admin');
-    } catch (\Throwable) {
+    } catch (Throwable) {
         return false;
     }
 });
@@ -24,7 +24,7 @@ Broadcast::channel('support.admin', function ($user) {
 Broadcast::channel('admin.governance', function ($user) {
     try {
         return $user->hasPermissionTo('view_governance', 'admin');
-    } catch (\Throwable) {
+    } catch (Throwable) {
         return false;
     }
 });

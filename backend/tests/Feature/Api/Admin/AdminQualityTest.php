@@ -5,6 +5,7 @@ namespace Tests\Feature\Api\Admin;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Laravel\Sanctum\Sanctum;
 use Modules\Quality\Entities\QualityDispatch;
+use Modules\Quality\Entities\QualitySnapshot;
 use Modules\Quality\Entities\TestCase as TestCaseAtom;
 use Modules\User\Entities\User;
 use Spatie\Permission\Models\Role;
@@ -126,7 +127,7 @@ class AdminQualityTest extends TestCase
 
         $this->artisan('quality:snapshot')->assertSuccessful();
 
-        $snap = \Modules\Quality\Entities\QualitySnapshot::first();
+        $snap = QualitySnapshot::first();
         $this->assertNotNull($snap);
         $this->assertSame(2, $snap->total);
         $this->assertSame(1, $snap->automated);

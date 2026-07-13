@@ -15,6 +15,7 @@ use Modules\User\Entities\User;
 class AdminTicketController extends Controller
 {
     private const SORTABLE = ['id', 'subject', 'priority', 'status', 'created_at', 'last_reply_at'];
+
     private const STATUSES = ['open', 'pending', 'resolved', 'closed'];
 
     /** قائمة التذاكر — بحث + فلترة (حالة/فئة/أولويّة) + فرز + ترقيم. */

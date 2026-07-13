@@ -3,12 +3,17 @@
 namespace Modules\Ai\Services;
 
 use Illuminate\Support\Str;
+use Modules\Account\Entities\Wallet;
 use Modules\Ai\Entities\AiCapability;
 use Modules\Ai\Entities\AiKnowledge;
 use Modules\Ai\Entities\AiSetting;
 use Modules\Ai\Entities\AssistantPreference;
+use Modules\Ai\Services\Providers\LlmProvider;
 use Modules\Ai\Services\Providers\ToolCallingProvider;
 use Modules\Chat\Entities\ChatSetting;
+use Modules\Marketplace\Entities\Application;
+use Modules\Marketplace\Entities\Opportunity;
+use Modules\Survey\Entities\Survey;
 use Modules\User\Entities\User;
 
 /**
@@ -92,10 +97,10 @@ class AssistantService
     private function activity($user): array
     {
         return [
-            'wallet' => $this->safe(fn () => (float) (\Modules\Account\Entities\Wallet::where('user_id', $user->id)->value('balance') ?? 0)),
-            'opportunities' => $this->safe(fn () => (int) \Modules\Marketplace\Entities\Opportunity::where('user_id', $user->id)->count()),
-            'applications' => $this->safe(fn () => (int) \Modules\Marketplace\Entities\Application::where('user_id', $user->id)->count()),
-            'surveys' => $this->safe(fn () => (int) \Modules\Survey\Entities\Survey::where('user_id', $user->id)->count()),
+            'wallet' => $this->safe(fn () => (float) (Wallet::where('user_id', $user->id)->value('balance') ?? 0)),
+            'opportunities' => $this->safe(fn () => (int) Opportunity::where('user_id', $user->id)->count()),
+            'applications' => $this->safe(fn () => (int) Application::where('user_id', $user->id)->count()),
+            'surveys' => $this->safe(fn () => (int) Survey::where('user_id', $user->id)->count()),
         ];
     }
 
@@ -238,7 +243,7 @@ class AssistantService
      * يختار مزوّدًا حيًّا حين المفتاح مهيّأ، وإلّا null (محاكاة).
      * يفوّض للمصنع المشترك ProviderFactory (مصدر توجيه واحد لكلّ الوحدات).
      */
-    private function providerFor(AiSetting $ai): ?\Modules\Ai\Services\Providers\LlmProvider
+    private function providerFor(AiSetting $ai): ?LlmProvider
     {
         return (new ProviderFactory)->for($ai);
     }

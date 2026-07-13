@@ -4,8 +4,14 @@ namespace Modules\Admin\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\Rule;
+use Modules\Account\Entities\Wallet;
 use Modules\Admin\Http\Resources\Admin\AdminUserResource;
+use Modules\Marketplace\Entities\Application;
+use Modules\Marketplace\Entities\Opportunity;
+use Modules\Survey\Entities\Survey;
 use Modules\User\Entities\User;
 use Spatie\Permission\Models\Role;
 
@@ -91,11 +97,11 @@ class AdminUserController extends Controller
         $byTier = User::selectRaw('tier, COUNT(*) as c')->groupBy('tier')->pluck('c', 'tier')
             ->map(fn ($c, $x) => ['label' => $x, 'value' => (int) $c])->values();
 
-        $raw = User::where('created_at', '>=', \Illuminate\Support\Carbon::now()->subDays(13)->startOfDay())
+        $raw = User::where('created_at', '>=', Carbon::now()->subDays(13)->startOfDay())
             ->selectRaw('DATE(created_at) as d, COUNT(*) as c')->groupBy('d')->pluck('c', 'd');
         $series = [];
         for ($i = 13; $i >= 0; $i--) {
-            $date = \Illuminate\Support\Carbon::now()->subDays($i)->toDateString();
+            $date = Carbon::now()->subDays($i)->toDateString();
             $series[] = ['date' => $date, 'value' => (int) ($raw[$date] ?? 0)];
         }
 
@@ -103,7 +109,7 @@ class AdminUserController extends Controller
             'total' => $total,
             'suspended' => User::where('status', 'suspended')->count(),
             'organizations' => User::where('kind', 'organization')->count(),
-            'admins' => (int) \Illuminate\Support\Facades\DB::table('model_has_roles')->distinct('model_id')->count('model_id'),
+            'admins' => (int) DB::table('model_has_roles')->distinct('model_id')->count('model_id'),
             'byRole' => $byRole,
             'byTier' => $byTier,
             'series' => $series,
@@ -116,11 +122,11 @@ class AdminUserController extends Controller
         $this->authorize('view_users');
 
         $data = (new AdminUserResource($user->load('roles')))->resolve();
-        $data['wallet'] = (float) (\Modules\Account\Entities\Wallet::where('user_id', $user->id)->value('balance') ?? 0);
+        $data['wallet'] = (float) (Wallet::where('user_id', $user->id)->value('balance') ?? 0);
         $data['stats'] = [
-            'opportunities' => \Modules\Marketplace\Entities\Opportunity::where('user_id', $user->id)->count(),
-            'applications' => \Modules\Marketplace\Entities\Application::where('user_id', $user->id)->count(),
-            'surveys' => \Modules\Survey\Entities\Survey::where('user_id', $user->id)->count(),
+            'opportunities' => Opportunity::where('user_id', $user->id)->count(),
+            'applications' => Application::where('user_id', $user->id)->count(),
+            'surveys' => Survey::where('user_id', $user->id)->count(),
         ];
 
         return $this->dataResponse($data);

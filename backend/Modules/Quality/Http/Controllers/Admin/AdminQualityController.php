@@ -27,6 +27,7 @@ class AdminQualityController extends Controller
     public const STATES = ['todo', 'doing', 'review', 'done'];
 
     public function __construct(private readonly QualityAgentService $agent) {}
+
     /** بطاقات + توزيعات + اتّجاه التغطية. */
     public function overview()
     {

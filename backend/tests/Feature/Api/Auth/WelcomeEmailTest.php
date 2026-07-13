@@ -4,6 +4,7 @@ namespace Tests\Feature\Api\Auth;
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Mail;
+use Modules\Settings\Entities\PlatformSetting;
 use Modules\User\Emails\WelcomeMail;
 use Tests\Support\Api\AssertsApiJson;
 use Tests\TestCase;
@@ -27,7 +28,7 @@ class WelcomeEmailTest extends TestCase
     public function test_no_welcome_email_when_signups_disabled(): void
     {
         Mail::fake();
-        \Modules\Settings\Entities\PlatformSetting::create([
+        PlatformSetting::create([
             'key' => 'registration.allow_signups', 'value' => 'false', 'default_value' => 'true', 'type' => 'boolean', 'group' => 'registration', 'label' => 'x',
         ]);
 

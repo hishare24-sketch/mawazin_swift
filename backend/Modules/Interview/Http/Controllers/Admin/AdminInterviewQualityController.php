@@ -4,6 +4,7 @@ namespace Modules\Interview\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
 use Modules\Interview\Entities\Interview;
@@ -56,7 +57,7 @@ class AdminInterviewQualityController extends Controller
                 ->values();
 
             $page = max(1, (int) $request->query('page', 1));
-            $items = new \Illuminate\Pagination\LengthAwarePaginator(
+            $items = new LengthAwarePaginator(
                 $all->forPage($page, $perPage)->values(),
                 $all->count(),
                 $perPage,

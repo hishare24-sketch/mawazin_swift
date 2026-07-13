@@ -6,6 +6,9 @@ use App\Http\Controllers\Controller;
 use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Modules\Ai\Entities\AiSetting;
+use Modules\Audit\Entities\AuditLog;
+use Modules\User\Entities\User;
 
 /**
  * صحّة النظام والمراقبة — فحوص حيّة فعليّة (لا أرقام ثابتة) لقاعدة البيانات والكاش
@@ -86,7 +89,7 @@ class AdminSystemController extends Controller
     private function checkAiProvider(): array
     {
         try {
-            $ai = \Modules\Ai\Entities\AiSetting::current();
+            $ai = AiSetting::current();
             if (! $ai->enabled) {
                 return $this->svc('ai_provider', 'مزوّد الذكاء', 'warn', 'الذكاء متوقّف', null, $ai->provider);
             }
@@ -110,11 +113,11 @@ class AdminSystemController extends Controller
         $today = Carbon::now()->startOfDay();
 
         return [
-            'users' => $this->safe(fn () => \Modules\User\Entities\User::count()),
+            'users' => $this->safe(fn () => User::count()),
             'pendingJobs' => $this->tableCount('jobs'),
             'failedJobs' => $this->tableCount('failed_jobs'),
-            'requestsToday' => $this->safe(fn () => \Modules\Audit\Entities\AuditLog::where('created_at', '>=', $today)->count()),
-            'errorsToday' => $this->safe(fn () => \Modules\Audit\Entities\AuditLog::where('created_at', '>=', $today)->where('status', '>=', 400)->count()),
+            'requestsToday' => $this->safe(fn () => AuditLog::where('created_at', '>=', $today)->count()),
+            'errorsToday' => $this->safe(fn () => AuditLog::where('created_at', '>=', $today)->where('status', '>=', 400)->count()),
             'php' => PHP_VERSION,
             'laravel' => app()->version(),
             'env' => app()->environment(),
@@ -124,7 +127,7 @@ class AdminSystemController extends Controller
 
     private function recentErrors(): array
     {
-        return $this->safe(fn () => \Modules\Audit\Entities\AuditLog::where('status', '>=', 400)
+        return $this->safe(fn () => AuditLog::where('status', '>=', 400)
             ->orderByDesc('id')->limit(10)->get()
             ->map(fn ($l) => [
                 'at' => optional($l->created_at)->toISOString(),
@@ -137,7 +140,7 @@ class AdminSystemController extends Controller
 
     private function series(): array
     {
-        $raw = $this->safe(fn () => \Modules\Audit\Entities\AuditLog::where('created_at', '>=', Carbon::now()->subDays(13)->startOfDay())
+        $raw = $this->safe(fn () => AuditLog::where('created_at', '>=', Carbon::now()->subDays(13)->startOfDay())
             ->selectRaw('DATE(created_at) d, COUNT(*) total, SUM(CASE WHEN status >= 400 THEN 1 ELSE 0 END) errors')
             ->groupBy('d')->get()->keyBy('d'));
         $series = [];

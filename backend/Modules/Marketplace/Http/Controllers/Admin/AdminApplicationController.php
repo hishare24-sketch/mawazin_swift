@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Modules\Marketplace\Entities\Application;
+use Modules\Marketplace\Entities\ApplicationEvent;
 use Modules\Marketplace\Entities\Opportunity;
 
 /**
@@ -130,7 +131,7 @@ class AdminApplicationController extends Controller
             return;
         }
         $user = current_user();
-        \Modules\Marketplace\Entities\ApplicationEvent::create([
+        ApplicationEvent::create([
             'application_id' => $a->id,
             'from_stage' => $a->stage,
             'to_stage' => $toStage,

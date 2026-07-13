@@ -9,6 +9,7 @@ use Illuminate\Support\Carbon;
 use Illuminate\Support\Str;
 use Modules\Ai\Entities\AiCapability;
 use Modules\Ai\Entities\AiSetting;
+use Modules\Ai\Services\AssistantService;
 use Modules\Chat\Entities\ChatSetting;
 use Modules\Chat\Entities\DirectMessage;
 
@@ -175,7 +176,7 @@ class AdminChatController extends Controller
 
         // المعاينة تمرّ بنفس مسار المساعد الحيّ (compose) — فتعكس المزوّد الحقيقيّ
         // (Claude/OpenAI) عند تهيئته، وتعود للمحاكاة الموسومة عند غياب المفتاح/الفشل.
-        $service = app(\Modules\Ai\Services\AssistantService::class);
+        $service = app(AssistantService::class);
         $composed = $service->compose($prompt, $service->context(current_user()));
         $meta = $composed['meta'] ?? [];
 

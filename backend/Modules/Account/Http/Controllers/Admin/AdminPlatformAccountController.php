@@ -6,12 +6,14 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
 use Modules\Account\Entities\PlatformAccount;
+use Modules\Account\Entities\PlatformTransaction;
 use Modules\Account\Http\Resources\Admin\AdminPlatformAccountResource;
 use Modules\Account\Http\Resources\Admin\AdminPlatformTransactionResource;
 
 class AdminPlatformAccountController extends Controller
 {
     private const SORTABLE = ['id', 'name', 'type', 'balance', 'created_at'];
+
     private const TYPES = ['bank', 'cash', 'gateway'];
 
     /** قائمة حسابات المنصّة (خزينة). */
@@ -49,9 +51,9 @@ class AdminPlatformAccountController extends Controller
         $accounts = PlatformAccount::withSum('transactions', 'amount')->get();
         $treasury = (float) $accounts->sum('balance');
 
-        $revenue = (float) \Modules\Account\Entities\PlatformTransaction::where('type', 'revenue')->sum('amount');
-        $inflow = (float) \Modules\Account\Entities\PlatformTransaction::where('amount', '>', 0)->sum('amount');
-        $outflow = (float) \Modules\Account\Entities\PlatformTransaction::where('amount', '<', 0)->sum('amount');
+        $revenue = (float) PlatformTransaction::where('type', 'revenue')->sum('amount');
+        $inflow = (float) PlatformTransaction::where('amount', '>', 0)->sum('amount');
+        $outflow = (float) PlatformTransaction::where('amount', '<', 0)->sum('amount');
 
         $distribution = $accounts->map(fn (PlatformAccount $a) => [
             'label' => $a->name,
@@ -59,7 +61,7 @@ class AdminPlatformAccountController extends Controller
         ])->values();
 
         // سلسلة الإيراد 14 يومًا (مملوءة الفجوات، LTR للرسم)
-        $raw = \Modules\Account\Entities\PlatformTransaction::where('type', 'revenue')
+        $raw = PlatformTransaction::where('type', 'revenue')
             ->where('created_at', '>=', Carbon::now()->subDays(13)->startOfDay())
             ->selectRaw('DATE(created_at) as d, SUM(amount) as s')
             ->groupBy('d')->pluck('s', 'd');

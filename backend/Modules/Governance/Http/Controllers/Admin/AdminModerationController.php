@@ -13,6 +13,7 @@ use Modules\Governance\Services\ModerationService;
 class AdminModerationController extends Controller
 {
     private const SORTABLE = ['id', 'type', 'status', 'created_at'];
+
     private const DECISIONS = ['approved', 'rejected', 'resolved'];
 
     public function __construct(private readonly ModerationService $service) {}

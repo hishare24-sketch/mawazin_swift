@@ -5,6 +5,16 @@ namespace Modules\Reports\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
+use Modules\Ai\Entities\AssistantMessage;
+use Modules\Billing\Entities\Invoice;
+use Modules\Governance\Entities\ModerationItem;
+use Modules\Interview\Entities\Interview;
+use Modules\Interviewer\Entities\Interviewer;
+use Modules\Marketplace\Entities\Application;
+use Modules\Marketplace\Entities\Opportunity;
+use Modules\Support\Entities\Ticket;
+use Modules\Survey\Entities\Survey;
+use Modules\User\Entities\User;
 
 /**
  * مركز الرؤى والتقارير — يجمع بيانات كل المديولات في قمع توظيف ومؤشّرات عابرة
@@ -17,10 +27,10 @@ class AdminReportController extends Controller
     {
         $this->authorize('view_reports');
 
-        $opportunities = $this->safe(fn () => \Modules\Marketplace\Entities\Opportunity::count());
-        $applications = $this->safe(fn () => \Modules\Marketplace\Entities\Application::count());
-        $interviews = $this->safe(fn () => \Modules\Interview\Entities\Interview::count());
-        $completed = $this->safe(fn () => \Modules\Interview\Entities\Interview::where('status', 'completed')->count());
+        $opportunities = $this->safe(fn () => Opportunity::count());
+        $applications = $this->safe(fn () => Application::count());
+        $interviews = $this->safe(fn () => Interview::count());
+        $completed = $this->safe(fn () => Interview::where('status', 'completed')->count());
 
         $funnel = [
             ['stage' => 'opportunities', 'value' => $opportunities],
@@ -35,27 +45,27 @@ class AdminReportController extends Controller
         ];
 
         $kpis = [
-            'users' => $this->safe(fn () => \Modules\User\Entities\User::count()),
-            'newUsers30d' => $this->safe(fn () => \Modules\User\Entities\User::where('created_at', '>=', Carbon::now()->subDays(30))->count()),
+            'users' => $this->safe(fn () => User::count()),
+            'newUsers30d' => $this->safe(fn () => User::where('created_at', '>=', Carbon::now()->subDays(30))->count()),
             'opportunities' => $opportunities,
             'applications' => $applications,
             'interviews' => $interviews,
-            'avgInterviewScore' => $this->safe(fn () => round((float) \Modules\Interview\Entities\Interview::avg('score'), 1)),
-            'revenue' => $this->safe(fn () => round((float) \Modules\Billing\Entities\Invoice::where('status', 'paid')->sum('amount'), 2)),
-            'surveys' => $this->safe(fn () => \Modules\Survey\Entities\Survey::count()),
-            'assistantMessages' => $this->safe(fn () => \Modules\Ai\Entities\AssistantMessage::count()),
-            'openTickets' => $this->safe(fn () => \Modules\Support\Entities\Ticket::whereIn('status', ['open', 'pending'])->count()),
-            'resolvedTickets' => $this->safe(fn () => \Modules\Support\Entities\Ticket::whereIn('status', ['resolved', 'closed'])->count()),
-            'approvedInterviewers' => $this->safe(fn () => \Modules\Interviewer\Entities\Interviewer::where('status', 'approved')->count()),
-            'pendingGovernance' => $this->safe(fn () => \Modules\Governance\Entities\ModerationItem::where('status', 'pending')->count()),
+            'avgInterviewScore' => $this->safe(fn () => round((float) Interview::avg('score'), 1)),
+            'revenue' => $this->safe(fn () => round((float) Invoice::where('status', 'paid')->sum('amount'), 2)),
+            'surveys' => $this->safe(fn () => Survey::count()),
+            'assistantMessages' => $this->safe(fn () => AssistantMessage::count()),
+            'openTickets' => $this->safe(fn () => Ticket::whereIn('status', ['open', 'pending'])->count()),
+            'resolvedTickets' => $this->safe(fn () => Ticket::whereIn('status', ['resolved', 'closed'])->count()),
+            'approvedInterviewers' => $this->safe(fn () => Interviewer::where('status', 'approved')->count()),
+            'pendingGovernance' => $this->safe(fn () => ModerationItem::where('status', 'pending')->count()),
         ];
 
         return $this->dataResponse([
             'funnel' => $funnel,
             'conversion' => $conversion,
             'kpis' => $kpis,
-            'growthSeries' => $this->dailySeries(\Modules\User\Entities\User::class, Carbon::now()->subDays(29), Carbon::now()),
-            'revenueSeries' => $this->dailySeries(\Modules\Billing\Entities\Invoice::class, Carbon::now()->subDays(29), Carbon::now(), 'amount', ['status' => 'paid']),
+            'growthSeries' => $this->dailySeries(User::class, Carbon::now()->subDays(29), Carbon::now()),
+            'revenueSeries' => $this->dailySeries(Invoice::class, Carbon::now()->subDays(29), Carbon::now(), 'amount', ['status' => 'paid']),
         ]);
     }
 
@@ -86,8 +96,8 @@ class AdminReportController extends Controller
 
     private function growthReport(Carbon $from, Carbon $to): array
     {
-        $series = $this->dailySeries(\Modules\User\Entities\User::class, $from, $to);
-        $byRole = $this->safeCollect(fn () => \Modules\User\Entities\User::whereBetween('created_at', [$from, $to])
+        $series = $this->dailySeries(User::class, $from, $to);
+        $byRole = $this->safeCollect(fn () => User::whereBetween('created_at', [$from, $to])
             ->selectRaw('role, COUNT(*) c')->groupBy('role')->get()
             ->map(fn ($r) => ['label' => $r->role ?: '—', 'value' => (int) $r->c])->all());
 
@@ -106,8 +116,8 @@ class AdminReportController extends Controller
 
     private function financeReport(Carbon $from, Carbon $to): array
     {
-        $series = $this->dailySeries(\Modules\Billing\Entities\Invoice::class, $from, $to, 'amount', ['status' => 'paid']);
-        $byPlan = $this->safeCollect(fn () => \Modules\Billing\Entities\Invoice::whereBetween('created_at', [$from, $to])->where('status', 'paid')
+        $series = $this->dailySeries(Invoice::class, $from, $to, 'amount', ['status' => 'paid']);
+        $byPlan = $this->safeCollect(fn () => Invoice::whereBetween('created_at', [$from, $to])->where('status', 'paid')
             ->selectRaw('plan_name, SUM(amount) s')->groupBy('plan_name')->get()
             ->map(fn ($r) => ['label' => $r->plan_name ?: '—', 'value' => round((float) $r->s, 2)])->all());
 
@@ -115,7 +125,7 @@ class AdminReportController extends Controller
             'domain' => 'finance',
             'summary' => [
                 ['label' => 'الإيراد', 'value' => round(array_sum(array_column($series, 'value')), 2)],
-                ['label' => 'فواتير مدفوعة', 'value' => $this->safe(fn () => \Modules\Billing\Entities\Invoice::whereBetween('created_at', [$from, $to])->where('status', 'paid')->count())],
+                ['label' => 'فواتير مدفوعة', 'value' => $this->safe(fn () => Invoice::whereBetween('created_at', [$from, $to])->where('status', 'paid')->count())],
             ],
             'series' => $series,
             'breakdown' => $byPlan,
@@ -126,10 +136,10 @@ class AdminReportController extends Controller
 
     private function funnelReport(Carbon $from, Carbon $to): array
     {
-        $opp = $this->safe(fn () => \Modules\Marketplace\Entities\Opportunity::whereBetween('created_at', [$from, $to])->count());
-        $app = $this->safe(fn () => \Modules\Marketplace\Entities\Application::whereBetween('created_at', [$from, $to])->count());
-        $intv = $this->safe(fn () => \Modules\Interview\Entities\Interview::whereBetween('created_at', [$from, $to])->count());
-        $done = $this->safe(fn () => \Modules\Interview\Entities\Interview::whereBetween('created_at', [$from, $to])->where('status', 'completed')->count());
+        $opp = $this->safe(fn () => Opportunity::whereBetween('created_at', [$from, $to])->count());
+        $app = $this->safe(fn () => Application::whereBetween('created_at', [$from, $to])->count());
+        $intv = $this->safe(fn () => Interview::whereBetween('created_at', [$from, $to])->count());
+        $done = $this->safe(fn () => Interview::whereBetween('created_at', [$from, $to])->where('status', 'completed')->count());
 
         return [
             'domain' => 'funnel',
@@ -149,9 +159,9 @@ class AdminReportController extends Controller
 
     private function engagementReport(Carbon $from, Carbon $to): array
     {
-        $assistant = $this->dailySeries(\Modules\Ai\Entities\AssistantMessage::class, $from, $to);
-        $tickets = $this->safe(fn () => \Modules\Support\Entities\Ticket::whereBetween('created_at', [$from, $to])->count());
-        $resolved = $this->safe(fn () => \Modules\Support\Entities\Ticket::whereBetween('created_at', [$from, $to])->whereIn('status', ['resolved', 'closed'])->count());
+        $assistant = $this->dailySeries(AssistantMessage::class, $from, $to);
+        $tickets = $this->safe(fn () => Ticket::whereBetween('created_at', [$from, $to])->count());
+        $resolved = $this->safe(fn () => Ticket::whereBetween('created_at', [$from, $to])->whereIn('status', ['resolved', 'closed'])->count());
 
         return [
             'domain' => 'engagement',
@@ -169,10 +179,10 @@ class AdminReportController extends Controller
 
     private function qualityReport(Carbon $from, Carbon $to): array
     {
-        $avg = $this->safe(fn () => round((float) \Modules\Interview\Entities\Interview::whereBetween('created_at', [$from, $to])->avg('score'), 1));
-        $approved = $this->safe(fn () => \Modules\Interviewer\Entities\Interviewer::where('status', 'approved')->count());
-        $totalIntw = $this->safe(fn () => \Modules\Interviewer\Entities\Interviewer::count());
-        $scoreBuckets = $this->safeCollect(fn () => \Modules\Interview\Entities\Interview::whereBetween('created_at', [$from, $to])->get(['score'])
+        $avg = $this->safe(fn () => round((float) Interview::whereBetween('created_at', [$from, $to])->avg('score'), 1));
+        $approved = $this->safe(fn () => Interviewer::where('status', 'approved')->count());
+        $totalIntw = $this->safe(fn () => Interviewer::count());
+        $scoreBuckets = $this->safeCollect(fn () => Interview::whereBetween('created_at', [$from, $to])->get(['score'])
             ->groupBy(fn ($i) => $i->score >= 80 ? 'ممتاز (80+)' : ($i->score >= 60 ? 'جيّد (60-79)' : 'يحتاج تحسين (<60)'))
             ->map->count()->map(fn ($v, $k) => ['label' => $k, 'value' => $v])->values()->all());
 

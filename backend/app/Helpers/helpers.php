@@ -1,5 +1,9 @@
 <?php
 
+use Illuminate\Support\Facades\DB;
+use Modules\Audit\Support\AuditContext;
+use Modules\Settings\Entities\PlatformSetting;
+
 if (! function_exists('like_op')) {
     /**
      * عامل البحث النصّيّ المحمول بين المحرّكات: `ilike` على Postgres (Supabase)
@@ -7,7 +11,7 @@ if (! function_exists('like_op')) {
      */
     function like_op(): string
     {
-        return \Illuminate\Support\Facades\DB::connection()->getDriverName() === 'pgsql' ? 'ilike' : 'like';
+        return DB::connection()->getDriverName() === 'pgsql' ? 'ilike' : 'like';
     }
 }
 
@@ -27,7 +31,7 @@ if (! function_exists('audit_changes')) {
      */
     function audit_changes(array $changes): void
     {
-        \Modules\Audit\Support\AuditContext::set($changes);
+        AuditContext::set($changes);
     }
 }
 
@@ -38,10 +42,10 @@ if (! function_exists('setting')) {
     function setting(string $key, mixed $default = null): mixed
     {
         try {
-            $row = \Modules\Settings\Entities\PlatformSetting::where('key', $key)->first();
+            $row = PlatformSetting::where('key', $key)->first();
 
             return $row !== null ? $row->typedValue() : $default;
-        } catch (\Throwable $e) {
+        } catch (Throwable $e) {
             return $default;
         }
     }

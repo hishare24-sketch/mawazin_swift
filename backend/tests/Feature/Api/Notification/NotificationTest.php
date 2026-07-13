@@ -3,7 +3,10 @@
 namespace Tests\Feature\Api\Notification;
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Event;
 use Laravel\Sanctum\Sanctum;
+use Modules\Notification\Events\NotificationSent;
+use Modules\Notification\Services\NotificationService;
 use Modules\User\Entities\User;
 use Tests\Support\Api\AssertsApiJson;
 use Tests\TestCase;
@@ -68,7 +71,7 @@ class NotificationTest extends TestCase
     public function test_index_paginates_while_preserving_unread_total(): void
     {
         $user = $this->actingAsUser();
-        $svc = app(\Modules\Notification\Services\NotificationService::class);
+        $svc = app(NotificationService::class);
         foreach (range(1, 4) as $i) {
             $svc->push($user->id, ['title' => "إشعار {$i}", 'category' => 'system']);
         }
@@ -99,12 +102,12 @@ class NotificationTest extends TestCase
     public function test_push_broadcasts_notification_sent(): void
     {
         $user = $this->actingAsUser();
-        \Illuminate\Support\Facades\Event::fake([\Modules\Notification\Events\NotificationSent::class]);
+        Event::fake([NotificationSent::class]);
 
-        app(\Modules\Notification\Services\NotificationService::class)->push($user->id, ['title' => 'تنبيه حيّ', 'category' => 'system']);
+        app(NotificationService::class)->push($user->id, ['title' => 'تنبيه حيّ', 'category' => 'system']);
 
-        \Illuminate\Support\Facades\Event::assertDispatched(
-            \Modules\Notification\Events\NotificationSent::class,
+        Event::assertDispatched(
+            NotificationSent::class,
             fn ($e) => $e->uuid === $user->fresh()->uuid && $e->notification['title'] === 'تنبيه حيّ',
         );
     }

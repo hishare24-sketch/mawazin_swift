@@ -6,6 +6,7 @@ use Illuminate\Support\Carbon;
 use Modules\Account\Entities\Plan;
 use Modules\Account\Entities\PlatformAccount;
 use Modules\Account\Entities\Wallet;
+use Modules\Billing\Entities\Invoice;
 use Modules\User\Entities\User;
 
 class AccountService
@@ -79,7 +80,7 @@ class AccountService
             );
 
             // فاتورة اشتراك (سجلّ ماليّ قابل للاسترداد)
-            \Modules\Billing\Entities\Invoice::create([
+            Invoice::create([
                 'user_id' => $userId,
                 'user_name' => $user->name,
                 'plan_key' => $tier,

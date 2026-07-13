@@ -14,6 +14,7 @@ class RoleController extends Controller
 {
     /** الأدوار النظاميّة المحميّة من الحذف/التعديل الهيكليّ. */
     private const SYSTEM_ROLES = ['super_admin', 'admin', 'governance'];
+
     /** قائمة أدوار لوحة الأدمن مع صلاحيّاتها + كل الصلاحيّات المتاحة (مصفوفة الصلاحيّات). */
     public function index()
     {

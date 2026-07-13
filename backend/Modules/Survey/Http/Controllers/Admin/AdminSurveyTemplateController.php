@@ -10,7 +10,9 @@ use Modules\Survey\Http\Resources\Admin\AdminSurveyTemplateResource;
 class AdminSurveyTemplateController extends Controller
 {
     private const SORTABLE = ['id', 'name', 'category', 'sort'];
+
     private const CATEGORIES = ['satisfaction', 'feedback', 'nps', 'poll', 'assessment', 'custom'];
+
     private const QUESTION_TYPES = ['single', 'multiple', 'dropdown', 'text', 'longtext', 'rating', 'nps', 'scale', 'matrix', 'ranking'];
 
     /** مكتبة النماذج — بحث + فلترة فئة + فرز + ترقيم. */

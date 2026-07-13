@@ -33,7 +33,7 @@ jobs:
         run: npm run build
 
   backend:
-    name: Backend (Pest feature/unit)
+    name: Backend (pint · larastan · tests)
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -78,6 +78,10 @@ jobs:
           restore-keys: composer-
       - name: Install dependencies
         run: composer install --no-interaction --prefer-dist --no-progress
+      - name: Pint (code style)
+        run: ./vendor/bin/pint --test
+      - name: Larastan (static analysis)
+        run: ./vendor/bin/phpstan analyse --memory-limit=1G --no-progress
       - name: Prepare env
         run: |
           cp .env.example .env

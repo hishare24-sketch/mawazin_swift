@@ -6,7 +6,6 @@ use Illuminate\Foundation\Testing\RefreshDatabase;
 use Laravel\Sanctum\Sanctum;
 use Modules\Ai\Database\Seeders\AiSeeder;
 use Modules\Ai\Entities\AiCapability;
-use Modules\Ai\Entities\AiKnowledge;
 use Modules\User\Entities\User;
 use Spatie\Permission\Models\Role;
 use Tests\Support\Api\AssertsApiJson;

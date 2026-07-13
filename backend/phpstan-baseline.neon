@@ -1,0 +1,3667 @@
+parameters:
+	ignoreErrors:
+		-
+			message: '#^Method Modules\\Account\\Entities\\PlatformAccount\:\:post\(\) should return Modules\\Account\\Entities\\PlatformTransaction but returns Illuminate\\Database\\Eloquent\\Model\.$#'
+			identifier: return.type
+			count: 1
+			path: Modules/Account/Entities/PlatformAccount.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Account\\Entities\\Plan\:\:\$key\.$#'
+			identifier: property.notFound
+			count: 3
+			path: Modules/Account/Http/Controllers/Admin/AdminPlanController.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Account\\Entities\\Plan\:\:\$name\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Account/Http/Controllers/Admin/AdminPlanController.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Account\\Entities\\Plan\:\:\$price\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Account/Http/Controllers/Admin/AdminPlanController.php
+
+		-
+			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,Modules\\Account\\Entities\\Plan\>\:\:map\(\) contains unresolvable type\.$#'
+			identifier: argument.unresolvableType
+			count: 1
+			path: Modules/Account/Http/Controllers/Admin/AdminPlanController.php
+
+		-
+			message: '#^Parameter \#1 \$collection of method Illuminate\\Pagination\\AbstractPaginator\<int,Modules\\Account\\Entities\\Plan\>\:\:setCollection\(\) expects Illuminate\\Support\\Collection\<int, Modules\\Account\\Entities\\Plan\>, Illuminate\\Support\\Collection\<int, array\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: Modules/Account/Http/Controllers/Admin/AdminPlanController.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Account\\Entities\\PlatformAccount\:\:\$balance\.$#'
+			identifier: property.notFound
+			count: 3
+			path: Modules/Account/Http/Controllers/Admin/AdminPlatformAccountController.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Account\\Entities\\PlatformAccount\:\:\$is_default\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Account/Http/Controllers/Admin/AdminPlatformAccountController.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Account\\Entities\\PlatformAccount\:\:\$name\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Account/Http/Controllers/Admin/AdminPlatformAccountController.php
+
+		-
+			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,Modules\\Account\\Entities\\PlatformAccount\>\:\:map\(\) contains unresolvable type\.$#'
+			identifier: argument.unresolvableType
+			count: 1
+			path: Modules/Account/Http/Controllers/Admin/AdminPlatformAccountController.php
+
+		-
+			message: '#^Parameter \#1 \$collection of method Illuminate\\Pagination\\AbstractPaginator\<int,Illuminate\\Database\\Eloquent\\Model\>\:\:setCollection\(\) expects Illuminate\\Support\\Collection\<int, Illuminate\\Database\\Eloquent\\Model\>, Illuminate\\Support\\Collection\<int, array\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: Modules/Account/Http/Controllers/Admin/AdminPlatformAccountController.php
+
+		-
+			message: '#^Parameter \#1 \$collection of method Illuminate\\Pagination\\AbstractPaginator\<int,Modules\\Account\\Entities\\PlatformAccount\>\:\:setCollection\(\) expects Illuminate\\Support\\Collection\<int, Modules\\Account\\Entities\\PlatformAccount\>, Illuminate\\Support\\Collection\<int, array\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: Modules/Account/Http/Controllers/Admin/AdminPlatformAccountController.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Account\\Entities\\Wallet\:\:\$balance\.$#'
+			identifier: property.notFound
+			count: 2
+			path: Modules/Account/Http/Controllers/Admin/AdminWalletController.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Account\\Entities\\Wallet\:\:\$transactions\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Account/Http/Controllers/Admin/AdminWalletController.php
+
+		-
+			message: '#^Parameter \#1 \$collection of method Illuminate\\Pagination\\AbstractPaginator\<int,Modules\\Account\\Entities\\Wallet\>\:\:setCollection\(\) expects Illuminate\\Support\\Collection\<int, Modules\\Account\\Entities\\Wallet\>, Illuminate\\Support\\Collection\<int, array\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: Modules/Account/Http/Controllers/Admin/AdminWalletController.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Account\\Http\\Resources\\Admin\\AdminPlanResource\:\:\$active\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Account/Http/Resources/Admin/AdminPlanResource.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Account\\Http\\Resources\\Admin\\AdminPlanResource\:\:\$features\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Account/Http/Resources/Admin/AdminPlanResource.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Account\\Http\\Resources\\Admin\\AdminPlanResource\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Account/Http/Resources/Admin/AdminPlanResource.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Account\\Http\\Resources\\Admin\\AdminPlanResource\:\:\$key\.$#'
+			identifier: property.notFound
+			count: 2
+			path: Modules/Account/Http/Resources/Admin/AdminPlanResource.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Account\\Http\\Resources\\Admin\\AdminPlanResource\:\:\$name\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Account/Http/Resources/Admin/AdminPlanResource.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Account\\Http\\Resources\\Admin\\AdminPlanResource\:\:\$price\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Account/Http/Resources/Admin/AdminPlanResource.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Account\\Http\\Resources\\Admin\\AdminPlanResource\:\:\$sort\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Account/Http/Resources/Admin/AdminPlanResource.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Account\\Http\\Resources\\Admin\\AdminPlanResource\:\:\$survey_limit\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Account/Http/Resources/Admin/AdminPlanResource.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Account\\Http\\Resources\\Admin\\AdminPlatformAccountResource\:\:\$account_no_masked\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Account/Http/Resources/Admin/AdminPlatformAccountResource.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Account\\Http\\Resources\\Admin\\AdminPlatformAccountResource\:\:\$active\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Account/Http/Resources/Admin/AdminPlatformAccountResource.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Account\\Http\\Resources\\Admin\\AdminPlatformAccountResource\:\:\$balance\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Account/Http/Resources/Admin/AdminPlatformAccountResource.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Account\\Http\\Resources\\Admin\\AdminPlatformAccountResource\:\:\$bank_name\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Account/Http/Resources/Admin/AdminPlatformAccountResource.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Account\\Http\\Resources\\Admin\\AdminPlatformAccountResource\:\:\$currency\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Account/Http/Resources/Admin/AdminPlatformAccountResource.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Account\\Http\\Resources\\Admin\\AdminPlatformAccountResource\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Account/Http/Resources/Admin/AdminPlatformAccountResource.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Account\\Http\\Resources\\Admin\\AdminPlatformAccountResource\:\:\$is_default\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Account/Http/Resources/Admin/AdminPlatformAccountResource.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Account\\Http\\Resources\\Admin\\AdminPlatformAccountResource\:\:\$name\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Account/Http/Resources/Admin/AdminPlatformAccountResource.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Account\\Http\\Resources\\Admin\\AdminPlatformAccountResource\:\:\$notes\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Account/Http/Resources/Admin/AdminPlatformAccountResource.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Account\\Http\\Resources\\Admin\\AdminPlatformAccountResource\:\:\$type\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Account/Http/Resources/Admin/AdminPlatformAccountResource.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Account\\Http\\Resources\\Admin\\AdminPlatformAccountResource\:\:\$updated_at\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Account/Http/Resources/Admin/AdminPlatformAccountResource.php
+
+		-
+			message: '#^Call to an undefined method Modules\\Account\\Http\\Resources\\Admin\\AdminPlatformAccountResource\:\:transactions\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: Modules/Account/Http/Resources/Admin/AdminPlatformAccountResource.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Account\\Http\\Resources\\Admin\\AdminPlatformTransactionResource\:\:\$amount\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Account/Http/Resources/Admin/AdminPlatformTransactionResource.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Account\\Http\\Resources\\Admin\\AdminPlatformTransactionResource\:\:\$created_at\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Account/Http/Resources/Admin/AdminPlatformTransactionResource.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Account\\Http\\Resources\\Admin\\AdminPlatformTransactionResource\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Account/Http/Resources/Admin/AdminPlatformTransactionResource.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Account\\Http\\Resources\\Admin\\AdminPlatformTransactionResource\:\:\$note\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Account/Http/Resources/Admin/AdminPlatformTransactionResource.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Account\\Http\\Resources\\Admin\\AdminPlatformTransactionResource\:\:\$reference\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Account/Http/Resources/Admin/AdminPlatformTransactionResource.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Account\\Http\\Resources\\Admin\\AdminPlatformTransactionResource\:\:\$type\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Account/Http/Resources/Admin/AdminPlatformTransactionResource.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Account\\Http\\Resources\\Admin\\AdminWalletResource\:\:\$balance\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Account/Http/Resources/Admin/AdminWalletResource.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Account\\Http\\Resources\\Admin\\AdminWalletResource\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Account/Http/Resources/Admin/AdminWalletResource.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Account\\Http\\Resources\\Admin\\AdminWalletResource\:\:\$transactions\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Account/Http/Resources/Admin/AdminWalletResource.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Account\\Http\\Resources\\Admin\\AdminWalletResource\:\:\$updated_at\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Account/Http/Resources/Admin/AdminWalletResource.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Account\\Http\\Resources\\Admin\\AdminWalletResource\:\:\$user\.$#'
+			identifier: property.notFound
+			count: 2
+			path: Modules/Account/Http/Resources/Admin/AdminWalletResource.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Account\\Http\\Resources\\Admin\\AdminWalletResource\:\:\$user_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Account/Http/Resources/Admin/AdminWalletResource.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Account\\Http\\Resources\\Api\\WalletResource\:\:\$balance\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Account/Http/Resources/Api/WalletResource.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Account\\Entities\\Plan\:\:\$price\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Account/Services/AccountService.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Account\\Entities\\Wallet\:\:\$balance\.$#'
+			identifier: property.notFound
+			count: 2
+			path: Modules/Account/Services/AccountService.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Account\\Entities\\Wallet\:\:\$transactions\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Account/Services/AccountService.php
+
+		-
+			message: '#^Access to an undefined property Modules\\User\\Entities\\User\:\:\$tier\.$#'
+			identifier: property.notFound
+			count: 2
+			path: Modules/Account/Services/AccountService.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>tier" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: Modules/Account/Services/AccountService.php
+
+		-
+			message: '#^Access to an undefined property Modules\\AccountState\\Entities\\AccountState\:\:\$data\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/AccountState/Services/AccountStateService.php
+
+		-
+			message: '#^Access to an undefined property Modules\\User\\Entities\\User\:\:\$status\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Admin/Http/Controllers/Admin/AdminUserController.php
+
+		-
+			message: '#^Parameter \#1 \$collection of method Illuminate\\Pagination\\AbstractPaginator\<int,Modules\\User\\Entities\\User\>\:\:setCollection\(\) expects Illuminate\\Support\\Collection\<int, Modules\\User\\Entities\\User\>, Illuminate\\Support\\Collection\<int, array\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: Modules/Admin/Http/Controllers/Admin/AdminUserController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Collection\<int, Modules\\User\\Entities\\User\>\|Modules\\User\\Entities\\User\:\:\$status\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Admin/Http/Controllers/Admin/RoleController.php
+
+		-
+			message: '#^Access to an undefined property Modules\\User\\Entities\\User\:\:\$status\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Admin/Http/Controllers/Admin/RoleController.php
+
+		-
+			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,Modules\\User\\Entities\\User\>\:\:map\(\) contains unresolvable type\.$#'
+			identifier: argument.unresolvableType
+			count: 1
+			path: Modules/Admin/Http/Controllers/Admin/RoleController.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Admin\\Http\\Resources\\Admin\\AdminUserResource\:\:\$created_at\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Admin/Http/Resources/Admin/AdminUserResource.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Admin\\Http\\Resources\\Admin\\AdminUserResource\:\:\$email\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Admin/Http/Resources/Admin/AdminUserResource.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Admin\\Http\\Resources\\Admin\\AdminUserResource\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Admin/Http/Resources/Admin/AdminUserResource.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Admin\\Http\\Resources\\Admin\\AdminUserResource\:\:\$kind\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Admin/Http/Resources/Admin/AdminUserResource.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Admin\\Http\\Resources\\Admin\\AdminUserResource\:\:\$name\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Admin/Http/Resources/Admin/AdminUserResource.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Admin\\Http\\Resources\\Admin\\AdminUserResource\:\:\$role\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Admin/Http/Resources/Admin/AdminUserResource.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Admin\\Http\\Resources\\Admin\\AdminUserResource\:\:\$roles\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Admin/Http/Resources/Admin/AdminUserResource.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Admin\\Http\\Resources\\Admin\\AdminUserResource\:\:\$tier\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Admin/Http/Resources/Admin/AdminUserResource.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Admin\\Http\\Resources\\Admin\\AdminUserResource\:\:\$uuid\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Admin/Http/Resources/Admin/AdminUserResource.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Ai\\Entities\\AiCapability\:\:\$enabled\.$#'
+			identifier: property.notFound
+			count: 2
+			path: Modules/Ai/Http/Controllers/Admin/AdminAiController.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Ai\\Entities\\AiCapability\:\:\$hint\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Ai/Http/Controllers/Admin/AdminAiController.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Ai\\Entities\\AiCapability\:\:\$icon\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Ai/Http/Controllers/Admin/AdminAiController.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Ai\\Entities\\AiCapability\:\:\$key\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Ai/Http/Controllers/Admin/AdminAiController.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Ai\\Entities\\AiCapability\:\:\$label\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Ai/Http/Controllers/Admin/AdminAiController.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Ai\\Entities\\AiKnowledge\:\:\$content\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Ai/Http/Controllers/Admin/AdminAiController.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Ai\\Entities\\AiKnowledge\:\:\$enabled\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Ai/Http/Controllers/Admin/AdminAiController.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Ai\\Entities\\AiKnowledge\:\:\$title\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Ai/Http/Controllers/Admin/AdminAiController.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Ai\\Entities\\AiSetting\:\:\$allow_user_level_override\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Ai/Http/Controllers/Admin/AdminAiController.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Ai\\Entities\\AiSetting\:\:\$api_key\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Ai/Http/Controllers/Admin/AdminAiController.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Ai\\Entities\\AiSetting\:\:\$assistant_level\.$#'
+			identifier: property.notFound
+			count: 2
+			path: Modules/Ai/Http/Controllers/Admin/AdminAiController.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Ai\\Entities\\AiSetting\:\:\$doc_max_reads\.$#'
+			identifier: property.notFound
+			count: 3
+			path: Modules/Ai/Http/Controllers/Admin/AdminAiController.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Ai\\Entities\\AiSetting\:\:\$enabled\.$#'
+			identifier: property.notFound
+			count: 2
+			path: Modules/Ai/Http/Controllers/Admin/AdminAiController.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Ai\\Entities\\AiSetting\:\:\$endpoint\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Ai/Http/Controllers/Admin/AdminAiController.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Ai\\Entities\\AiSetting\:\:\$language\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Ai/Http/Controllers/Admin/AdminAiController.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Ai\\Entities\\AiSetting\:\:\$max_tokens\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Ai/Http/Controllers/Admin/AdminAiController.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Ai\\Entities\\AiSetting\:\:\$model\.$#'
+			identifier: property.notFound
+			count: 2
+			path: Modules/Ai/Http/Controllers/Admin/AdminAiController.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Ai\\Entities\\AiSetting\:\:\$plan_quotas\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Ai/Http/Controllers/Admin/AdminAiController.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Ai\\Entities\\AiSetting\:\:\$provider\.$#'
+			identifier: property.notFound
+			count: 2
+			path: Modules/Ai/Http/Controllers/Admin/AdminAiController.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Ai\\Entities\\AiSetting\:\:\$system_prompt\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Ai/Http/Controllers/Admin/AdminAiController.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Ai\\Entities\\AiSetting\:\:\$temperature\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Ai/Http/Controllers/Admin/AdminAiController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Collection\<int, Modules\\Ai\\Entities\\AssistantConversation\>\|Modules\\Ai\\Entities\\AssistantConversation\:\:\$title\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Ai/Http/Controllers/Api/AssistantController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$body\.$#'
+			identifier: property.notFound
+			count: 3
+			path: Modules/Ai/Http/Controllers/Api/AssistantController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$created_at\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Ai/Http/Controllers/Api/AssistantController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Ai/Http/Controllers/Api/AssistantController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$meta\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Ai/Http/Controllers/Api/AssistantController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$role\.$#'
+			identifier: property.notFound
+			count: 2
+			path: Modules/Ai/Http/Controllers/Api/AssistantController.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Ai\\Entities\\AssistantConversation\:\:\$title\.$#'
+			identifier: property.notFound
+			count: 2
+			path: Modules/Ai/Http/Controllers/Api/AssistantController.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Ai\\Entities\\AssistantConversation\:\:\$updated_at\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Ai/Http/Controllers/Api/AssistantController.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Ai\\Entities\\AssistantConversation\:\:\$user_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Ai/Http/Controllers/Api/AssistantController.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Ai\\Entities\\AssistantPreference\:\:\$data_access\.$#'
+			identifier: property.notFound
+			count: 2
+			path: Modules/Ai/Http/Controllers/Api/AssistantController.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Ai\\Entities\\AssistantPreference\:\:\$proactive\.$#'
+			identifier: property.notFound
+			count: 2
+			path: Modules/Ai/Http/Controllers/Api/AssistantController.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Support\\Entities\\Ticket\:\:\$status\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Ai/Http/Controllers/Api/AssistantController.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Support\\Entities\\Ticket\:\:\$subject\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Ai/Http/Controllers/Api/AssistantController.php
+
+		-
+			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,Illuminate\\Database\\Eloquent\\Model\>\:\:map\(\) contains unresolvable type\.$#'
+			identifier: argument.unresolvableType
+			count: 2
+			path: Modules/Ai/Http/Controllers/Api/AssistantController.php
+
+		-
+			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,Modules\\Ai\\Entities\\AssistantConversation\>\:\:map\(\) contains unresolvable type\.$#'
+			identifier: argument.unresolvableType
+			count: 1
+			path: Modules/Ai/Http/Controllers/Api/AssistantController.php
+
+		-
+			message: '#^Parameter \#2 \$reply of static method Modules\\Support\\Events\\TicketReplyPosted\:\:payloadFor\(\) expects Modules\\Support\\Entities\\TicketReply, Illuminate\\Database\\Eloquent\\Model given\.$#'
+			identifier: argument.type
+			count: 1
+			path: Modules/Ai/Http/Controllers/Api/AssistantController.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Ai\\Entities\\AiCapability\:\:\$enabled\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Ai/Services/AssistantService.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Ai\\Entities\\AiKnowledge\:\:\$content\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Ai/Services/AssistantService.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Ai\\Entities\\AiKnowledge\:\:\$title\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Ai/Services/AssistantService.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Ai\\Entities\\AiSetting\:\:\$assistant_level\.$#'
+			identifier: property.notFound
+			count: 4
+			path: Modules/Ai/Services/AssistantService.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Ai\\Entities\\AiSetting\:\:\$enabled\.$#'
+			identifier: property.notFound
+			count: 2
+			path: Modules/Ai/Services/AssistantService.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Ai\\Entities\\AiSetting\:\:\$model\.$#'
+			identifier: property.notFound
+			count: 5
+			path: Modules/Ai/Services/AssistantService.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Ai\\Entities\\AiSetting\:\:\$provider\.$#'
+			identifier: property.notFound
+			count: 6
+			path: Modules/Ai/Services/AssistantService.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Ai\\Entities\\AiSetting\:\:\$system_prompt\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Ai/Services/AssistantService.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Ai\\Entities\\AssistantPreference\:\:\$data_access\.$#'
+			identifier: property.notFound
+			count: 2
+			path: Modules/Ai/Services/AssistantService.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Ai\\Entities\\AssistantPreference\:\:\$proactive\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Ai/Services/AssistantService.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Chat\\Entities\\ChatSetting\:\:\$assistant_enabled\.$#'
+			identifier: property.notFound
+			count: 2
+			path: Modules/Ai/Services/AssistantService.php
+
+		-
+			message: '#^Call to function is_array\(\) with array will always evaluate to true\.$#'
+			identifier: function.alreadyNarrowedType
+			count: 1
+			path: Modules/Ai/Services/AssistantService.php
+
+		-
+			message: '#^Offset ''input'' on array\{input\: int, output\: int\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 2
+			path: Modules/Ai/Services/AssistantService.php
+
+		-
+			message: '#^Offset ''output'' on array\{input\: int, output\: int\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 2
+			path: Modules/Ai/Services/AssistantService.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>enabled" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: Modules/Ai/Services/AssistantService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$company\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Ai/Services/PlatformTools.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$title\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Ai/Services/PlatformTools.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Marketplace\\Entities\\Application\:\:\$stage\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Ai/Services/PlatformTools.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Marketplace\\Entities\\Opportunity\:\:\$category\.$#'
+			identifier: property.notFound
+			count: 2
+			path: Modules/Ai/Services/PlatformTools.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Marketplace\\Entities\\Opportunity\:\:\$company\.$#'
+			identifier: property.notFound
+			count: 2
+			path: Modules/Ai/Services/PlatformTools.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Marketplace\\Entities\\Opportunity\:\:\$title\.$#'
+			identifier: property.notFound
+			count: 2
+			path: Modules/Ai/Services/PlatformTools.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Profile\\Entities\\Profile\:\:\$certificates\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Ai/Services/PlatformTools.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Profile\\Entities\\Profile\:\:\$experiences\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Ai/Services/PlatformTools.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Profile\\Entities\\Profile\:\:\$headline\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Ai/Services/PlatformTools.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Profile\\Entities\\Profile\:\:\$proof_requests\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Ai/Services/PlatformTools.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Profile\\Entities\\Profile\:\:\$skills\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Ai/Services/PlatformTools.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Profile\\Entities\\Profile\:\:\$summary\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Ai/Services/PlatformTools.php
+
+		-
+			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,Modules\\Marketplace\\Entities\\Application\>\:\:map\(\) contains unresolvable type\.$#'
+			identifier: argument.unresolvableType
+			count: 1
+			path: Modules/Ai/Services/PlatformTools.php
+
+		-
+			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,Modules\\Marketplace\\Entities\\Opportunity\>\:\:map\(\) contains unresolvable type\.$#'
+			identifier: argument.unresolvableType
+			count: 2
+			path: Modules/Ai/Services/PlatformTools.php
+
+		-
+			message: '#^Parameter \#1 \$callback of method Illuminate\\Support\\Collection\<int,array\<string, mixed\>\>\:\:sortByDesc\(\) contains unresolvable type\.$#'
+			identifier: argument.unresolvableType
+			count: 1
+			path: Modules/Ai/Services/PlatformTools.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>title" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: Modules/Ai/Services/PlatformTools.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Ai\\Entities\\AiSetting\:\:\$api_key\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Ai/Services/ProviderFactory.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Ai\\Entities\\AiSetting\:\:\$provider\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Ai/Services/ProviderFactory.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Ai\\Entities\\AiSetting\:\:\$api_key\.$#'
+			identifier: property.notFound
+			count: 3
+			path: Modules/Ai/Services/Providers/ClaudeProvider.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Ai\\Entities\\AiSetting\:\:\$endpoint\.$#'
+			identifier: property.notFound
+			count: 3
+			path: Modules/Ai/Services/Providers/ClaudeProvider.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Ai\\Entities\\AiSetting\:\:\$model\.$#'
+			identifier: property.notFound
+			count: 3
+			path: Modules/Ai/Services/Providers/ClaudeProvider.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Ai\\Entities\\AiSetting\:\:\$temperature\.$#'
+			identifier: property.notFound
+			count: 2
+			path: Modules/Ai/Services/Providers/ClaudeProvider.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Ai\\Entities\\AiSetting\:\:\$api_key\.$#'
+			identifier: property.notFound
+			count: 3
+			path: Modules/Ai/Services/Providers/OpenAiProvider.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Ai\\Entities\\AiSetting\:\:\$endpoint\.$#'
+			identifier: property.notFound
+			count: 3
+			path: Modules/Ai/Services/Providers/OpenAiProvider.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Ai\\Entities\\AiSetting\:\:\$model\.$#'
+			identifier: property.notFound
+			count: 3
+			path: Modules/Ai/Services/Providers/OpenAiProvider.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$action\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Audit/Http/Controllers/Admin/AuditLogController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$actor_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Audit/Http/Controllers/Admin/AuditLogController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$created_at\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Audit/Http/Controllers/Admin/AuditLogController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Audit/Http/Controllers/Admin/AuditLogController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$ip\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Audit/Http/Controllers/Admin/AuditLogController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$meta\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Audit/Http/Controllers/Admin/AuditLogController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$method\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Audit/Http/Controllers/Admin/AuditLogController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$path\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Audit/Http/Controllers/Admin/AuditLogController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$status\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Audit/Http/Controllers/Admin/AuditLogController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$target_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Audit/Http/Controllers/Admin/AuditLogController.php
+
+		-
+			message: '#^Parameter \#1 \$callback of method Illuminate\\Support\\Collection\<int,Illuminate\\Database\\Eloquent\\Model\>\:\:map\(\) expects callable\(Illuminate\\Database\\Eloquent\\Model, int\)\: array, Closure\(Modules\\Audit\\Entities\\AuditLog\)\: array given\.$#'
+			identifier: argument.type
+			count: 1
+			path: Modules/Audit/Http/Controllers/Admin/AuditLogController.php
+
+		-
+			message: '#^Parameter \#1 \$collection of method Illuminate\\Pagination\\AbstractPaginator\<int,Illuminate\\Database\\Eloquent\\Model\>\:\:setCollection\(\) expects Illuminate\\Support\\Collection\<int, Illuminate\\Database\\Eloquent\\Model\>, Illuminate\\Support\\Collection\<int, array\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: Modules/Audit/Http/Controllers/Admin/AuditLogController.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Audit\\Http\\Resources\\Admin\\AuditLogResource\:\:\$action\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Audit/Http/Resources/Admin/AuditLogResource.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Audit\\Http\\Resources\\Admin\\AuditLogResource\:\:\$actor_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Audit/Http/Resources/Admin/AuditLogResource.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Audit\\Http\\Resources\\Admin\\AuditLogResource\:\:\$created_at\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Audit/Http/Resources/Admin/AuditLogResource.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Audit\\Http\\Resources\\Admin\\AuditLogResource\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Audit/Http/Resources/Admin/AuditLogResource.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Audit\\Http\\Resources\\Admin\\AuditLogResource\:\:\$ip\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Audit/Http/Resources/Admin/AuditLogResource.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Audit\\Http\\Resources\\Admin\\AuditLogResource\:\:\$meta\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Audit/Http/Resources/Admin/AuditLogResource.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Audit\\Http\\Resources\\Admin\\AuditLogResource\:\:\$method\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Audit/Http/Resources/Admin/AuditLogResource.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Audit\\Http\\Resources\\Admin\\AuditLogResource\:\:\$path\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Audit/Http/Resources/Admin/AuditLogResource.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Audit\\Http\\Resources\\Admin\\AuditLogResource\:\:\$status\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Audit/Http/Resources/Admin/AuditLogResource.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Audit\\Http\\Resources\\Admin\\AuditLogResource\:\:\$target_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Audit/Http/Resources/Admin/AuditLogResource.php
+
+		-
+			message: '#^Call to an undefined method Modules\\Audit\\Http\\Resources\\Admin\\AuditLogResource\:\:getAttribute\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: Modules/Audit/Http/Resources/Admin/AuditLogResource.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Account\\Entities\\Wallet\:\:\$balance\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Billing/Http/Controllers/Admin/AdminInvoiceController.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Account\\Entities\\Wallet\:\:\$transactions\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Billing/Http/Controllers/Admin/AdminInvoiceController.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Billing\\Entities\\Invoice\:\:\$amount\.$#'
+			identifier: property.notFound
+			count: 3
+			path: Modules/Billing/Http/Controllers/Admin/AdminInvoiceController.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Billing\\Entities\\Invoice\:\:\$reference\.$#'
+			identifier: property.notFound
+			count: 3
+			path: Modules/Billing/Http/Controllers/Admin/AdminInvoiceController.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Billing\\Entities\\Invoice\:\:\$status\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Billing/Http/Controllers/Admin/AdminInvoiceController.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Billing\\Entities\\Invoice\:\:\$user_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Billing/Http/Controllers/Admin/AdminInvoiceController.php
+
+		-
+			message: '#^Parameter \#1 \$collection of method Illuminate\\Pagination\\AbstractPaginator\<int,Modules\\Billing\\Entities\\Invoice\>\:\:setCollection\(\) expects Illuminate\\Support\\Collection\<int, Modules\\Billing\\Entities\\Invoice\>, Illuminate\\Support\\Collection\<int, array\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: Modules/Billing/Http/Controllers/Admin/AdminInvoiceController.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Billing\\Http\\Resources\\Admin\\AdminInvoiceResource\:\:\$amount\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Billing/Http/Resources/Admin/AdminInvoiceResource.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Billing\\Http\\Resources\\Admin\\AdminInvoiceResource\:\:\$created_at\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Billing/Http/Resources/Admin/AdminInvoiceResource.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Billing\\Http\\Resources\\Admin\\AdminInvoiceResource\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Billing/Http/Resources/Admin/AdminInvoiceResource.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Billing\\Http\\Resources\\Admin\\AdminInvoiceResource\:\:\$plan_key\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Billing/Http/Resources/Admin/AdminInvoiceResource.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Billing\\Http\\Resources\\Admin\\AdminInvoiceResource\:\:\$plan_name\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Billing/Http/Resources/Admin/AdminInvoiceResource.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Billing\\Http\\Resources\\Admin\\AdminInvoiceResource\:\:\$reference\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Billing/Http/Resources/Admin/AdminInvoiceResource.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Billing\\Http\\Resources\\Admin\\AdminInvoiceResource\:\:\$refunded_at\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Billing/Http/Resources/Admin/AdminInvoiceResource.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Billing\\Http\\Resources\\Admin\\AdminInvoiceResource\:\:\$status\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Billing/Http/Resources/Admin/AdminInvoiceResource.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Billing\\Http\\Resources\\Admin\\AdminInvoiceResource\:\:\$user\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Billing/Http/Resources/Admin/AdminInvoiceResource.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Billing\\Http\\Resources\\Admin\\AdminInvoiceResource\:\:\$user_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Billing/Http/Resources/Admin/AdminInvoiceResource.php
+
+		-
+			message: '#^Parameter \#1 \$collection of method Illuminate\\Pagination\\AbstractPaginator\<int,Modules\\Broadcast\\Entities\\Broadcast\>\:\:setCollection\(\) expects Illuminate\\Support\\Collection\<int, Modules\\Broadcast\\Entities\\Broadcast\>, Illuminate\\Support\\Collection\<int, array\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: Modules/Broadcast/Http/Controllers/Admin/AdminBroadcastController.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Broadcast\\Http\\Resources\\Admin\\AdminBroadcastResource\:\:\$audience\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Broadcast/Http/Resources/Admin/AdminBroadcastResource.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Broadcast\\Http\\Resources\\Admin\\AdminBroadcastResource\:\:\$audience_value\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Broadcast/Http/Resources/Admin/AdminBroadcastResource.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Broadcast\\Http\\Resources\\Admin\\AdminBroadcastResource\:\:\$body\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Broadcast/Http/Resources/Admin/AdminBroadcastResource.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Broadcast\\Http\\Resources\\Admin\\AdminBroadcastResource\:\:\$channel\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Broadcast/Http/Resources/Admin/AdminBroadcastResource.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Broadcast\\Http\\Resources\\Admin\\AdminBroadcastResource\:\:\$created_at\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Broadcast/Http/Resources/Admin/AdminBroadcastResource.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Broadcast\\Http\\Resources\\Admin\\AdminBroadcastResource\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Broadcast/Http/Resources/Admin/AdminBroadcastResource.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Broadcast\\Http\\Resources\\Admin\\AdminBroadcastResource\:\:\$recipients_count\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Broadcast/Http/Resources/Admin/AdminBroadcastResource.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Broadcast\\Http\\Resources\\Admin\\AdminBroadcastResource\:\:\$sender_name\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Broadcast/Http/Resources/Admin/AdminBroadcastResource.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Broadcast\\Http\\Resources\\Admin\\AdminBroadcastResource\:\:\$sent_at\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Broadcast/Http/Resources/Admin/AdminBroadcastResource.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Broadcast\\Http\\Resources\\Admin\\AdminBroadcastResource\:\:\$status\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Broadcast/Http/Resources/Admin/AdminBroadcastResource.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Broadcast\\Http\\Resources\\Admin\\AdminBroadcastResource\:\:\$title\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Broadcast/Http/Resources/Admin/AdminBroadcastResource.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Ai\\Entities\\AiCapability\:\:\$enabled\.$#'
+			identifier: property.notFound
+			count: 2
+			path: Modules/Chat/Http/Controllers/Admin/AdminChatController.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Ai\\Entities\\AiSetting\:\:\$assistant_level\.$#'
+			identifier: property.notFound
+			count: 2
+			path: Modules/Chat/Http/Controllers/Admin/AdminChatController.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Ai\\Entities\\AiSetting\:\:\$enabled\.$#'
+			identifier: property.notFound
+			count: 3
+			path: Modules/Chat/Http/Controllers/Admin/AdminChatController.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Ai\\Entities\\AiSetting\:\:\$model\.$#'
+			identifier: property.notFound
+			count: 2
+			path: Modules/Chat/Http/Controllers/Admin/AdminChatController.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Ai\\Entities\\AiSetting\:\:\$provider\.$#'
+			identifier: property.notFound
+			count: 2
+			path: Modules/Chat/Http/Controllers/Admin/AdminChatController.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Chat\\Entities\\ChatSetting\:\:\$assistant_enabled\.$#'
+			identifier: property.notFound
+			count: 4
+			path: Modules/Chat/Http/Controllers/Admin/AdminChatController.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Chat\\Entities\\ChatSetting\:\:\$direct_messages_enabled\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Chat/Http/Controllers/Admin/AdminChatController.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Chat\\Entities\\ChatSetting\:\:\$moderation_enabled\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Chat/Http/Controllers/Admin/AdminChatController.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Chat\\Entities\\ChatSetting\:\:\$retention_days\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Chat/Http/Controllers/Admin/AdminChatController.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Chat\\Entities\\DirectMessage\:\:\$body\.$#'
+			identifier: property.notFound
+			count: 2
+			path: Modules/Chat/Http/Controllers/Admin/AdminChatController.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Chat\\Entities\\DirectMessage\:\:\$created_at\.$#'
+			identifier: property.notFound
+			count: 3
+			path: Modules/Chat/Http/Controllers/Admin/AdminChatController.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Chat\\Entities\\DirectMessage\:\:\$read_at\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Chat/Http/Controllers/Admin/AdminChatController.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Chat\\Entities\\DirectMessage\:\:\$recipient_id\.$#'
+			identifier: property.notFound
+			count: 5
+			path: Modules/Chat/Http/Controllers/Admin/AdminChatController.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Chat\\Entities\\DirectMessage\:\:\$recipient_name\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Chat/Http/Controllers/Admin/AdminChatController.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Chat\\Entities\\DirectMessage\:\:\$sender_id\.$#'
+			identifier: property.notFound
+			count: 6
+			path: Modules/Chat/Http/Controllers/Admin/AdminChatController.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Chat\\Entities\\DirectMessage\:\:\$sender_name\.$#'
+			identifier: property.notFound
+			count: 3
+			path: Modules/Chat/Http/Controllers/Admin/AdminChatController.php
+
+		-
+			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<\(int\|string\),Illuminate\\Database\\Eloquent\\Collection\<int, Modules\\Chat\\Entities\\DirectMessage\>\>\:\:map\(\) contains unresolvable type\.$#'
+			identifier: argument.unresolvableType
+			count: 1
+			path: Modules/Chat/Http/Controllers/Admin/AdminChatController.php
+
+		-
+			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,Modules\\Chat\\Entities\\DirectMessage\>\:\:map\(\) contains unresolvable type\.$#'
+			identifier: argument.unresolvableType
+			count: 1
+			path: Modules/Chat/Http/Controllers/Admin/AdminChatController.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>enabled" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: Modules/Chat/Http/Controllers/Admin/AdminChatController.php
+
+		-
+			message: '#^Access to an undefined property Modules\\User\\Entities\\User\:\:\$uuid\.$#'
+			identifier: property.notFound
+			count: 4
+			path: Modules/Chat/Http/Controllers/Api/MessageController.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Chat\\Http\\Resources\\Api\\DirectMessageResource\:\:\$body\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Chat/Http/Resources/Api/DirectMessageResource.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Chat\\Http\\Resources\\Api\\DirectMessageResource\:\:\$created_at\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Chat/Http/Resources/Api/DirectMessageResource.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Chat\\Http\\Resources\\Api\\DirectMessageResource\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Chat/Http/Resources/Api/DirectMessageResource.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Chat\\Http\\Resources\\Api\\DirectMessageResource\:\:\$read_at\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Chat/Http/Resources/Api/DirectMessageResource.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Chat\\Http\\Resources\\Api\\DirectMessageResource\:\:\$recipient_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Chat/Http/Resources/Api/DirectMessageResource.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Chat\\Http\\Resources\\Api\\DirectMessageResource\:\:\$recipient_name\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Chat/Http/Resources/Api/DirectMessageResource.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Chat\\Http\\Resources\\Api\\DirectMessageResource\:\:\$sender_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Chat/Http/Resources/Api/DirectMessageResource.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Chat\\Http\\Resources\\Api\\DirectMessageResource\:\:\$sender_name\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Chat/Http/Resources/Api/DirectMessageResource.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Collection\<int, Modules\\User\\Entities\\User\>\|Modules\\User\\Entities\\User\:\:\$uuid\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Chat/Services/MessageService.php
+
+		-
+			message: '#^Access to an undefined property Modules\\PublicProfile\\Entities\\PublicProfile\:\:\$user_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Chat/Services/MessageService.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Audit\\Entities\\AuditLog\:\:\$action\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Compliance/Http/Controllers/Admin/AdminComplianceController.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Audit\\Entities\\AuditLog\:\:\$actor_name\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Compliance/Http/Controllers/Admin/AdminComplianceController.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Audit\\Entities\\AuditLog\:\:\$created_at\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Compliance/Http/Controllers/Admin/AdminComplianceController.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Audit\\Entities\\AuditLog\:\:\$status\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Compliance/Http/Controllers/Admin/AdminComplianceController.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Audit\\Entities\\AuditLog\:\:\$target_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Compliance/Http/Controllers/Admin/AdminComplianceController.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Marketplace\\Entities\\MatchSetting\:\:\$ai_boost\.$#'
+			identifier: property.notFound
+			count: 2
+			path: Modules/Compliance/Http/Controllers/Admin/AdminComplianceController.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Marketplace\\Entities\\MatchSetting\:\:\$category_weight\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Compliance/Http/Controllers/Admin/AdminComplianceController.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Marketplace\\Entities\\MatchSetting\:\:\$experience_weight\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Compliance/Http/Controllers/Admin/AdminComplianceController.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Marketplace\\Entities\\MatchSetting\:\:\$skills_weight\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Compliance/Http/Controllers/Admin/AdminComplianceController.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Marketplace\\Entities\\MatchSetting\:\:\$threshold\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Compliance/Http/Controllers/Admin/AdminComplianceController.php
+
+		-
+			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,Modules\\Audit\\Entities\\AuditLog\>\:\:map\(\) contains unresolvable type\.$#'
+			identifier: argument.unresolvableType
+			count: 1
+			path: Modules/Compliance/Http/Controllers/Admin/AdminComplianceController.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Governance\\Entities\\ModerationItem\:\:\$created_at\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Governance/Events/ModerationItemCreated.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Governance\\Entities\\ModerationItem\:\:\$reason\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Governance/Events/ModerationItemCreated.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Governance\\Entities\\ModerationItem\:\:\$status\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Governance/Events/ModerationItemCreated.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Governance\\Entities\\ModerationItem\:\:\$subject\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Governance/Events/ModerationItemCreated.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Governance\\Entities\\ModerationItem\:\:\$submitter_name\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Governance/Events/ModerationItemCreated.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Governance\\Entities\\ModerationItem\:\:\$target_ref\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Governance/Events/ModerationItemCreated.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Governance\\Entities\\ModerationItem\:\:\$type\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Governance/Events/ModerationItemCreated.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Governance\\Entities\\ModerationItem\:\:\$status\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Governance/Http/Controllers/Admin/AdminModerationController.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Governance\\Entities\\ModerationItem\:\:\$target_ref\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Governance/Http/Controllers/Admin/AdminModerationController.php
+
+		-
+			message: '#^Parameter \#1 \$collection of method Illuminate\\Pagination\\AbstractPaginator\<int,Modules\\Governance\\Entities\\ModerationItem\>\:\:setCollection\(\) expects Illuminate\\Support\\Collection\<int, Modules\\Governance\\Entities\\ModerationItem\>, Illuminate\\Support\\Collection\<int, array\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: Modules/Governance/Http/Controllers/Admin/AdminModerationController.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Governance\\Entities\\ModerationItem\:\:\$status\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Governance/Http/Controllers/Api/ReportController.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Governance\\Http\\Resources\\Admin\\AdminModerationResource\:\:\$created_at\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Governance/Http/Resources/Admin/AdminModerationResource.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Governance\\Http\\Resources\\Admin\\AdminModerationResource\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Governance/Http/Resources/Admin/AdminModerationResource.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Governance\\Http\\Resources\\Admin\\AdminModerationResource\:\:\$meta\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Governance/Http/Resources/Admin/AdminModerationResource.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Governance\\Http\\Resources\\Admin\\AdminModerationResource\:\:\$reason\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Governance/Http/Resources/Admin/AdminModerationResource.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Governance\\Http\\Resources\\Admin\\AdminModerationResource\:\:\$resolved_at\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Governance/Http/Resources/Admin/AdminModerationResource.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Governance\\Http\\Resources\\Admin\\AdminModerationResource\:\:\$resolver_name\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Governance/Http/Resources/Admin/AdminModerationResource.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Governance\\Http\\Resources\\Admin\\AdminModerationResource\:\:\$status\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Governance/Http/Resources/Admin/AdminModerationResource.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Governance\\Http\\Resources\\Admin\\AdminModerationResource\:\:\$subject\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Governance/Http/Resources/Admin/AdminModerationResource.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Governance\\Http\\Resources\\Admin\\AdminModerationResource\:\:\$target_ref\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Governance/Http/Resources/Admin/AdminModerationResource.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Governance\\Http\\Resources\\Admin\\AdminModerationResource\:\:\$type\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Governance/Http/Resources/Admin/AdminModerationResource.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Collection\<int, Modules\\Marketplace\\Entities\\MarketRequest\>\|Illuminate\\Database\\Eloquent\\Collection\<int, Modules\\Marketplace\\Entities\\Opportunity\>\|Modules\\Marketplace\\Entities\\MarketRequest\|Modules\\Marketplace\\Entities\\Opportunity\:\:\$title\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Governance/Services/ModerationService.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Governance\\Entities\\ModerationItem\:\:\$status\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Governance/Services/ModerationService.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Governance\\Entities\\ModerationItem\:\:\$subject\.$#'
+			identifier: property.notFound
+			count: 2
+			path: Modules/Governance/Services/ModerationService.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Governance\\Entities\\ModerationItem\:\:\$submitted_by\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Governance/Services/ModerationService.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Governance\\Entities\\ModerationItem\:\:\$target_ref\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Governance/Services/ModerationService.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Governance\\Entities\\ModerationItem\:\:\$type\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Governance/Services/ModerationService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Collection\<int, Modules\\Interview\\Entities\\InterviewRubric\>\|Modules\\Interview\\Entities\\InterviewRubric\:\:\$criteria\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Interview/Database/Seeders/InterviewQualitySeeder.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Interview\\Entities\\Interview\:\:\$candidate_name\.$#'
+			identifier: property.notFound
+			count: 2
+			path: Modules/Interview/Http/Controllers/Admin/AdminInterviewQualityController.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Interview\\Entities\\Interview\:\:\$created_at\.$#'
+			identifier: property.notFound
+			count: 2
+			path: Modules/Interview/Http/Controllers/Admin/AdminInterviewQualityController.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Interview\\Entities\\Interview\:\:\$integrity\.$#'
+			identifier: property.notFound
+			count: 4
+			path: Modules/Interview/Http/Controllers/Admin/AdminInterviewQualityController.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Interview\\Entities\\Interview\:\:\$review_status\.$#'
+			identifier: property.notFound
+			count: 2
+			path: Modules/Interview/Http/Controllers/Admin/AdminInterviewQualityController.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Interview\\Entities\\Interview\:\:\$reviewed_at\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Interview/Http/Controllers/Admin/AdminInterviewQualityController.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Interview\\Entities\\Interview\:\:\$rubric\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Interview/Http/Controllers/Admin/AdminInterviewQualityController.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Interview\\Entities\\Interview\:\:\$score\.$#'
+			identifier: property.notFound
+			count: 2
+			path: Modules/Interview/Http/Controllers/Admin/AdminInterviewQualityController.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Interview\\Entities\\Interview\:\:\$status\.$#'
+			identifier: property.notFound
+			count: 2
+			path: Modules/Interview/Http/Controllers/Admin/AdminInterviewQualityController.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Interview\\Entities\\Interview\:\:\$track\.$#'
+			identifier: property.notFound
+			count: 2
+			path: Modules/Interview/Http/Controllers/Admin/AdminInterviewQualityController.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Interview\\Entities\\InterviewRubric\:\:\$active\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Interview/Http/Controllers/Admin/AdminInterviewQualityController.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Interview\\Entities\\InterviewRubric\:\:\$is_system\.$#'
+			identifier: property.notFound
+			count: 2
+			path: Modules/Interview/Http/Controllers/Admin/AdminInterviewQualityController.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Interview\\Entities\\InterviewRubric\:\:\$key\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Interview/Http/Controllers/Admin/AdminInterviewQualityController.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Interview\\Entities\\InterviewRubric\:\:\$name\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Interview/Http/Controllers/Admin/AdminInterviewQualityController.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Interview\\Entities\\InterviewRubric\:\:\$track\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Interview/Http/Controllers/Admin/AdminInterviewQualityController.php
+
+		-
+			message: '#^Constant Modules\\Interview\\Http\\Controllers\\Admin\\AdminInterviewQualityController\:\:REVIEW_STATUSES is unused\.$#'
+			identifier: classConstant.unused
+			count: 1
+			path: Modules/Interview/Http/Controllers/Admin/AdminInterviewQualityController.php
+
+		-
+			message: '#^Parameter \#1 \$collection of method Illuminate\\Pagination\\AbstractPaginator\<int,Modules\\Interview\\Entities\\Interview\>\:\:setCollection\(\) expects Illuminate\\Support\\Collection\<int, Modules\\Interview\\Entities\\Interview\>, Illuminate\\Support\\Collection\<int, array\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: Modules/Interview/Http/Controllers/Admin/AdminInterviewQualityController.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>criteria" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: Modules/Interview/Http/Controllers/Admin/AdminInterviewQualityController.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Interview\\Http\\Resources\\Api\\InterviewResource\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Interview/Http/Resources/Api/InterviewResource.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Interview\\Http\\Resources\\Api\\InterviewResource\:\:\$integrity\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Interview/Http/Resources/Api/InterviewResource.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Interview\\Http\\Resources\\Api\\InterviewResource\:\:\$score\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Interview/Http/Resources/Api/InterviewResource.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Interview\\Http\\Resources\\Api\\InterviewResource\:\:\$status\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Interview/Http/Resources/Api/InterviewResource.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Interview\\Http\\Resources\\Api\\InterviewResource\:\:\$track\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Interview/Http/Resources/Api/InterviewResource.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Interview\\Entities\\Interview\:\:\$integrity\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Interview/Services/InterviewQualityService.php
+
+		-
+			message: '#^Parameter \#1 \$collection of method Illuminate\\Pagination\\AbstractPaginator\<int,Modules\\Interviewer\\Entities\\Interviewer\>\:\:setCollection\(\) expects Illuminate\\Support\\Collection\<int, Modules\\Interviewer\\Entities\\Interviewer\>, Illuminate\\Support\\Collection\<int, array\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: Modules/Interviewer/Http/Controllers/Admin/AdminInterviewerController.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Interviewer\\Http\\Resources\\Admin\\AdminInterviewerResource\:\:\$created_at\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Interviewer/Http/Resources/Admin/AdminInterviewerResource.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Interviewer\\Http\\Resources\\Admin\\AdminInterviewerResource\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Interviewer/Http/Resources/Admin/AdminInterviewerResource.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Interviewer\\Http\\Resources\\Admin\\AdminInterviewerResource\:\:\$name\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Interviewer/Http/Resources/Admin/AdminInterviewerResource.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Interviewer\\Http\\Resources\\Admin\\AdminInterviewerResource\:\:\$price_from\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Interviewer/Http/Resources/Admin/AdminInterviewerResource.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Interviewer\\Http\\Resources\\Admin\\AdminInterviewerResource\:\:\$rating\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Interviewer/Http/Resources/Admin/AdminInterviewerResource.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Interviewer\\Http\\Resources\\Admin\\AdminInterviewerResource\:\:\$specialty\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Interviewer/Http/Resources/Admin/AdminInterviewerResource.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Interviewer\\Http\\Resources\\Admin\\AdminInterviewerResource\:\:\$status\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Interviewer/Http/Resources/Admin/AdminInterviewerResource.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Interviewer\\Http\\Resources\\Admin\\AdminInterviewerResource\:\:\$user\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Interviewer/Http/Resources/Admin/AdminInterviewerResource.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Interviewer\\Http\\Resources\\Api\\BookingResource\:\:\$day\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Interviewer/Http/Resources/Api/BookingResource.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Interviewer\\Http\\Resources\\Api\\BookingResource\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Interviewer/Http/Resources/Api/BookingResource.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Interviewer\\Http\\Resources\\Api\\BookingResource\:\:\$interviewer_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Interviewer/Http/Resources/Api/BookingResource.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Interviewer\\Http\\Resources\\Api\\BookingResource\:\:\$report\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Interviewer/Http/Resources/Api/BookingResource.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Interviewer\\Http\\Resources\\Api\\BookingResource\:\:\$slot\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Interviewer/Http/Resources/Api/BookingResource.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Interviewer\\Http\\Resources\\Api\\BookingResource\:\:\$status\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Interviewer/Http/Resources/Api/BookingResource.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Interviewer\\Http\\Resources\\Api\\BookingResource\:\:\$type\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Interviewer/Http/Resources/Api/BookingResource.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Interviewer\\Http\\Resources\\Api\\InterviewerResource\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Interviewer/Http/Resources/Api/InterviewerResource.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Interviewer\\Http\\Resources\\Api\\InterviewerResource\:\:\$name\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Interviewer/Http/Resources/Api/InterviewerResource.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Interviewer\\Http\\Resources\\Api\\InterviewerResource\:\:\$price_from\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Interviewer/Http/Resources/Api/InterviewerResource.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Interviewer\\Http\\Resources\\Api\\InterviewerResource\:\:\$rating\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Interviewer/Http/Resources/Api/InterviewerResource.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Interviewer\\Http\\Resources\\Api\\InterviewerResource\:\:\$specialty\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Interviewer/Http/Resources/Api/InterviewerResource.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Collection\<int, Modules\\Interviewer\\Entities\\Interviewer\>\|Modules\\Interviewer\\Entities\\Interviewer\:\:\$user_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Interviewer/Services/InterviewerService.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Interviewer\\Entities\\Booking\:\:\$interviewer_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Interviewer/Services/InterviewerService.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Interviewer\\Entities\\Booking\:\:\$report\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Interviewer/Services/InterviewerService.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Interviewer\\Entities\\Booking\:\:\$status\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Interviewer/Services/InterviewerService.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Interviewer\\Entities\\Booking\:\:\$user_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Interviewer/Services/InterviewerService.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$company\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Marketplace/Http/Controllers/Admin/AdminApplicationController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$email\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Marketplace/Http/Controllers/Admin/AdminApplicationController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$name\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Marketplace/Http/Controllers/Admin/AdminApplicationController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$title\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Marketplace/Http/Controllers/Admin/AdminApplicationController.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Marketplace\\Entities\\Application\:\:\$created_at\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Marketplace/Http/Controllers/Admin/AdminApplicationController.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Marketplace\\Entities\\Application\:\:\$note\.$#'
+			identifier: property.notFound
+			count: 2
+			path: Modules/Marketplace/Http/Controllers/Admin/AdminApplicationController.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Marketplace\\Entities\\Application\:\:\$opportunity_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Marketplace/Http/Controllers/Admin/AdminApplicationController.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Marketplace\\Entities\\Application\:\:\$stage\.$#'
+			identifier: property.notFound
+			count: 4
+			path: Modules/Marketplace/Http/Controllers/Admin/AdminApplicationController.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Marketplace\\Entities\\Application\:\:\$stage_changed_at\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Marketplace/Http/Controllers/Admin/AdminApplicationController.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Marketplace\\Entities\\Opportunity\:\:\$company\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Marketplace/Http/Controllers/Admin/AdminApplicationController.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Marketplace\\Entities\\Opportunity\:\:\$title\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Marketplace/Http/Controllers/Admin/AdminApplicationController.php
+
+		-
+			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,Modules\\Marketplace\\Entities\\Opportunity\>\:\:map\(\) contains unresolvable type\.$#'
+			identifier: argument.unresolvableType
+			count: 1
+			path: Modules/Marketplace/Http/Controllers/Admin/AdminApplicationController.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>name" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: Modules/Marketplace/Http/Controllers/Admin/AdminApplicationController.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>title" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: Modules/Marketplace/Http/Controllers/Admin/AdminApplicationController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Collection\<int, Modules\\Marketplace\\Entities\\Application\>\|Modules\\Marketplace\\Entities\\Application\:\:\$user_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Marketplace/Http/Controllers/Admin/AdminMatchController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Collection\<int, Modules\\Marketplace\\Entities\\Opportunity\>\|Modules\\Marketplace\\Entities\\Opportunity\:\:\$company\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Marketplace/Http/Controllers/Admin/AdminMatchController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Collection\<int, Modules\\Marketplace\\Entities\\Opportunity\>\|Modules\\Marketplace\\Entities\\Opportunity\:\:\$title\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Marketplace/Http/Controllers/Admin/AdminMatchController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$name\.$#'
+			identifier: property.notFound
+			count: 2
+			path: Modules/Marketplace/Http/Controllers/Admin/AdminMatchController.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Marketplace\\Entities\\Application\:\:\$stage\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Marketplace/Http/Controllers/Admin/AdminMatchController.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Marketplace\\Entities\\Application\:\:\$user_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Marketplace/Http/Controllers/Admin/AdminMatchController.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Marketplace\\Entities\\MatchSetting\:\:\$ai_boost\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Marketplace/Http/Controllers/Admin/AdminMatchController.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Marketplace\\Entities\\MatchSetting\:\:\$category_weight\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Marketplace/Http/Controllers/Admin/AdminMatchController.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Marketplace\\Entities\\MatchSetting\:\:\$experience_weight\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Marketplace/Http/Controllers/Admin/AdminMatchController.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Marketplace\\Entities\\MatchSetting\:\:\$skills_weight\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Marketplace/Http/Controllers/Admin/AdminMatchController.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Marketplace\\Entities\\MatchSetting\:\:\$threshold\.$#'
+			identifier: property.notFound
+			count: 2
+			path: Modules/Marketplace/Http/Controllers/Admin/AdminMatchController.php
+
+		-
+			message: '#^Offset ''live'' on array\{live\: bool, score\: float, verdict\: string, reasons\: array, redFlags\: array, summary\: string, breakdown\: array, matchedSkills\: array, \.\.\.\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: Modules/Marketplace/Http/Controllers/Admin/AdminMatchController.php
+
+		-
+			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,Modules\\Marketplace\\Entities\\Application\>\:\:map\(\) contains unresolvable type\.$#'
+			identifier: argument.unresolvableType
+			count: 1
+			path: Modules/Marketplace/Http/Controllers/Admin/AdminMatchController.php
+
+		-
+			message: '#^Parameter \#1 \$callback of method Illuminate\\Support\\Collection\<int,array\<string, mixed\>\>\:\:sortByDesc\(\) contains unresolvable type\.$#'
+			identifier: argument.unresolvableType
+			count: 1
+			path: Modules/Marketplace/Http/Controllers/Admin/AdminMatchController.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>name" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 2
+			path: Modules/Marketplace/Http/Controllers/Admin/AdminMatchController.php
+
+		-
+			message: '#^Parameter \#1 \$collection of method Illuminate\\Pagination\\AbstractPaginator\<int,Modules\\Marketplace\\Entities\\Opportunity\>\:\:setCollection\(\) expects Illuminate\\Support\\Collection\<int, Modules\\Marketplace\\Entities\\Opportunity\>, Illuminate\\Support\\Collection\<int, array\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: Modules/Marketplace/Http/Controllers/Admin/AdminOpportunityController.php
+
+		-
+			message: '#^Parameter \#1 \$collection of method Illuminate\\Pagination\\AbstractPaginator\<int,Modules\\Marketplace\\Entities\\MarketRequest\>\:\:setCollection\(\) expects Illuminate\\Support\\Collection\<int, Modules\\Marketplace\\Entities\\MarketRequest\>, Illuminate\\Support\\Collection\<int, array\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: Modules/Marketplace/Http/Controllers/Admin/AdminRequestController.php
+
+		-
+			message: '#^Offset ''live'' on array\{live\: bool, score\: float, verdict\: string, reasons\: array, redFlags\: array, summary\: string, breakdown\: array, matchedSkills\: array, \.\.\.\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: Modules/Marketplace/Http/Controllers/Api/MatchController.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Marketplace\\Http\\Resources\\Admin\\AdminMarketRequestResource\:\:\$compensation\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Marketplace/Http/Resources/Admin/AdminMarketRequestResource.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Marketplace\\Http\\Resources\\Admin\\AdminMarketRequestResource\:\:\$created_at\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Marketplace/Http/Resources/Admin/AdminMarketRequestResource.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Marketplace\\Http\\Resources\\Admin\\AdminMarketRequestResource\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Marketplace/Http/Resources/Admin/AdminMarketRequestResource.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Marketplace\\Http\\Resources\\Admin\\AdminMarketRequestResource\:\:\$org\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Marketplace/Http/Resources/Admin/AdminMarketRequestResource.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Marketplace\\Http\\Resources\\Admin\\AdminMarketRequestResource\:\:\$remote\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Marketplace/Http/Resources/Admin/AdminMarketRequestResource.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Marketplace\\Http\\Resources\\Admin\\AdminMarketRequestResource\:\:\$state\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Marketplace/Http/Resources/Admin/AdminMarketRequestResource.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Marketplace\\Http\\Resources\\Admin\\AdminMarketRequestResource\:\:\$title\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Marketplace/Http/Resources/Admin/AdminMarketRequestResource.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Marketplace\\Http\\Resources\\Admin\\AdminMarketRequestResource\:\:\$type\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Marketplace/Http/Resources/Admin/AdminMarketRequestResource.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Marketplace\\Http\\Resources\\Admin\\AdminOpportunityResource\:\:\$category\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Marketplace/Http/Resources/Admin/AdminOpportunityResource.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Marketplace\\Http\\Resources\\Admin\\AdminOpportunityResource\:\:\$company\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Marketplace/Http/Resources/Admin/AdminOpportunityResource.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Marketplace\\Http\\Resources\\Admin\\AdminOpportunityResource\:\:\$created_at\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Marketplace/Http/Resources/Admin/AdminOpportunityResource.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Marketplace\\Http\\Resources\\Admin\\AdminOpportunityResource\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Marketplace/Http/Resources/Admin/AdminOpportunityResource.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Marketplace\\Http\\Resources\\Admin\\AdminOpportunityResource\:\:\$location\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Marketplace/Http/Resources/Admin/AdminOpportunityResource.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Marketplace\\Http\\Resources\\Admin\\AdminOpportunityResource\:\:\$salary\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Marketplace/Http/Resources/Admin/AdminOpportunityResource.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Marketplace\\Http\\Resources\\Admin\\AdminOpportunityResource\:\:\$title\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Marketplace/Http/Resources/Admin/AdminOpportunityResource.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Marketplace\\Http\\Resources\\Api\\MarketRequestResource\:\:\$compensation\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Marketplace/Http/Resources/Api/MarketRequestResource.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Marketplace\\Http\\Resources\\Api\\MarketRequestResource\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Marketplace/Http/Resources/Api/MarketRequestResource.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Marketplace\\Http\\Resources\\Api\\MarketRequestResource\:\:\$org\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Marketplace/Http/Resources/Api/MarketRequestResource.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Marketplace\\Http\\Resources\\Api\\MarketRequestResource\:\:\$remote\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Marketplace/Http/Resources/Api/MarketRequestResource.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Marketplace\\Http\\Resources\\Api\\MarketRequestResource\:\:\$state\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Marketplace/Http/Resources/Api/MarketRequestResource.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Marketplace\\Http\\Resources\\Api\\MarketRequestResource\:\:\$title\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Marketplace/Http/Resources/Api/MarketRequestResource.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Marketplace\\Http\\Resources\\Api\\MarketRequestResource\:\:\$type\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Marketplace/Http/Resources/Api/MarketRequestResource.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Marketplace\\Http\\Resources\\Api\\OpportunityResource\:\:\$category\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Marketplace/Http/Resources/Api/OpportunityResource.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Marketplace\\Http\\Resources\\Api\\OpportunityResource\:\:\$company\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Marketplace/Http/Resources/Api/OpportunityResource.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Marketplace\\Http\\Resources\\Api\\OpportunityResource\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Marketplace/Http/Resources/Api/OpportunityResource.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Marketplace\\Http\\Resources\\Api\\OpportunityResource\:\:\$location\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Marketplace/Http/Resources/Api/OpportunityResource.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Marketplace\\Http\\Resources\\Api\\OpportunityResource\:\:\$salary\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Marketplace/Http/Resources/Api/OpportunityResource.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Marketplace\\Http\\Resources\\Api\\OpportunityResource\:\:\$title\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Marketplace/Http/Resources/Api/OpportunityResource.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Ai\\Entities\\AiCapability\:\:\$enabled\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Marketplace/Services/MatchService.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Ai\\Entities\\AiSetting\:\:\$enabled\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Marketplace/Services/MatchService.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Ai\\Entities\\AiSetting\:\:\$model\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Marketplace/Services/MatchService.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Ai\\Entities\\AiSetting\:\:\$provider\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Marketplace/Services/MatchService.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Marketplace\\Entities\\MatchSetting\:\:\$ai_boost\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Marketplace/Services/MatchService.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Marketplace\\Entities\\MatchSetting\:\:\$category_weight\.$#'
+			identifier: property.notFound
+			count: 2
+			path: Modules/Marketplace/Services/MatchService.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Marketplace\\Entities\\MatchSetting\:\:\$experience_weight\.$#'
+			identifier: property.notFound
+			count: 2
+			path: Modules/Marketplace/Services/MatchService.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Marketplace\\Entities\\MatchSetting\:\:\$skills_weight\.$#'
+			identifier: property.notFound
+			count: 2
+			path: Modules/Marketplace/Services/MatchService.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Marketplace\\Entities\\Opportunity\:\:\$category\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Marketplace/Services/MatchService.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Marketplace\\Entities\\Opportunity\:\:\$company\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Marketplace/Services/MatchService.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Marketplace\\Entities\\Opportunity\:\:\$skills\.$#'
+			identifier: property.notFound
+			count: 4
+			path: Modules/Marketplace/Services/MatchService.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Marketplace\\Entities\\Opportunity\:\:\$title\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Marketplace/Services/MatchService.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Profile\\Entities\\Profile\:\:\$experiences\.$#'
+			identifier: property.notFound
+			count: 2
+			path: Modules/Marketplace/Services/MatchService.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Profile\\Entities\\Profile\:\:\$prefs\.$#'
+			identifier: property.notFound
+			count: 2
+			path: Modules/Marketplace/Services/MatchService.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Profile\\Entities\\Profile\:\:\$skills\.$#'
+			identifier: property.notFound
+			count: 3
+			path: Modules/Marketplace/Services/MatchService.php
+
+		-
+			message: '#^Offset ''input'' on array\{input\: int, output\: int\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: Modules/Marketplace/Services/MatchService.php
+
+		-
+			message: '#^Offset ''output'' on array\{input\: int, output\: int\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: Modules/Marketplace/Services/MatchService.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>enabled" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: Modules/Marketplace/Services/MatchService.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Notification\\Entities\\Notification\:\:\$user_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Notification/Http/Controllers/Api/NotificationController.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Notification\\Http\\Resources\\Api\\NotificationResource\:\:\$action_to\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Notification/Http/Resources/Api/NotificationResource.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Notification\\Http\\Resources\\Api\\NotificationResource\:\:\$category\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Notification/Http/Resources/Api/NotificationResource.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Notification\\Http\\Resources\\Api\\NotificationResource\:\:\$created_at\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Notification/Http/Resources/Api/NotificationResource.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Notification\\Http\\Resources\\Api\\NotificationResource\:\:\$icon\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Notification/Http/Resources/Api/NotificationResource.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Notification\\Http\\Resources\\Api\\NotificationResource\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Notification/Http/Resources/Api/NotificationResource.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Notification\\Http\\Resources\\Api\\NotificationResource\:\:\$read\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Notification/Http/Resources/Api/NotificationResource.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Notification\\Http\\Resources\\Api\\NotificationResource\:\:\$title\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Notification/Http/Resources/Api/NotificationResource.php
+
+		-
+			message: '#^Called ''env'' outside of the config directory which returns null when the config is cached, use ''config''\.$#'
+			identifier: larastan.noEnvCallsOutsideOfConfig
+			count: 1
+			path: Modules/Notification/Services/FcmService.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Notification\\Entities\\Notification\:\:\$action_to\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Notification/Services/NotificationService.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Notification\\Entities\\Notification\:\:\$category\.$#'
+			identifier: property.notFound
+			count: 2
+			path: Modules/Notification/Services/NotificationService.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Notification\\Entities\\Notification\:\:\$created_at\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Notification/Services/NotificationService.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Notification\\Entities\\Notification\:\:\$icon\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Notification/Services/NotificationService.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Notification\\Entities\\Notification\:\:\$title\.$#'
+			identifier: property.notFound
+			count: 2
+			path: Modules/Notification/Services/NotificationService.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Profile\\Http\\Resources\\Api\\ProfileResource\:\:\$prefs\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Profile/Http/Resources/Api/ProfileResource.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Profile\\Entities\\Profile\:\:\$certificates\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Profile/Services/ProfileService.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Profile\\Entities\\Profile\:\:\$experiences\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Profile/Services/ProfileService.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Profile\\Entities\\Profile\:\:\$headline\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Profile/Services/ProfileService.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Profile\\Entities\\Profile\:\:\$prefs\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Profile/Services/ProfileService.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Profile\\Entities\\Profile\:\:\$proof_requests\.$#'
+			identifier: property.notFound
+			count: 2
+			path: Modules/Profile/Services/ProfileService.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Profile\\Entities\\Profile\:\:\$skills\.$#'
+			identifier: property.notFound
+			count: 3
+			path: Modules/Profile/Services/ProfileService.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Profile\\Entities\\Profile\:\:\$summary\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Profile/Services/ProfileService.php
+
+		-
+			message: '#^Access to an undefined property Modules\\PublicProfile\\Entities\\PublicProfile\:\:\$comments\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/PublicProfile/Services/PublicProfileService.php
+
+		-
+			message: '#^Access to an undefined property Modules\\PublicProfile\\Entities\\PublicProfile\:\:\$doc\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/PublicProfile/Services/PublicProfileService.php
+
+		-
+			message: '#^Access to an undefined property Modules\\PublicProfile\\Entities\\PublicProfile\:\:\$inbox\.$#'
+			identifier: property.notFound
+			count: 2
+			path: Modules/PublicProfile/Services/PublicProfileService.php
+
+		-
+			message: '#^Access to an undefined property Modules\\PublicProfile\\Entities\\PublicProfile\:\:\$slug\.$#'
+			identifier: property.notFound
+			count: 2
+			path: Modules/PublicProfile/Services/PublicProfileService.php
+
+		-
+			message: '#^Access to an undefined property Modules\\PublicProfile\\Entities\\PublicProfile\:\:\$stats\.$#'
+			identifier: property.notFound
+			count: 12
+			path: Modules/PublicProfile/Services/PublicProfileService.php
+
+		-
+			message: '#^Access to an undefined property Modules\\PublicProfile\\Entities\\PublicProfile\:\:\$testimonials\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/PublicProfile/Services/PublicProfileService.php
+
+		-
+			message: '#^Access to an undefined property Modules\\PublicProfile\\Entities\\PublicProfile\:\:\$user_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/PublicProfile/Services/PublicProfileService.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Quality\\Entities\\QualityDispatch\:\:\$assignee\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Quality/Http/Controllers/Admin/AdminQualityController.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Quality\\Entities\\QualityDispatch\:\:\$department\.$#'
+			identifier: property.notFound
+			count: 2
+			path: Modules/Quality/Http/Controllers/Admin/AdminQualityController.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Quality\\Entities\\QualityDispatch\:\:\$note\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Quality/Http/Controllers/Admin/AdminQualityController.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Quality\\Entities\\QualityDispatch\:\:\$state\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Quality/Http/Controllers/Admin/AdminQualityController.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Quality\\Entities\\QualitySnapshot\:\:\$automated\.$#'
+			identifier: property.notFound
+			count: 2
+			path: Modules/Quality/Http/Controllers/Admin/AdminQualityController.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Quality\\Entities\\QualitySnapshot\:\:\$captured_on\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Quality/Http/Controllers/Admin/AdminQualityController.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Quality\\Entities\\QualitySnapshot\:\:\$total\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Quality/Http/Controllers/Admin/AdminQualityController.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Quality\\Entities\\RuntimeError\:\:\$count\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Quality/Http/Controllers/Admin/AdminQualityController.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Quality\\Entities\\RuntimeError\:\:\$diagnosed_at\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Quality/Http/Controllers/Admin/AdminQualityController.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Quality\\Entities\\RuntimeError\:\:\$diagnosis\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Quality/Http/Controllers/Admin/AdminQualityController.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Quality\\Entities\\RuntimeError\:\:\$fingerprint\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Quality/Http/Controllers/Admin/AdminQualityController.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Quality\\Entities\\RuntimeError\:\:\$first_seen_at\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Quality/Http/Controllers/Admin/AdminQualityController.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Quality\\Entities\\RuntimeError\:\:\$last_seen_at\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Quality/Http/Controllers/Admin/AdminQualityController.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Quality\\Entities\\RuntimeError\:\:\$layer\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Quality/Http/Controllers/Admin/AdminQualityController.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Quality\\Entities\\RuntimeError\:\:\$message\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Quality/Http/Controllers/Admin/AdminQualityController.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Quality\\Entities\\RuntimeError\:\:\$route\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Quality/Http/Controllers/Admin/AdminQualityController.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Quality\\Entities\\RuntimeError\:\:\$scope\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Quality/Http/Controllers/Admin/AdminQualityController.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Quality\\Entities\\RuntimeError\:\:\$severity\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Quality/Http/Controllers/Admin/AdminQualityController.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Quality\\Entities\\RuntimeError\:\:\$status\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Quality/Http/Controllers/Admin/AdminQualityController.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Quality\\Entities\\RuntimeError\:\:\$type\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Quality/Http/Controllers/Admin/AdminQualityController.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Quality\\Entities\\TestCase\:\:\$c\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Quality/Http/Controllers/Admin/AdminQualityController.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Quality\\Entities\\TestCase\:\:\$case_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Quality/Http/Controllers/Admin/AdminQualityController.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Quality\\Entities\\TestCase\:\:\$gaps\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Quality/Http/Controllers/Admin/AdminQualityController.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Quality\\Entities\\TestCase\:\:\$layer\.$#'
+			identifier: property.notFound
+			count: 2
+			path: Modules/Quality/Http/Controllers/Admin/AdminQualityController.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Quality\\Entities\\TestCase\:\:\$lifecycle\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Quality/Http/Controllers/Admin/AdminQualityController.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Quality\\Entities\\TestCase\:\:\$module\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Quality/Http/Controllers/Admin/AdminQualityController.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Quality\\Entities\\TestCase\:\:\$priority\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Quality/Http/Controllers/Admin/AdminQualityController.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Quality\\Entities\\TestCase\:\:\$section\.$#'
+			identifier: property.notFound
+			count: 2
+			path: Modules/Quality/Http/Controllers/Admin/AdminQualityController.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Quality\\Entities\\TestCase\:\:\$status\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Quality/Http/Controllers/Admin/AdminQualityController.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Quality\\Entities\\TestCase\:\:\$test_file\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Quality/Http/Controllers/Admin/AdminQualityController.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Quality\\Entities\\TestCase\:\:\$title\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Quality/Http/Controllers/Admin/AdminQualityController.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Quality\\Entities\\TestCase\:\:\$type\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Quality/Http/Controllers/Admin/AdminQualityController.php
+
+		-
+			message: '#^Parameter \#1 \$a of method Modules\\Quality\\Http\\Controllers\\Admin\\AdminQualityController\:\:present\(\) expects Modules\\Quality\\Entities\\TestCase, Illuminate\\Database\\Eloquent\\Model given\.$#'
+			identifier: argument.type
+			count: 1
+			path: Modules/Quality/Http/Controllers/Admin/AdminQualityController.php
+
+		-
+			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,Modules\\Quality\\Entities\\TestCase\>\:\:map\(\) contains unresolvable type\.$#'
+			identifier: argument.unresolvableType
+			count: 1
+			path: Modules/Quality/Http/Controllers/Admin/AdminQualityController.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Quality\\Entities\\RuntimeError\:\:\$count\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Quality/Http/Controllers/Api/ObserveController.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Quality\\Entities\\RuntimeError\:\:\$fingerprint\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Quality/Http/Controllers/Api/ObserveController.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Quality\\Entities\\RuntimeError\:\:\$last_seen_at\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Quality/Http/Controllers/Api/ObserveController.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Quality\\Entities\\RuntimeError\:\:\$message\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Quality/Http/Controllers/Api/ObserveController.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Quality\\Entities\\RuntimeError\:\:\$route\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Quality/Http/Controllers/Api/ObserveController.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Quality\\Entities\\RuntimeError\:\:\$severity\.$#'
+			identifier: property.notFound
+			count: 2
+			path: Modules/Quality/Http/Controllers/Api/ObserveController.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Quality\\Entities\\RuntimeError\:\:\$status\.$#'
+			identifier: property.notFound
+			count: 3
+			path: Modules/Quality/Http/Controllers/Api/ObserveController.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Ai\\Entities\\AiSetting\:\:\$enabled\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Quality/Services/QualityAgentService.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Ai\\Entities\\AiSetting\:\:\$provider\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Quality/Services/QualityAgentService.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Quality\\Entities\\RuntimeError\:\:\$count\.$#'
+			identifier: property.notFound
+			count: 2
+			path: Modules/Quality/Services/QualityAgentService.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Quality\\Entities\\RuntimeError\:\:\$layer\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Quality/Services/QualityAgentService.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Quality\\Entities\\RuntimeError\:\:\$message\.$#'
+			identifier: property.notFound
+			count: 2
+			path: Modules/Quality/Services/QualityAgentService.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Quality\\Entities\\RuntimeError\:\:\$route\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Quality/Services/QualityAgentService.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Quality\\Entities\\RuntimeError\:\:\$scope\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Quality/Services/QualityAgentService.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Quality\\Entities\\RuntimeError\:\:\$severity\.$#'
+			identifier: property.notFound
+			count: 2
+			path: Modules/Quality/Services/QualityAgentService.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Quality\\Entities\\RuntimeError\:\:\$type\.$#'
+			identifier: property.notFound
+			count: 3
+			path: Modules/Quality/Services/QualityAgentService.php
+
+		-
+			message: '#^Offset ''text'' on array\{text\: string, usage\: array\{input\: int, output\: int\}, stopReason\: string\|null\} on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 1
+			path: Modules/Quality/Services/QualityAgentService.php
+
+		-
+			message: '#^Offset 0 on non\-empty\-list\<string\> on left side of \?\? always exists and is not nullable\.$#'
+			identifier: nullCoalesce.offset
+			count: 2
+			path: Modules/Quality/Services/TestCaseRegistryParser.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Quality\\Entities\\TestCase\:\:\$case_id\.$#'
+			identifier: property.notFound
+			count: 11
+			path: Modules/Quality/Services/TestScaffoldGenerator.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Quality\\Entities\\TestCase\:\:\$layer\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Quality/Services/TestScaffoldGenerator.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Quality\\Entities\\TestCase\:\:\$module\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Quality/Services/TestScaffoldGenerator.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Quality\\Entities\\TestCase\:\:\$test_file\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Quality/Services/TestScaffoldGenerator.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Quality\\Entities\\TestCase\:\:\$title\.$#'
+			identifier: property.notFound
+			count: 6
+			path: Modules/Quality/Services/TestScaffoldGenerator.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Quality\\Entities\\TestCase\:\:\$type\.$#'
+			identifier: property.notFound
+			count: 2
+			path: Modules/Quality/Services/TestScaffoldGenerator.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Billing\\Entities\\Invoice\:\:\$plan_name\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Reports/Http/Controllers/Admin/AdminReportController.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Billing\\Entities\\Invoice\:\:\$s\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Reports/Http/Controllers/Admin/AdminReportController.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Interview\\Entities\\Interview\:\:\$score\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Reports/Http/Controllers/Admin/AdminReportController.php
+
+		-
+			message: '#^Access to an undefined property Modules\\User\\Entities\\User\:\:\$c\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Reports/Http/Controllers/Admin/AdminReportController.php
+
+		-
+			message: '#^Access to an undefined property Modules\\User\\Entities\\User\:\:\$role\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Reports/Http/Controllers/Admin/AdminReportController.php
+
+		-
+			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,Modules\\Billing\\Entities\\Invoice\>\:\:map\(\) contains unresolvable type\.$#'
+			identifier: argument.unresolvableType
+			count: 1
+			path: Modules/Reports/Http/Controllers/Admin/AdminReportController.php
+
+		-
+			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,Modules\\User\\Entities\\User\>\:\:map\(\) contains unresolvable type\.$#'
+			identifier: argument.unresolvableType
+			count: 1
+			path: Modules/Reports/Http/Controllers/Admin/AdminReportController.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Settings\\Entities\\BrandingSetting\:\:\$default_mode\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Settings/Entities/BrandingSetting.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Settings\\Entities\\BrandingSetting\:\:\$default_preset\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Settings/Entities/BrandingSetting.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Settings\\Entities\\BrandingSetting\:\:\$login_headline\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Settings/Entities/BrandingSetting.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Settings\\Entities\\BrandingSetting\:\:\$login_subtext\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Settings/Entities/BrandingSetting.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Settings\\Entities\\BrandingSetting\:\:\$logo_url\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Settings/Entities/BrandingSetting.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Settings\\Entities\\BrandingSetting\:\:\$platform_name\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Settings/Entities/BrandingSetting.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Settings\\Entities\\BrandingSetting\:\:\$primary_color\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Settings/Entities/BrandingSetting.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Settings\\Entities\\BrandingSetting\:\:\$secondary_color\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Settings/Entities/BrandingSetting.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Settings\\Entities\\BrandingSetting\:\:\$tagline\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Settings/Entities/BrandingSetting.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Settings\\Entities\\PlatformSetting\:\:\$default_value\.$#'
+			identifier: property.notFound
+			count: 2
+			path: Modules/Settings/Entities/PlatformSetting.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Settings\\Entities\\PlatformSetting\:\:\$type\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Settings/Entities/PlatformSetting.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Settings\\Entities\\PlatformSetting\:\:\$value\.$#'
+			identifier: property.notFound
+			count: 2
+			path: Modules/Settings/Entities/PlatformSetting.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Settings\\Entities\\PlatformSetting\:\:\$default_value\.$#'
+			identifier: property.notFound
+			count: 3
+			path: Modules/Settings/Http/Controllers/Admin/AdminSettingController.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Settings\\Entities\\PlatformSetting\:\:\$key\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Settings/Http/Controllers/Admin/AdminSettingController.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Settings\\Entities\\PlatformSetting\:\:\$type\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Settings/Http/Controllers/Admin/AdminSettingController.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Settings\\Entities\\PlatformSetting\:\:\$value\.$#'
+			identifier: property.notFound
+			count: 4
+			path: Modules/Settings/Http/Controllers/Admin/AdminSettingController.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Settings\\Http\\Resources\\Admin\\AdminSettingResource\:\:\$description\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Settings/Http/Resources/Admin/AdminSettingResource.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Settings\\Http\\Resources\\Admin\\AdminSettingResource\:\:\$group\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Settings/Http/Resources/Admin/AdminSettingResource.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Settings\\Http\\Resources\\Admin\\AdminSettingResource\:\:\$key\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Settings/Http/Resources/Admin/AdminSettingResource.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Settings\\Http\\Resources\\Admin\\AdminSettingResource\:\:\$label\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Settings/Http/Resources/Admin/AdminSettingResource.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Settings\\Http\\Resources\\Admin\\AdminSettingResource\:\:\$options\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Settings/Http/Resources/Admin/AdminSettingResource.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Settings\\Http\\Resources\\Admin\\AdminSettingResource\:\:\$sort\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Settings/Http/Resources/Admin/AdminSettingResource.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Settings\\Http\\Resources\\Admin\\AdminSettingResource\:\:\$type\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Settings/Http/Resources/Admin/AdminSettingResource.php
+
+		-
+			message: '#^Call to an undefined method Modules\\Settings\\Http\\Resources\\Admin\\AdminSettingResource\:\:isModified\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: Modules/Settings/Http/Resources/Admin/AdminSettingResource.php
+
+		-
+			message: '#^Call to an undefined method Modules\\Settings\\Http\\Resources\\Admin\\AdminSettingResource\:\:typedDefault\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: Modules/Settings/Http/Resources/Admin/AdminSettingResource.php
+
+		-
+			message: '#^Call to an undefined method Modules\\Settings\\Http\\Resources\\Admin\\AdminSettingResource\:\:typedValue\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: Modules/Settings/Http/Resources/Admin/AdminSettingResource.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Support\\Entities\\Ticket\:\:\$status\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Support/Events/TicketReplyPosted.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Support\\Entities\\Ticket\:\:\$subject\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Support/Events/TicketReplyPosted.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Support\\Entities\\TicketReply\:\:\$author_name\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Support/Events/TicketReplyPosted.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Support\\Entities\\TicketReply\:\:\$body\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Support/Events/TicketReplyPosted.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Support\\Entities\\TicketReply\:\:\$created_at\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Support/Events/TicketReplyPosted.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Support\\Entities\\TicketReply\:\:\$is_staff\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Support/Events/TicketReplyPosted.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Support\\Entities\\Ticket\:\:\$status\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Support/Http/Controllers/Admin/AdminTicketController.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Support\\Entities\\Ticket\:\:\$user_id\.$#'
+			identifier: property.notFound
+			count: 2
+			path: Modules/Support/Http/Controllers/Admin/AdminTicketController.php
+
+		-
+			message: '#^Parameter \#1 \$collection of method Illuminate\\Pagination\\AbstractPaginator\<int,Modules\\Support\\Entities\\Ticket\>\:\:setCollection\(\) expects Illuminate\\Support\\Collection\<int, Modules\\Support\\Entities\\Ticket\>, Illuminate\\Support\\Collection\<int, array\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: Modules/Support/Http/Controllers/Admin/AdminTicketController.php
+
+		-
+			message: '#^Parameter \#2 \$reply of static method Modules\\Support\\Events\\TicketReplyPosted\:\:payloadFor\(\) expects Modules\\Support\\Entities\\TicketReply, Illuminate\\Database\\Eloquent\\Model given\.$#'
+			identifier: argument.type
+			count: 1
+			path: Modules/Support/Http/Controllers/Admin/AdminTicketController.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>name" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: Modules/Support/Http/Controllers/Admin/AdminTicketController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$author_name\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Support/Http/Controllers/Api/TicketController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$body\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Support/Http/Controllers/Api/TicketController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$created_at\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Support/Http/Controllers/Api/TicketController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Support/Http/Controllers/Api/TicketController.php
+
+		-
+			message: '#^Access to an undefined property Illuminate\\Database\\Eloquent\\Model\:\:\$is_staff\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Support/Http/Controllers/Api/TicketController.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Support\\Entities\\Ticket\:\:\$assignee_name\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Support/Http/Controllers/Api/TicketController.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Support\\Entities\\Ticket\:\:\$category\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Support/Http/Controllers/Api/TicketController.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Support\\Entities\\Ticket\:\:\$created_at\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Support/Http/Controllers/Api/TicketController.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Support\\Entities\\Ticket\:\:\$last_reply_at\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Support/Http/Controllers/Api/TicketController.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Support\\Entities\\Ticket\:\:\$priority\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Support/Http/Controllers/Api/TicketController.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Support\\Entities\\Ticket\:\:\$status\.$#'
+			identifier: property.notFound
+			count: 2
+			path: Modules/Support/Http/Controllers/Api/TicketController.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Support\\Entities\\Ticket\:\:\$subject\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Support/Http/Controllers/Api/TicketController.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Support\\Entities\\Ticket\:\:\$user_id\.$#'
+			identifier: property.notFound
+			count: 2
+			path: Modules/Support/Http/Controllers/Api/TicketController.php
+
+		-
+			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,Illuminate\\Database\\Eloquent\\Model\>\:\:map\(\) contains unresolvable type\.$#'
+			identifier: argument.unresolvableType
+			count: 1
+			path: Modules/Support/Http/Controllers/Api/TicketController.php
+
+		-
+			message: '#^Parameter \#2 \$reply of static method Modules\\Support\\Events\\TicketReplyPosted\:\:payloadFor\(\) expects Modules\\Support\\Entities\\TicketReply, Illuminate\\Database\\Eloquent\\Model given\.$#'
+			identifier: argument.type
+			count: 2
+			path: Modules/Support/Http/Controllers/Api/TicketController.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Support\\Http\\Resources\\Admin\\AdminTicketResource\:\:\$assignee_name\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Support/Http/Resources/Admin/AdminTicketResource.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Support\\Http\\Resources\\Admin\\AdminTicketResource\:\:\$category\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Support/Http/Resources/Admin/AdminTicketResource.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Support\\Http\\Resources\\Admin\\AdminTicketResource\:\:\$created_at\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Support/Http/Resources/Admin/AdminTicketResource.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Support\\Http\\Resources\\Admin\\AdminTicketResource\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Support/Http/Resources/Admin/AdminTicketResource.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Support\\Http\\Resources\\Admin\\AdminTicketResource\:\:\$last_reply_at\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Support/Http/Resources/Admin/AdminTicketResource.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Support\\Http\\Resources\\Admin\\AdminTicketResource\:\:\$priority\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Support/Http/Resources/Admin/AdminTicketResource.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Support\\Http\\Resources\\Admin\\AdminTicketResource\:\:\$replies\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Support/Http/Resources/Admin/AdminTicketResource.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Support\\Http\\Resources\\Admin\\AdminTicketResource\:\:\$status\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Support/Http/Resources/Admin/AdminTicketResource.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Support\\Http\\Resources\\Admin\\AdminTicketResource\:\:\$subject\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Support/Http/Resources/Admin/AdminTicketResource.php
+
+		-
+			message: '#^Call to an undefined method Modules\\Support\\Http\\Resources\\Admin\\AdminTicketResource\:\:replies\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: Modules/Support/Http/Resources/Admin/AdminTicketResource.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Survey\\Entities\\Survey\:\:\$responses\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Survey/Http/Controllers/Admin/AdminSurveyController.php
+
+		-
+			message: '#^Parameter \#1 \$collection of method Illuminate\\Pagination\\AbstractPaginator\<int,Modules\\Survey\\Entities\\Survey\>\:\:setCollection\(\) expects Illuminate\\Support\\Collection\<int, Modules\\Survey\\Entities\\Survey\>, Illuminate\\Support\\Collection\<int, array\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: Modules/Survey/Http/Controllers/Admin/AdminSurveyController.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Survey\\Entities\\SurveyTemplate\:\:\$is_system\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Survey/Http/Controllers/Admin/AdminSurveyTemplateController.php
+
+		-
+			message: '#^Parameter \#1 \$collection of method Illuminate\\Pagination\\AbstractPaginator\<int,Modules\\Survey\\Entities\\SurveyTemplate\>\:\:setCollection\(\) expects Illuminate\\Support\\Collection\<int, Modules\\Survey\\Entities\\SurveyTemplate\>, Illuminate\\Support\\Collection\<int, array\> given\.$#'
+			identifier: argument.type
+			count: 1
+			path: Modules/Survey/Http/Controllers/Admin/AdminSurveyTemplateController.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Survey\\Http\\Resources\\Admin\\AdminSurveyResource\:\:\$created_at\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Survey/Http/Resources/Admin/AdminSurveyResource.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Survey\\Http\\Resources\\Admin\\AdminSurveyResource\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Survey/Http/Resources/Admin/AdminSurveyResource.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Survey\\Http\\Resources\\Admin\\AdminSurveyResource\:\:\$points_pool\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Survey/Http/Resources/Admin/AdminSurveyResource.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Survey\\Http\\Resources\\Admin\\AdminSurveyResource\:\:\$responses\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Survey/Http/Resources/Admin/AdminSurveyResource.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Survey\\Http\\Resources\\Admin\\AdminSurveyResource\:\:\$state\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Survey/Http/Resources/Admin/AdminSurveyResource.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Survey\\Http\\Resources\\Admin\\AdminSurveyResource\:\:\$title\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Survey/Http/Resources/Admin/AdminSurveyResource.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Survey\\Http\\Resources\\Admin\\AdminSurveyResource\:\:\$user\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Survey/Http/Resources/Admin/AdminSurveyResource.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Survey\\Http\\Resources\\Admin\\AdminSurveyTemplateResource\:\:\$active\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Survey/Http/Resources/Admin/AdminSurveyTemplateResource.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Survey\\Http\\Resources\\Admin\\AdminSurveyTemplateResource\:\:\$category\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Survey/Http/Resources/Admin/AdminSurveyTemplateResource.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Survey\\Http\\Resources\\Admin\\AdminSurveyTemplateResource\:\:\$description\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Survey/Http/Resources/Admin/AdminSurveyTemplateResource.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Survey\\Http\\Resources\\Admin\\AdminSurveyTemplateResource\:\:\$icon\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Survey/Http/Resources/Admin/AdminSurveyTemplateResource.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Survey\\Http\\Resources\\Admin\\AdminSurveyTemplateResource\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Survey/Http/Resources/Admin/AdminSurveyTemplateResource.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Survey\\Http\\Resources\\Admin\\AdminSurveyTemplateResource\:\:\$is_system\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Survey/Http/Resources/Admin/AdminSurveyTemplateResource.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Survey\\Http\\Resources\\Admin\\AdminSurveyTemplateResource\:\:\$name\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Survey/Http/Resources/Admin/AdminSurveyTemplateResource.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Survey\\Http\\Resources\\Admin\\AdminSurveyTemplateResource\:\:\$questions\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Survey/Http/Resources/Admin/AdminSurveyTemplateResource.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Survey\\Http\\Resources\\Admin\\AdminSurveyTemplateResource\:\:\$sort\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Survey/Http/Resources/Admin/AdminSurveyTemplateResource.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Survey\\Http\\Resources\\Api\\SurveyResource\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Survey/Http/Resources/Api/SurveyResource.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Survey\\Http\\Resources\\Api\\SurveyResource\:\:\$points_pool\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Survey/Http/Resources/Api/SurveyResource.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Survey\\Http\\Resources\\Api\\SurveyResource\:\:\$state\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Survey/Http/Resources/Api/SurveyResource.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Survey\\Http\\Resources\\Api\\SurveyResource\:\:\$targeting\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Survey/Http/Resources/Api/SurveyResource.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Survey\\Http\\Resources\\Api\\SurveyResource\:\:\$title\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Survey/Http/Resources/Api/SurveyResource.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Survey\\Entities\\Survey\:\:\$points_pool\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Survey/Services/SurveyService.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Survey\\Entities\\Survey\:\:\$responses\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Survey/Services/SurveyService.php
+
+		-
+			message: '#^Access to an undefined property Modules\\User\\Entities\\User\:\:\$tier\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/Survey/Services/SurveyService.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>tier" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: Modules/Survey/Services/SurveyService.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Ai\\Entities\\AiSetting\:\:\$enabled\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/System/Http/Controllers/Admin/AdminSystemController.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Ai\\Entities\\AiSetting\:\:\$provider\.$#'
+			identifier: property.notFound
+			count: 2
+			path: Modules/System/Http/Controllers/Admin/AdminSystemController.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Audit\\Entities\\AuditLog\:\:\$action\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/System/Http/Controllers/Admin/AdminSystemController.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Audit\\Entities\\AuditLog\:\:\$actor_name\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/System/Http/Controllers/Admin/AdminSystemController.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Audit\\Entities\\AuditLog\:\:\$created_at\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/System/Http/Controllers/Admin/AdminSystemController.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Audit\\Entities\\AuditLog\:\:\$status\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/System/Http/Controllers/Admin/AdminSystemController.php
+
+		-
+			message: '#^Called ''env'' outside of the config directory which returns null when the config is cached, use ''config''\.$#'
+			identifier: larastan.noEnvCallsOutsideOfConfig
+			count: 1
+			path: Modules/System/Http/Controllers/Admin/AdminSystemController.php
+
+		-
+			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,Modules\\Audit\\Entities\\AuditLog\>\:\:map\(\) contains unresolvable type\.$#'
+			identifier: argument.unresolvableType
+			count: 1
+			path: Modules/System/Http/Controllers/Admin/AdminSystemController.php
+
+		-
+			message: '#^Access to an undefined property Modules\\User\\Entities\\User\:\:\$role\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/User/Entities/User.php
+
+		-
+			message: '#^Access to an undefined property Modules\\User\\Entities\\User\:\:\$status\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/User/Entities/User.php
+
+		-
+			message: '#^Access to an undefined property Modules\\User\\Entities\\User\:\:\$tier\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/User/Entities/User.php
+
+		-
+			message: '#^Access to an undefined property Modules\\User\\Entities\\User\:\:\$uuid\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/User/Entities/User.php
+
+		-
+			message: '#^Access to an undefined property Modules\\User\\Http\\Resources\\Api\\AuthUserResource\:\:\$created_at\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/User/Http/Resources/Api/AuthUserResource.php
+
+		-
+			message: '#^Access to an undefined property Modules\\User\\Http\\Resources\\Api\\AuthUserResource\:\:\$email\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/User/Http/Resources/Api/AuthUserResource.php
+
+		-
+			message: '#^Access to an undefined property Modules\\User\\Http\\Resources\\Api\\AuthUserResource\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/User/Http/Resources/Api/AuthUserResource.php
+
+		-
+			message: '#^Access to an undefined property Modules\\User\\Http\\Resources\\Api\\AuthUserResource\:\:\$kind\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/User/Http/Resources/Api/AuthUserResource.php
+
+		-
+			message: '#^Access to an undefined property Modules\\User\\Http\\Resources\\Api\\AuthUserResource\:\:\$name\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/User/Http/Resources/Api/AuthUserResource.php
+
+		-
+			message: '#^Access to an undefined property Modules\\User\\Http\\Resources\\Api\\AuthUserResource\:\:\$phone\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/User/Http/Resources/Api/AuthUserResource.php
+
+		-
+			message: '#^Access to an undefined property Modules\\User\\Http\\Resources\\Api\\AuthUserResource\:\:\$role\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/User/Http/Resources/Api/AuthUserResource.php
+
+		-
+			message: '#^Access to an undefined property Modules\\User\\Http\\Resources\\Api\\AuthUserResource\:\:\$roles\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/User/Http/Resources/Api/AuthUserResource.php
+
+		-
+			message: '#^Access to an undefined property Modules\\User\\Http\\Resources\\Api\\AuthUserResource\:\:\$tier\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/User/Http/Resources/Api/AuthUserResource.php
+
+		-
+			message: '#^Access to an undefined property Modules\\User\\Http\\Resources\\Api\\AuthUserResource\:\:\$uuid\.$#'
+			identifier: property.notFound
+			count: 1
+			path: Modules/User/Http/Resources/Api/AuthUserResource.php
+
+		-
+			message: '#^Call to an undefined method Modules\\User\\Http\\Resources\\Api\\AuthUserResource\:\:getAllPermissions\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: Modules/User/Http/Resources/Api/AuthUserResource.php
+
+		-
+			message: '#^Using nullsafe method call on non\-nullable type Laravel\\Sanctum\\PersonalAccessToken\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: Modules/User/Services/AuthService.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Quality\\Entities\\TestCase\:\:\$automated\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Console/Commands/QualityImport.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Quality\\Entities\\TestCase\:\:\$layer\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Console/Commands/QualityImport.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Quality\\Entities\\TestCase\:\:\$total\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Console/Commands/QualityImport.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Quality\\Entities\\TestCase\:\:\$automated\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Console/Commands/QualitySnapshot.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Quality\\Entities\\TestCase\:\:\$layer\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Console/Commands/QualitySnapshot.php
+
+		-
+			message: '#^Access to an undefined property Modules\\Quality\\Entities\\TestCase\:\:\$total\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Console/Commands/QualitySnapshot.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Contracts\\Pagination\\LengthAwarePaginator\:\:getCollection\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Http/Controllers/Controller.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Contracts\\Pagination\\LengthAwarePaginator\:\:setCollection\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Http/Controllers/Controller.php
+
+		-
+			message: '#^Using nullsafe method call on non\-nullable type object\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Controllers/Controller.php
