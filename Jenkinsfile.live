@@ -6,7 +6,8 @@ pipeline {
     TARGET_HOST = '54.86.29.10'
     TARGET_USER = 'ubuntu'
     APP_DIR     = '/home/ubuntu/recruitment'
-    BRANCH_NAME = 'live-stage'
+    GIT_REPO    = 'git@github.com:hishare24-sketch/Smart_Recruitment_Platform.git'
+    BRANCH_NAME = 'main'
     SITE_URL    = 'https://sufha.com'
     PROJECT     = 'Sufha Recruitment'
   }
@@ -19,8 +20,15 @@ pipeline {
             echo ">>> Deploying ${PROJECT} branch=${BRANCH_NAME} host=${TARGET_HOST}"
 
             ssh -o StrictHostKeyChecking=no ${TARGET_USER}@${TARGET_HOST} \
-              env APP_DIR="${APP_DIR}" BRANCH="${BRANCH_NAME}" SITE="${SITE_URL}" bash <<'REMOTE_EOF'
+              env APP_DIR="${APP_DIR}" GIT_REPO="${GIT_REPO}" BRANCH="${BRANCH_NAME}" SITE="${SITE_URL}" bash <<'REMOTE_EOF'
 set -euo pipefail
+
+if [ ! -d "$APP_DIR/.git" ]; then
+  echo ">>> App dir missing - cloning into $APP_DIR ..."
+  mkdir -p "$(dirname "$APP_DIR")"
+  git clone -b "$BRANCH" "$GIT_REPO" "$APP_DIR"
+fi
+
 cd "$APP_DIR"
 
 echo '>>> git pull...'
