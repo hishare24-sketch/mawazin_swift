@@ -47,9 +47,9 @@ trait ApiResponder
         try {
             $response['meta'] = [
                 'current_page' => $collection?->currentPage(),
-                'last_page'    => $collection?->lastPage(),
-                'itemPerPage'  => $collection?->perPage(),
-                'total'        => $collection?->total(),
+                'last_page' => $collection?->lastPage(),
+                'itemPerPage' => $collection?->perPage(),
+                'total' => $collection?->total(),
             ];
         } catch (\Throwable $th) {
             $response['meta'] = null;

@@ -13,9 +13,9 @@ use Modules\Compliance\Database\Seeders\ComplianceDemoSeeder;
 use Modules\Governance\Database\Seeders\ModerationSeeder;
 use Modules\Interview\Database\Seeders\InterviewQualitySeeder;
 use Modules\Interview\Database\Seeders\InterviewRubricSeeder;
-use Modules\Support\Database\Seeders\TicketSeeder;
 use Modules\Settings\Database\Seeders\BrandingSettingSeeder;
 use Modules\Settings\Database\Seeders\PlatformSettingSeeder;
+use Modules\Support\Database\Seeders\TicketSeeder;
 use Modules\Survey\Database\Seeders\SurveyTemplateSeeder;
 
 class DatabaseSeeder extends Seeder

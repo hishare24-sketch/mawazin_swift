@@ -3,6 +3,7 @@
 namespace Tests\Feature;
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Testing\TestResponse;
 use Laravel\Sanctum\Sanctum;
 use Modules\User\Entities\User;
 use Spatie\Permission\Models\Role;
@@ -35,7 +36,7 @@ class BroadcastChannelsTest extends TestCase
         return User::create(['name' => 'U', 'email' => 'ch'.uniqid().'@rec.test', 'password' => 'secret123']);
     }
 
-    private function auth(string $channel): \Illuminate\Testing\TestResponse
+    private function auth(string $channel): TestResponse
     {
         return $this->postJson('/broadcasting/auth', ['socket_id' => '1234.5678', 'channel_name' => $channel]);
     }

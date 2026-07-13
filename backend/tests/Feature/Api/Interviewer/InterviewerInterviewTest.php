@@ -14,7 +14,7 @@ class InterviewerInterviewTest extends TestCase
 {
     use AssertsApiJson, RefreshDatabase;
 
-    private function user(string $email = null): User
+    private function user(?string $email = null): User
     {
         return User::create([
             'name' => 'U',

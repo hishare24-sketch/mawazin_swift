@@ -4,6 +4,7 @@ namespace Tests\Feature\Api\Admin;
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Laravel\Sanctum\Sanctum;
+use Modules\Audit\Entities\AuditLog;
 use Modules\User\Entities\User;
 use Spatie\Permission\Models\Role;
 use Tests\Support\Api\AssertsApiJson;
@@ -107,7 +108,7 @@ class AdminRoleTest extends TestCase
 
         $this->putJson('/api/admin/roles/auditor/permissions', ['permissions' => ['view_users', 'view_surveys']])->assertOk();
 
-        $log = \Modules\Audit\Entities\AuditLog::where('resource', 'roles')->where('action', 'permissions')->latest('id')->first();
+        $log = AuditLog::where('resource', 'roles')->where('action', 'permissions')->latest('id')->first();
         $this->assertNotNull($log);
         $this->assertSame(['view_surveys'], $log->meta['added']);
         $this->assertSame([], $log->meta['removed']);
@@ -129,7 +130,7 @@ class AdminRoleTest extends TestCase
         $this->getJson('/api/admin/roles/helper/members')->assertOk()->assertJsonCount(1, 'data.members');
 
         // تدقيق الإسناد
-        $log = \Modules\Audit\Entities\AuditLog::where('action', 'assign')->latest('id')->first();
+        $log = AuditLog::where('action', 'assign')->latest('id')->first();
         $this->assertSame($member->id, $log->meta['userId']);
 
         // نزع

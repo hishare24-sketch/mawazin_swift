@@ -4,6 +4,7 @@ namespace Tests\Feature\Api\Admin;
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Laravel\Sanctum\Sanctum;
+use Modules\Audit\Entities\AuditLog;
 use Modules\Settings\Database\Seeders\PlatformSettingSeeder;
 use Modules\User\Entities\User;
 use Spatie\Permission\Models\Role;
@@ -109,7 +110,7 @@ class AdminSettingTest extends TestCase
 
         $this->putJson('/api/admin/settings', ['settings' => ['general.support_email' => 'new@rec.test']])->assertOk();
 
-        $log = \Modules\Audit\Entities\AuditLog::where('resource', 'settings')->latest('id')->first();
+        $log = AuditLog::where('resource', 'settings')->latest('id')->first();
         $this->assertNotNull($log);
         $this->assertSame('support@rec.test', $log->meta['settings']['general.support_email']['from']);
         $this->assertSame('new@rec.test', $log->meta['settings']['general.support_email']['to']);
@@ -139,7 +140,7 @@ class AdminSettingTest extends TestCase
 
         $this->assertDatabaseHas('platform_settings', ['key' => 'general.platform_name', 'value' => 'منظومة التوظيف الذكية']);
 
-        $log = \Modules\Audit\Entities\AuditLog::where('resource', 'settings')->where('action', 'reset')->latest('id')->first();
+        $log = AuditLog::where('resource', 'settings')->where('action', 'reset')->latest('id')->first();
         $this->assertNotNull($log);
         $this->assertArrayHasKey('general.platform_name', $log->meta['reset']);
     }

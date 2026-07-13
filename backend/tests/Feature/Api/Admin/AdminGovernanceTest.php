@@ -3,9 +3,12 @@
 namespace Tests\Feature\Api\Admin;
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Event;
 use Laravel\Sanctum\Sanctum;
 use Modules\Governance\Database\Seeders\ModerationSeeder;
 use Modules\Governance\Entities\ModerationItem;
+use Modules\Governance\Events\ModerationItemCreated;
+use Modules\Marketplace\Entities\Opportunity;
 use Modules\User\Entities\User;
 use Spatie\Permission\Models\Role;
 use Tests\Support\Api\AssertsApiJson;
@@ -120,12 +123,12 @@ class AdminGovernanceTest extends TestCase
     public function test_new_report_broadcasts_live_to_admin_governance_channel(): void
     {
         $this->reporter();
-        \Illuminate\Support\Facades\Event::fake([\Modules\Governance\Events\ModerationItemCreated::class]);
+        Event::fake([ModerationItemCreated::class]);
 
         $this->postJson('/api/v1/reports', ['targetRef' => 'opportunity:12', 'subject' => 'بلاغ لحظيّ'])->assertStatus(201);
 
-        \Illuminate\Support\Facades\Event::assertDispatched(
-            \Modules\Governance\Events\ModerationItemCreated::class,
+        Event::assertDispatched(
+            ModerationItemCreated::class,
             fn ($e) => $e->payload['targetRef'] === 'opportunity:12'
                 && $e->payload['subject'] === 'بلاغ لحظيّ'
                 && $e->payload['status'] === 'pending',
@@ -133,14 +136,14 @@ class AdminGovernanceTest extends TestCase
 
         // تكرار البلاغ نفسه لا يعيد البثّ (dedup).
         $this->postJson('/api/v1/reports', ['targetRef' => 'opportunity:12', 'subject' => 'مكرّر'])->assertStatus(201);
-        \Illuminate\Support\Facades\Event::assertDispatchedTimes(\Modules\Governance\Events\ModerationItemCreated::class, 1);
+        Event::assertDispatchedTimes(ModerationItemCreated::class, 1);
     }
 
     public function test_approving_content_report_takes_down_target_and_notifies_reporter(): void
     {
         $reporter = $this->reporter();
         $owner = User::create(['name' => 'Owner', 'email' => 'own'.uniqid().'@rec.test', 'password' => 'secret123']);
-        $opp = \Modules\Marketplace\Entities\Opportunity::create(['title' => 'Bad job', 'user_id' => $owner->id]);
+        $opp = Opportunity::create(['title' => 'Bad job', 'user_id' => $owner->id]);
         $this->postJson('/api/v1/reports', ['targetRef' => "opportunity:{$opp->id}", 'subject' => 'بلاغ', 'reason' => 'مضلّل'])->assertStatus(201);
         $item = ModerationItem::where('target_ref', "opportunity:{$opp->id}")->firstOrFail();
 
@@ -158,7 +161,7 @@ class AdminGovernanceTest extends TestCase
     public function test_detail_includes_target_snapshot(): void
     {
         $admin = $this->admin();
-        $opp = \Modules\Marketplace\Entities\Opportunity::create(['title' => 'Snap', 'user_id' => $admin->id]);
+        $opp = Opportunity::create(['title' => 'Snap', 'user_id' => $admin->id]);
         $item = ModerationItem::create(['type' => 'content_report', 'subject' => 'S', 'target_ref' => "opportunity:{$opp->id}", 'status' => 'pending']);
 
         $this->getJson("/api/admin/moderation/{$item->id}")

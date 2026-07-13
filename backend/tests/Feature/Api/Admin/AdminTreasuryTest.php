@@ -4,6 +4,7 @@ namespace Tests\Feature\Api\Admin;
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Laravel\Sanctum\Sanctum;
+use Modules\Account\Database\Seeders\PlanSeeder;
 use Modules\Account\Database\Seeders\PlatformAccountSeeder;
 use Modules\Account\Entities\PlatformAccount;
 use Modules\User\Entities\User;
@@ -76,7 +77,7 @@ class AdminTreasuryTest extends TestCase
     {
         // مستخدم عاديّ يرقّي باقته → يُرصَّد الإيراد في الخزينة الافتراضيّة
         $this->seed(PlatformAccountSeeder::class);
-        $this->seed(\Modules\Account\Database\Seeders\PlanSeeder::class);
+        $this->seed(PlanSeeder::class);
         $user = User::create(['name' => 'P', 'email' => 'p'.uniqid().'@rec.test', 'password' => 'secret123']);
         Sanctum::actingAs($user);
 

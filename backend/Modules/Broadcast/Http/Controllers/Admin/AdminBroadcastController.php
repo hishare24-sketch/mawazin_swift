@@ -18,7 +18,9 @@ class AdminBroadcastController extends Controller
     public function __construct(private readonly NotificationService $notifications) {}
 
     private const SORTABLE = ['id', 'title', 'channel', 'recipients_count', 'created_at'];
+
     private const CHANNELS = ['notification', 'banner', 'email'];
+
     private const AUDIENCES = ['all', 'role', 'tier'];
 
     /** سجلّ عمليّات البثّ. */

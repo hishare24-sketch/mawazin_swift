@@ -3,15 +3,18 @@
 namespace Tests\Feature\Api;
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Http;
 use Laravel\Sanctum\Sanctum;
 use Modules\Ai\Database\Seeders\AiSeeder;
-use Modules\Ai\Entities\AiCapability;
 use Modules\Ai\Entities\AiSetting;
 use Modules\Ai\Entities\AiUsage;
+use Modules\Ai\Entities\AssistantMessage;
+use Modules\Ai\Entities\AssistantPreference;
 use Modules\Marketplace\Entities\Application;
 use Modules\Marketplace\Entities\Opportunity;
 use Modules\Profile\Entities\Profile;
+use Modules\Support\Events\TicketReplyPosted;
 use Modules\User\Entities\User;
 use Tests\Support\Api\AssertsApiJson;
 use Tests\TestCase;
@@ -58,7 +61,7 @@ class AssistantTest extends TestCase
         $cid = $res->json('data.conversationId');
         $this->assertDatabaseHas('assistant_conversations', ['id' => $cid]);
         // رسالة المستخدم + ردّ المساعد
-        $this->assertSame(2, \Modules\Ai\Entities\AssistantMessage::where('conversation_id', $cid)->count());
+        $this->assertSame(2, AssistantMessage::where('conversation_id', $cid)->count());
     }
 
     public function test_message_blocked_friendly_when_ai_off(): void
@@ -138,11 +141,11 @@ class AssistantTest extends TestCase
         $this->user(['role' => 'seeker']);
         $id = $this->postJson('/api/v1/support/tickets', ['subject' => 'استفسار', 'body' => 'سؤال'])->json('data.id');
 
-        \Illuminate\Support\Facades\Event::fake([\Modules\Support\Events\TicketReplyPosted::class]);
+        Event::fake([TicketReplyPosted::class]);
         $this->postJson("/api/v1/support/tickets/{$id}/reply", ['body' => 'تحديث'])->assertOk();
 
-        \Illuminate\Support\Facades\Event::assertDispatched(
-            \Modules\Support\Events\TicketReplyPosted::class,
+        Event::assertDispatched(
+            TicketReplyPosted::class,
             fn ($e) => $e->channelName === 'support.admin' && $e->payload['ticketId'] === $id && $e->payload['reply']['isStaff'] === false,
         );
     }
@@ -166,7 +169,7 @@ class AssistantTest extends TestCase
 
         $this->postJson('/api/v1/assistant/message', ['message' => 'كيف أحسّن ملفّي؟'])->assertOk();
 
-        $row = \Modules\Ai\Entities\AiUsage::where('user_id', $user->id)->first();
+        $row = AiUsage::where('user_id', $user->id)->first();
         $this->assertNotNull($row);
         $this->assertGreaterThan(0, $row->tokens);
         $this->assertSame($row->request_tokens + $row->response_tokens, $row->tokens);
@@ -237,7 +240,7 @@ class AssistantTest extends TestCase
             ->assertJsonPath('data.reply', 'ردّ كلود الحقيقيّ للمستخدم.')
             ->assertJsonPath('data.meta.simulated', false);
 
-        $row = \Modules\Ai\Entities\AiUsage::where('user_id', $user->id)->first();
+        $row = AiUsage::where('user_id', $user->id)->first();
         $this->assertSame(42, $row->request_tokens);
         $this->assertSame(17, $row->response_tokens);
     }
@@ -351,7 +354,7 @@ class AssistantTest extends TestCase
         $this->seed(AiSeeder::class);
         $this->useClaudeProvider();
         $user = $this->user(['role' => 'seeker']);
-        \Modules\Ai\Entities\AssistantPreference::forUser($user->id)->update(['data_access' => false]);
+        AssistantPreference::forUser($user->id)->update(['data_access' => false]);
 
         Http::fake(['api.anthropic.com/*' => Http::response([
             'content' => [['type' => 'text', 'text' => 'تمام.']], 'stop_reason' => 'end_turn', 'usage' => ['input_tokens' => 5, 'output_tokens' => 3],
@@ -419,7 +422,7 @@ class AssistantTest extends TestCase
             ->assertJsonPath('data.reply', 'ردّ OpenAI الحقيقيّ للمستخدم.')
             ->assertJsonPath('data.meta.simulated', false);
 
-        $row = \Modules\Ai\Entities\AiUsage::where('user_id', $user->id)->first();
+        $row = AiUsage::where('user_id', $user->id)->first();
         $this->assertSame(55, $row->request_tokens);
         $this->assertSame(23, $row->response_tokens);
     }
@@ -467,7 +470,7 @@ class AssistantTest extends TestCase
             ->assertJsonPath('data.data.skills.0.level', 5)
             ->assertJsonPath('data.data.confidence', 88);
 
-        $row = \Modules\Ai\Entities\AiUsage::where('user_id', $user->id)->first();
+        $row = AiUsage::where('user_id', $user->id)->first();
         $this->assertSame(300, $row->request_tokens);
     }
 

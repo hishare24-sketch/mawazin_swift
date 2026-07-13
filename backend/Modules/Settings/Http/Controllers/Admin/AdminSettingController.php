@@ -4,6 +4,7 @@ namespace Modules\Settings\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Modules\Settings\Entities\PlatformSetting;
 use Modules\Settings\Http\Resources\Admin\AdminSettingResource;
 
@@ -114,7 +115,7 @@ class AdminSettingController extends Controller
     }
 
     /** القائمة كاملة مرتّبة عبر الـResource. */
-    private function all(): \Illuminate\Support\Collection
+    private function all(): Collection
     {
         return PlatformSetting::orderBy('group')->orderBy('sort')->get()
             ->map(fn (PlatformSetting $s) => (new AdminSettingResource($s))->resolve());

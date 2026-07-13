@@ -3,8 +3,10 @@
 namespace Tests\Feature\Api\Admin;
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Carbon;
 use Laravel\Sanctum\Sanctum;
 use Modules\Account\Database\Seeders\PlanSeeder;
+use Modules\Survey\Entities\Survey;
 use Modules\User\Entities\User;
 use Spatie\Permission\Models\Role;
 use Tests\Support\Api\AssertsApiJson;
@@ -50,7 +52,7 @@ class AdminAuditTest extends TestCase
 
         // POST plans/{id}/... غير موجود؛ نختبر close على استبيان
         $owner = User::first();
-        $survey = \Modules\Survey\Entities\Survey::create(['user_id' => $owner->id, 'title' => 'S', 'state' => 'active']);
+        $survey = Survey::create(['user_id' => $owner->id, 'title' => 'S', 'state' => 'active']);
         $this->postJson("/api/admin/surveys/{$survey->id}/close")->assertOk();
 
         $this->assertDatabaseHas('audit_logs', ['resource' => 'surveys', 'action' => 'close', 'target_id' => $survey->id]);
@@ -106,7 +108,7 @@ class AdminAuditTest extends TestCase
         $admin = $this->admin();
         $this->postJson('/api/admin/plans', ['key' => 'f1', 'name' => 'x', 'price' => 1])->assertStatus(201);
         // فعل على مورد آخر (surveys/close) كي لا يظهر في تصدير plans
-        $survey = \Modules\Survey\Entities\Survey::create(['user_id' => $admin->id, 'title' => 'S', 'state' => 'active']);
+        $survey = Survey::create(['user_id' => $admin->id, 'title' => 'S', 'state' => 'active']);
         $this->postJson("/api/admin/surveys/{$survey->id}/close")->assertOk();
 
         $csv = $this->get('/api/admin/audit-logs/export?resource=plans')->assertOk()->streamedContent();
@@ -121,10 +123,10 @@ class AdminAuditTest extends TestCase
         $this->postJson('/api/admin/plans', ['key' => 'd1', 'name' => 'x', 'price' => 1])->assertStatus(201);
 
         // اليوم يُرجِع القيد؛ نطاق ماضٍ لا يُرجِع شيئًا
-        $today = \Illuminate\Support\Carbon::now()->toDateString();
+        $today = Carbon::now()->toDateString();
         $this->getJson("/api/admin/audit-logs?from={$today}&to={$today}")->assertOk()->assertJsonPath('meta.total', 1);
 
-        $past = \Illuminate\Support\Carbon::now()->subDays(5)->toDateString();
+        $past = Carbon::now()->subDays(5)->toDateString();
         $this->getJson("/api/admin/audit-logs?from={$past}&to={$past}")->assertOk()->assertJsonPath('meta.total', 0);
     }
 }

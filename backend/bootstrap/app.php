@@ -1,10 +1,13 @@
 <?php
 
+use App\Http\Middleware\AdminMiddleware;
+use App\Http\Middleware\ForceJsonForApi;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
 use Illuminate\Support\Facades\Broadcast;
 use Illuminate\Support\Facades\Route;
+use Modules\Audit\Http\Middleware\AuditMiddleware;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -25,7 +28,7 @@ return Application::configure(basePath: dirname(__DIR__))
             });
 
             // لوحة الأدمن: /api/admin — يجمّع Modules/*/Routes/web.php (+ تدقيق آليّ للأفعال)
-            Route::group(['prefix' => 'api/admin', 'middleware' => ['api', 'auth:sanctum', 'admin', \Modules\Audit\Http\Middleware\AuditMiddleware::class]], function (): void {
+            Route::group(['prefix' => 'api/admin', 'middleware' => ['api', 'auth:sanctum', 'admin', AuditMiddleware::class]], function (): void {
                 foreach (glob(base_path('Modules/*/Routes/web.php')) as $file) {
                     require $file;
                 }
@@ -36,9 +39,9 @@ return Application::configure(basePath: dirname(__DIR__))
         // خلف nginx/Docker: اعتمد X-Forwarded-* حتى تُولَّد روابط https صحيحة
         $middleware->trustProxies(at: '*');
         // يفرض معاملة كلّ طلبات api/* كـJSON (غير المصادَق → 401 لا 500 login-redirect).
-        $middleware->prepend(\App\Http\Middleware\ForceJsonForApi::class);
+        $middleware->prepend(ForceJsonForApi::class);
         $middleware->alias([
-            'admin' => \App\Http\Middleware\AdminMiddleware::class,
+            'admin' => AdminMiddleware::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

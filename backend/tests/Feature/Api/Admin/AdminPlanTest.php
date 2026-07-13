@@ -5,6 +5,7 @@ namespace Tests\Feature\Api\Admin;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Laravel\Sanctum\Sanctum;
 use Modules\Account\Database\Seeders\PlanSeeder;
+use Modules\Account\Entities\Plan;
 use Modules\User\Entities\User;
 use Spatie\Permission\Models\Role;
 use Tests\Support\Api\AssertsApiJson;
@@ -45,7 +46,7 @@ class AdminPlanTest extends TestCase
     public function test_admin_can_update_plan_price_and_features(): void
     {
         $this->admin();
-        $plan = \Modules\Account\Entities\Plan::where('key', 'pro')->first();
+        $plan = Plan::where('key', 'pro')->first();
 
         $this->putJson("/api/admin/plans/{$plan->id}", [
             'price' => 75,
@@ -91,10 +92,10 @@ class AdminPlanTest extends TestCase
     public function test_admin_can_delete_empty_plan_but_not_one_with_subscribers(): void
     {
         $this->admin();
-        $empty = \Modules\Account\Entities\Plan::create(['key' => 'ghost', 'name' => 'شبح', 'price' => 10, 'sort' => 9]);
+        $empty = Plan::create(['key' => 'ghost', 'name' => 'شبح', 'price' => 10, 'sort' => 9]);
 
         // free له مشترك (المستخدم الأدمن نفسه tier=free) → 405
-        $free = \Modules\Account\Entities\Plan::where('key', 'free')->first();
+        $free = Plan::where('key', 'free')->first();
         $this->deleteJson("/api/admin/plans/{$free->id}")->assertStatus(405);
 
         // ghost بلا مشتركين → يُحذف

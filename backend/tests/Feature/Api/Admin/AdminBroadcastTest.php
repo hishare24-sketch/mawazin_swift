@@ -3,7 +3,9 @@
 namespace Tests\Feature\Api\Admin;
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Event;
 use Laravel\Sanctum\Sanctum;
+use Modules\Notification\Events\NotificationSent;
 use Modules\User\Entities\User;
 use Spatie\Permission\Models\Role;
 use Tests\Support\Api\AssertsApiJson;
@@ -70,26 +72,26 @@ class AdminBroadcastTest extends TestCase
         $this->admin(); // seeker + super_admin
         User::create(['name' => 'C', 'email' => 'c'.uniqid().'@rec.test', 'password' => 'secret123', 'role' => 'company', 'tier' => 'pro']);
 
-        \Illuminate\Support\Facades\Event::fake([\Modules\Notification\Events\NotificationSent::class]);
+        Event::fake([NotificationSent::class]);
 
         $this->postJson('/api/admin/broadcasts', ['title' => 'ترقية للمحترفين', 'body' => 'مزايا جديدة', 'channel' => 'notification', 'audience' => 'tier', 'audience_value' => 'pro'])
             ->assertStatus(201);
 
         // إشعار فعليّ للمستهدف (pro) في قاعدة البيانات
         $this->assertDatabaseHas('notifications', ['title' => 'ترقية للمحترفين', 'category' => 'system']);
-        \Illuminate\Support\Facades\Event::assertDispatched(\Modules\Notification\Events\NotificationSent::class);
+        Event::assertDispatched(NotificationSent::class);
     }
 
     public function test_banner_channel_does_not_create_notifications(): void
     {
         $this->admin();
-        \Illuminate\Support\Facades\Event::fake([\Modules\Notification\Events\NotificationSent::class]);
+        Event::fake([NotificationSent::class]);
 
         $this->postJson('/api/admin/broadcasts', ['title' => 'لافتة', 'body' => 'نصّ', 'channel' => 'banner', 'audience' => 'all'])
             ->assertStatus(201);
 
         $this->assertDatabaseMissing('notifications', ['title' => 'لافتة']);
-        \Illuminate\Support\Facades\Event::assertNotDispatched(\Modules\Notification\Events\NotificationSent::class);
+        Event::assertNotDispatched(NotificationSent::class);
     }
 
     public function test_non_admin_cannot_view_broadcasts(): void

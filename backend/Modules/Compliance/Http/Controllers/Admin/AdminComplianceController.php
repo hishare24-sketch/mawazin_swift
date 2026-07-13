@@ -4,7 +4,10 @@ namespace Modules\Compliance\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
+use Modules\Audit\Entities\AuditLog;
 use Modules\Compliance\Services\ComplianceService;
+use Modules\Marketplace\Entities\MatchSetting;
+use Modules\Marketplace\Services\MatchService;
 
 /**
  * كونسول العدالة والامتثال (B4) — الأثر التمييزيّ + التمثيل + الإشراف على قرارات الذكاء + أثر التدقيق.
@@ -67,7 +70,7 @@ class AdminComplianceController extends Controller
     {
         $this->authorize('view_compliance');
 
-        $logs = \Modules\Audit\Entities\AuditLog::query()
+        $logs = AuditLog::query()
             ->whereIn('resource', self::DECISION_RESOURCES)
             ->orderByDesc('id')->limit(25)->get()
             ->map(fn ($l) => [
@@ -94,8 +97,8 @@ class AdminComplianceController extends Controller
 
     private function aiOversightPayload(): array
     {
-        $match = app(\Modules\Marketplace\Services\MatchService::class);
-        $settings = \Modules\Marketplace\Entities\MatchSetting::current();
+        $match = app(MatchService::class);
+        $settings = MatchSetting::current();
         $aiActive = $match->aiActive();
 
         return [
