@@ -79,3 +79,8 @@ vite.config.d.ts
 .tmp/
 
 li*.html
+
+# Playwright
+playwright-report/
+test-results/
+/playwright/.cache/
