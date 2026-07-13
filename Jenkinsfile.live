@@ -22,58 +22,60 @@ pipeline {
           sh '''
             echo ">>> Deploying ${PROJECT} branch=${BRANCH_NAME} host=${TARGET_HOST}"
 
-            # dash (Jenkins /bin/sh) لا يدعم printf %q — نهرّب بـ sed
+            # تهريب ' داخل القيم (متوافق مع dash)
             esc() { printf '%s' "$1" | sed "s/'/'\\\\''/g"; }
-            REMOTE_ENV="export APP_DIR='$(esc "$APP_DIR")' GIT_REPO='$(esc "$GIT_REPO")' BRANCH='$(esc "$BRANCH_NAME")' SITE='$(esc "$SITE_URL")"
-            REMOTE_ENV="$REMOTE_ENV SUPER_ADMIN_EMAIL='$(esc "$SUPER_ADMIN_EMAIL")'"
-            REMOTE_ENV="$REMOTE_ENV SUPER_ADMIN_PASSWORD='$(esc "$SUPER_ADMIN_PASSWORD")'"
-            REMOTE_ENV="$REMOTE_ENV SUPER_ADMIN_NAME='$(esc "$SUPER_ADMIN_NAME")'; exec bash -s"
 
-            ssh -o StrictHostKeyChecking=no ${TARGET_USER}@${TARGET_HOST} \
-              "$REMOTE_ENV" <<'REMOTE_EOF'
+            # heredoc غير مقتبس: القيم تُحقَن محلّيًا داخل '...'; الأوامر عن بُعد تستخدم \\$
+            ssh -o StrictHostKeyChecking=no "${TARGET_USER}@${TARGET_HOST}" bash -s <<EOF
 set -euo pipefail
+export APP_DIR='$(esc "$APP_DIR")'
+export GIT_REPO='$(esc "$GIT_REPO")'
+export BRANCH='$(esc "$BRANCH_NAME")'
+export SITE='$(esc "$SITE_URL")'
+export SUPER_ADMIN_EMAIL='$(esc "$SUPER_ADMIN_EMAIL")'
+export SUPER_ADMIN_PASSWORD='$(esc "$SUPER_ADMIN_PASSWORD")'
+export SUPER_ADMIN_NAME='$(esc "$SUPER_ADMIN_NAME")'
 
-if [ ! -d "$APP_DIR/.git" ]; then
-  echo ">>> App dir missing - cloning into $APP_DIR ..."
-  mkdir -p "$(dirname "$APP_DIR")"
-  git clone -b "$BRANCH" "$GIT_REPO" "$APP_DIR"
+if [ ! -d "\$APP_DIR/.git" ]; then
+  echo ">>> App dir missing - cloning into \$APP_DIR ..."
+  mkdir -p "\$(dirname "\$APP_DIR")"
+  git clone -b "\$BRANCH" "\$GIT_REPO" "\$APP_DIR"
 fi
 
-cd "$APP_DIR"
+cd "\$APP_DIR"
 
 echo '>>> git pull...'
-git fetch origin "$BRANCH"
-git checkout "$BRANCH"
-git pull --ff-only origin "$BRANCH"
+git fetch origin "\$BRANCH"
+git checkout "\$BRANCH"
+git pull --ff-only origin "\$BRANCH"
 
-# ثبّت بيانات السوبر أدمن في .env
 if [ ! -f .env ]; then
   cp .env.docker.example .env
 fi
 upsert_env() {
-  key="$1"
-  val="$2"
-  tmp="$(mktemp)"
+  key="\$1"
+  val="\$2"
+  tmp="\$(mktemp)"
   if [ -f .env ]; then
-    grep -vE "^${key}=" .env > "$tmp" || true
+    grep -vE "^\${key}=" .env > "\$tmp" || true
   else
-    : > "$tmp"
+    : > "\$tmp"
   fi
-  printf '%s=%s\n' "$key" "$val" >> "$tmp"
-  mv "$tmp" .env
+  printf '%s=%s\\n' "\$key" "\$val" >> "\$tmp"
+  mv "\$tmp" .env
 }
-upsert_env SUPER_ADMIN_EMAIL "$SUPER_ADMIN_EMAIL"
-upsert_env SUPER_ADMIN_PASSWORD "$SUPER_ADMIN_PASSWORD"
-upsert_env SUPER_ADMIN_NAME "$SUPER_ADMIN_NAME"
+upsert_env SUPER_ADMIN_EMAIL "\$SUPER_ADMIN_EMAIL"
+upsert_env SUPER_ADMIN_PASSWORD "\$SUPER_ADMIN_PASSWORD"
+upsert_env SUPER_ADMIN_NAME "\$SUPER_ADMIN_NAME"
 
 echo '>>> deploy + ensure super admin...'
 bash deploy.sh
 
 echo '>>> smoke check...'
-curl -skI "$SITE" | head -5
+curl -skI "\$SITE" | head -5
 
 echo 'Deploy done.'
-REMOTE_EOF
+EOF
           '''
 
           script {
