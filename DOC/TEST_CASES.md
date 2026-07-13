@@ -31,13 +31,13 @@
 | AUTH-04 | بلا توكن → me → 401 | F | 🔴 | ✅ | AuthTest |
 | AUTH-05 | تسجيل صحيح → 201 + token + بريد ترحيب | F | 🔴 | ✅ | WelcomeEmailTest |
 | AUTH-06 | التسجيل معطّل → register → 403 بلا بريد | F | 🟠 | ✅ | WelcomeEmailTest |
-| AUTH-07 | register بلا name/email/password → 422 | F | 🔴 | ⬜ | AuthTest |
-| AUTH-08 | register ببريد مكرّر → 422 (unique) | F | 🔴 | ⬜ | AuthTest |
-| AUTH-09 | register بكلمة مرور < 6 → 422 | F | 🟠 | ⬜ | AuthTest |
-| AUTH-10 | register بـ role/kind خارج القائمة → 422 | F | ⚪ | ⬜ | AuthTest |
-| AUTH-11 | register بلا role/kind → 201 بالافتراضيّ (seeker/individual) | F | ⚪ | ⬜ | AuthTest |
-| AUTH-12 | login ببريد غير صالح أو بلا password → 422 | F | 🟠 | ⬜ | AuthTest |
-| AUTH-13 | حساب مُعلَّق ببيانات صحيحة → login → 403 «موقوف» | F | 🔴 | ⬜ | AuthTest |
+| AUTH-07 | register بلا name/email/password → 422 | F | 🔴 | ✅ | AuthTest |
+| AUTH-08 | register ببريد مكرّر → 422 (unique) | F | 🔴 | ✅ | AuthTest |
+| AUTH-09 | register بكلمة مرور < 6 → 422 | F | 🟠 | ✅ | AuthTest |
+| AUTH-10 | register بـ role/kind خارج القائمة → 422 | F | ⚪ | ✅ | AuthTest |
+| AUTH-11 | register بلا role/kind → 201 بالافتراضيّ (seeker/individual) | F | ⚪ | ✅ | AuthTest |
+| AUTH-12 | login ببريد غير صالح أو بلا password → 422 | F | 🟠 | ✅ | AuthTest |
+| AUTH-13 | حساب مُعلَّق ببيانات صحيحة → login → 403 «موقوف» | F | 🔴 | ✅ | AuthTest |
 | AUTH-14 | logout بلا توكن → 401 | F | 🟠 | ⬜ | AuthTest |
 | AUTH-15 | حافّة: بريد بحروف كبيرة/مسافات → سلوك متّسق | F | ⚪ | ⬜ | AuthTest |
 
@@ -501,17 +501,17 @@
 | BRND-001..007 | Branding | read · تحديث+تطبيع hex · preset/color/mode 422 · **عامّ بلا مصادقة** · fallback · 403 | ✅ الأغلب (AdminBrandingTest) · ⬜ 004/006 | AdminBrandingTest |
 | BCAST-001..012 | Broadcast | إرسال للكلّ/موجّه · notification يُنشئ+يبثّ · banner لا يُنشئ · 422 (حقول/قناة/جمهور/audience_value) · **FANOUT_CAP 1000** · audience/stats · list/بحث/فلاتر · 403 (create/view) | ✅ الأساس (AdminBroadcastTest) · ⬜ 004..007/010/011 | AdminBroadcastTest |
 | ARCH-001..011 | Archive | حذف يؤرشف · list موحّد+ترقيم · فلتر type/مجهول · stats · restore · purge · 422 (type/id/مجهول) · 404 · 403 (manage/view) | ✅ الأساس (AdminArchiveTest) · ⬜ 004/007/008/009/010 | AdminArchiveTest |
-| SYS-001..005 / RT-001..007 | System/Realtime | health (services/metrics/overall) · فحص DB/cache/queue/ai · down cascade · recentErrors · 403 · **قنوات Reverb** (user.{uuid}/support.admin/admin.governance تخويل بالصلاحيّة/Bearer/رفض) | ✅ health أساس · ⬜ **BroadcastChannelsTest مفقود كليًّا** | AdminSystemHealthTest / BroadcastChannelsTest |
+| SYS-001..005 / RT-001..007 | System/Realtime | health (services/metrics/overall) · فحص DB/cache/queue/ai · down cascade · recentErrors · 403 · **قنوات Reverb** (user.{uuid}/support.admin/admin.governance تخويل بالصلاحيّة/Bearer/رفض) | ✅ health أساس · ✅ **BroadcastChannelsTest (6 اختبارات: مالك/غير 403/صلاحيّات أدمن/401/قناة مجهولة)** | AdminSystemHealthTest / BroadcastChannelsTest |
 | REP-001..010 | Reports | overview (قمع/تحويل/kpis) · report بالنطاق (growth/funnel/finance/engagement/quality) · domain 422 · مدى زمنيّ · تجميع دفاعيّ · 403 | ✅ الأساس (AdminReportTest) · ⬜ 004/005/006/008/009 | AdminReportTest |
-| SURV-001..022 | Survey (عميل+أدمن+نماذج) | عميل list/create/responses/401/422 · admin list/close/delete/403 · stats · **survey-templates** CRUD+فلاتر+نظاميّ محميّ · 422 (category/type) · 403 | ✅ النماذج+stats (AdminSurveyTemplateTest, SurveyTest) · ⬜ **AdminSurveyTest مفقود** (list/close/delete) | SurveyTest / AdminSurveyTemplateTest / AdminSurveyTest |
+| SURV-001..022 | Survey (عميل+أدمن+نماذج) | عميل list/create/responses/401/422 · admin list/close/delete/403 · stats · **survey-templates** CRUD+فلاتر+نظاميّ محميّ · 422 (category/type) · 403 | ✅ النماذج+stats (AdminSurveyTemplateTest, SurveyTest) · ✅ **AdminSurveyTest أُنشئ (5 اختبارات: list/فلتر/stats/close/delete/403)** | SurveyTest / AdminSurveyTemplateTest / AdminSurveyTest |
 | PROF-001..011 | Profile (عميل) | get/patch · skills إضافة/حذف/422 · proofs (+404/422) · proof-requests/resolve · 401 | ✅ الأساس (ProfileTest) · ⬜ 422/404 الفرعيّة | ProfileTest |
 | EXP-001..015 | Interviewer (عميل+أدمن) | عميل list/bookings/PATCH/422/401 · admin list/فلاتر/stats/create/approve/reject/delete/403 | ✅ الأساس (InterviewerInterviewTest, AdminInterviewerTest) · ⬜ 422/403 الفرعيّة | InterviewerInterviewTest / AdminInterviewerTest |
-| INTVQ-001..013 | Interview (عميل+جودة) | عميل index/store/track 422/401 (**InterviewTest مفقود**) · جودة board/detail/review/stats/calibration/rubrics CRUD+نظاميّ · 422/403 | ✅ الجودة (AdminInterviewQualityTest) · ⬜ **عميل interviews غير مُختبَر** | InterviewTest / AdminInterviewQualityTest |
+| INTVQ-001..013 | Interview (عميل+جودة) | عميل index/store/track 422/401 · جودة board/detail/review/stats/calibration/rubrics CRUD+نظاميّ · 422/403 | ✅ الجودة (AdminInterviewQualityTest) · ✅ **InterviewTest أُنشئ (4 اختبارات: store افتراضيّات/عزل index/422 track/401)** | InterviewTest / AdminInterviewQualityTest |
 | PUB-001..014 | PublicProfile | me (get/patch/401) · {slug} عرض/404/ترتيب me أوّلًا · view/follow/rate/comments/contact/schedule/testimonials/proof-requests (+422) | ✅ الأساس (PublicProfileTest) · ⬜ 401/404/422 الفرعيّة | PublicProfileTest |
 | ACCS-001..006 | AccountState | get/put · **عزل لكلّ مستخدم/store** · 401 · upsert | ✅ الأساس (AccountStateTest) · ⬜ العزل/401 | AccountStateTest |
 
 **اختبارات باك-إند موجودة اكتُشِفت هنا:** AdminAccessTest · AdminRoleTest · AdminAuditTest · AdminGovernanceTest · AdminComplianceTest · AdminSettingTest · AdminBrandingTest · AdminBroadcastTest · AdminArchiveTest · AdminSystemHealthTest · AdminReportTest · AdminSurveyTemplateTest · SurveyTest · ProfileTest · PublicProfileTest · AccountStateTest.
-**ملفّات هدف مفقودة كليًّا:** ~~AdminUserTest~~ ✅ **أُنشئ (13 اختبارًا خضراء: ADM-004..007/010..027)** · `AdminSurveyTest` (⏭️) · `InterviewTest` (⏭️) · **`BroadcastChannelsTest`** ⏸️ **مؤجَّل** — سقالة RT-001..006 محفوظة لكن `markTestSkipped`: اختبار `/broadcasting/auth` عبر Sanctum أعطى **200 لقناة user.{uuid} تخصّ الغير** (المتوقّع 403) — **يلزم تحقّق: عطل أمنيّ حقيقيّ أم أثر بيئة اختبار؟** البديل: استدعاء ردود `routes/channels.php` مباشرةً عبر Reflection.
+**ملفّات هدف مفقودة كليًّا — أُغلقت كلّها ✅:** ~~AdminUserTest~~ ✅ (13) · ~~AdminSurveyTest~~ ✅ (5) · ~~InterviewTest~~ ✅ (4) · ~~BroadcastChannelsTest~~ ✅ **حُسم وفُعّل (6 اختبارات خضراء)** — التحقيق الأمنيّ انتهى: الـ«200 لقناة الغير» كان **أثر بيئة اختبار لا ثغرة** (phpunit يضبط `BROADCAST_CONNECTION=null` وNullBroadcaster يقبل الجميع)؛ الحلّ: تبديل المذيع إلى reverb ببيانات وهميّة + **إعادة تسجيل قنوات channels.php على المذيع الجديد** (القنوات تُسجَّل عند الإقلاع على مذيع null فقط).
 
 ### Quality (مركز قيادة الجودة — اللوحة الذرّية)
 | ID | الحالة | نوع | أولويّة | حالة | الاختبار |
@@ -788,13 +788,13 @@
 | ST-REQ-04..08 | getById/similar · rateOrg · perfStats/counts · fields · تلف JSON | U | 🟠⚪ | ⬜ | RequestsStore.test |
 | ST-WISH-01..05 | sendWish · تعديل/سحب/إعادة · acceptanceRate · respondOffer · negotiate | U | 🔴🟠 | ✅ | WishesStore.test |
 | ST-WISH-06..07 | جانب الباحث setStatus+عدّادات · تلف JSON | U | 🟠 | ⬜ | WishesStore.test |
-| ST-APP-01..05 | apply/hasApplied · withdraw · byStatus/count · persist · تلف JSON | U | 🔴🟠⚪ | ⬜ | ApplicationsStore.test |
+| ST-APP-01..05 | apply/hasApplied · withdraw · byStatus/count · persist · تلف JSON | U | 🔴🟠⚪ | ✅ | ApplicationsStore.test |
 | ST-INT-01..07 | بذر · book · recommendedFor · trustValue · عناصر التقييم · مرفقات · قبول/إكمال | U | 🔴🟠 | ✅ | InterviewersStore.test |
 | ST-INT-08..11 | reschedule · interviewerTier · matchFor/setPrice/stats · تلف JSON | U | 🟠 | ⬜ | InterviewersStore.test |
 | ST-EXP-01..04 | تسجيل الأدوار · مرشد/برامج · مدرب/إحالة · مستشار/طلبات | U | 🔴🟠 | ✅ | ExpertRolesStore.test |
 | ST-EXP-05..08 | expertTier · getBySlug/إحصاءات · enrollTrainee حافّة · دمج البذرة | U | 🟠 | ⬜ | ExpertRolesStore.test |
 | ST-SAVED-01..03 | toggle/isSaved/count · بذرة [6,11] · تلف JSON | U | 🟠⚪ | ⬜ | SavedStore.test |
-| ST-CAND-01..04 | دمج التجاوزات · setStatus بالمعرّف · عدّادات/getById · تلف JSON | U | 🔴🟠 | ⬜ | CandidatesStore.test |
+| ST-CAND-01..04 | دمج التجاوزات · setStatus بالمعرّف · عدّادات/getById · تلف JSON | U | 🔴🟠 | ✅ | CandidatesStore.test |
 
 ### مكوّن الاكتشاف
 | ID | الحالة | نوع | أولويّة | حالة | الاختبار |
@@ -829,8 +829,10 @@
 |----|--------|-----|--------|------|----------|
 | ST-SURV-01..17 | SurveysStore: بذر+byToken · statsFor · CRUD · submitResponse (نشط/مغلق/ممتلئ) · simulate · ترحيل · participatable/mySurveys · مكافأة+منع مزدوج · خصم المحفظة · canCreate/plan · انتقالات · syncLifecycle · إغلاق تلقائيّ · invitees · inviteAll · adminFor · generateQuestions | U | 🔴🟠 | ✅ | SurveysStore.test |
 | ST-SURV-18..19 | إشعارات دورة الحياة · مزامنة سحابيّة خاصّة | U | ⚪ | ⬜ | SurveysStore.test |
-| ST-NOTIF-01..08 | NotificationsStore: بذر+unreadCount · push · mark(All/toggle/one) · ترحيل actionTo · mapRow · hydrate real-API · start/stopRealtime · نداء API | U | 🟠⚪ | ⬜ | NotificationsStore.test |
-| ST-MSG-01..08 | MessagesStore: بذر+totalUnread · markRead · send محليّ/peer · ingest (منع mid مكرّر) · startConversation · بثّ وارد · إعادة التوصيل | U | 🔴🟠⚪ | ⬜ | MessagesStore.test |
+| ST-NOTIF-01..05 | NotificationsStore (محليّ): بذر+unreadCount · push · mark(All/toggle/one) · ترحيل actionTo · تلف JSON | U | 🟠⚪ | ✅ | NotificationsStore.test |
+| ST-NOTIF-06..08 | NotificationsStore (real-API): mapRow · hydrate · start/stopRealtime · نداء API | U | ⚪ | ⬜ | NotificationsStore.test |
+| ST-MSG-01..05 | MessagesStore (محليّ): بذر+totalUnread · markRead · send (+تجاهل الفارغ) · startConversation · تلف JSON | U | 🔴🟠 | ✅ | MessagesStore.test |
+| ST-MSG-06..08 | MessagesStore (real-API): send peer · ingest (منع mid مكرّر) · بثّ وارد/إعادة التوصيل | U | 🟠⚪ | ⬜ | MessagesStore.test |
 | SVC-RT-01..06 | البثّ: subscribeUserTickets/AdminSupport/Notifications/AdminModeration محايدة في المحاكاة · makeEcho/serverBase | U | 🟠⚪ | ⬜ | supportRealtime/echo.test |
 | SVC-RT-07..11 | directMessages (flag off): send/fetch/resolve/markRead/subscribe محايدة | U | 🟠⚪ | ✅ | directMessages.test |
 | SVC-RT-12 | toRow يحوّل camelCase→snake_case | U | ⚪ | ⬜ | directMessages.test |
@@ -899,12 +901,12 @@
 **مؤتمَت (✅) الآن — الباك-إند قويّ:** ~40 ملفّ اختبار تغطّي المسار السعيد وأغلب الصلاحيّات عبر: Auth · Account/AccountState/Wallet/Treasury/Plan/Billing · Marketplace/Pipeline/Matching/WhyMatch · Interview/Interviewer · Assistant/CV/Chat/Support/Notification/FCM. وفي الواجهة: **طبقة المنطق فقط** — خدمات (matching/matchProfile/sectors/taxonomy) + ~12 متجرًا + `useFacetedList`.
 
 **الفجوات (⬜) ذات الأولويّة (بالترتيب):**
-1. 🔴 **الواجهة — تصيير الصفحات (E2E): صفر تغطية** — كلّ صفحات المستخدم (سوق/مساعد/استبيانات) والأدمن (29 صفحة) والعامّة، وحارس الراوتر. هذا أكبر فراغ (يُعالَج بـPlaywright في م5 + اختبارات مكوّنات).
-2. 🔴 **الباك-إند — ملفّات اختبار مفقودة كليًّا لموديولات حيّة:** `AdminUserTest` (إدارة المستخدمين) · `AdminSurveyTest` (list/close/delete) · `InterviewTest` (عميل المقابلات) · **`BroadcastChannelsTest`** (تخويل قنوات Reverb: `user.{uuid}`/`support.admin`/`admin.governance`) — إضافةً إلى **401/422/404** التفصيليّة وتمييز الصلاحيّات الدقيقة عبر الموديولات المُغطّاة جزئيًّا.
-3. 🔴 **أدوات الشات وحدويًّا** (`chatLinks`: منع حقن HTML · `nudgeRoute` · `ChatWidgetStore`) — سريعة التنفيذ.
-4. 🟠 **متاجر بلا أيّ اختبار:** `ApplicationsStore` · `CandidatesStore` · `NotificationsStore` · `MessagesStore`.
-5. 🟠 **حالات الحافّة المتكرّرة:** سقوط `load*` للبذرة عند تلف JSON في كلّ متجر؛ صنف «الشاشة الفارغة» (real-API) في الصفحات.
+1. 🔴 **الواجهة — تصيير الصفحات (E2E): صفر تغطية** — كلّ صفحات المستخدم (سوق/مساعد/استبيانات) والأدمن (29 صفحة) والعامّة، وحارس الراوتر. هذا أكبر فراغ (يُعالَج بـPlaywright في م5 + اختبارات مكوّنات — مولّد الهياكل ف5 جاهز).
+2. ~~ملفّات مفقودة كليًّا~~ ✅ **أُغلقت (دفعة أ):** AuthTest+7 (AUTH-07..13) · AdminSurveyTest (5) · InterviewTest (4) · BroadcastChannelsTest (6، **حُسم التحقيق: لا ثغرة — NullBroadcaster في بيئة الاختبار**). يبقى: 401/422/404 التفصيليّة عبر الموديولات المُغطّاة جزئيًّا.
+3. 🔴 **أدوات الشات وحدويًّا** (`chatLinks`: منع حقن HTML · `nudgeRoute` · `ChatWidgetStore`) — **على فرع feat/floating-chat-widget غير المدموج؛ تُختبَر عند دمجه.**
+4. ~~متاجر بلا اختبار~~ ✅ **أُغلقت (دفعة ب):** المتاجر الأربعة (Applications/Candidates/Notifications/Messages) بـ19 اختبارًا شاملة تلف JSON. يبقى الجزء real-API (ST-NOTIF-06..08 · ST-MSG-06..08).
+5. 🟠 **حالات الحافّة:** صنف «الشاشة الفارغة» (real-API) في الصفحات.
 
 **فجوة منتَج مرصودة (لا اختباريّة):** `PublicResumePage.vue` لا يقرأ `:token` — يعرض سيرة ثابتة لكلّ الروابط.
 
-**الخطوة التالية للتنفيذ:** نبدأ بالفجوات الرخيصة عالية القيمة (أدوات الشات + 401/422/404 الباك-إند) لأنها Pest/vitest سريعة يحرسها CI فورًا، ثمّ E2E للصفحات (م5).
+**الخطوة التالية للتنفيذ:** م5 Playwright E2E (التأسيس + أوّل 10 تدفّقات حرِجة) — أو 401/422/404 التفصيليّة المتبقّية.
